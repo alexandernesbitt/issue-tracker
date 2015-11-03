@@ -34,7 +34,8 @@ namespace ARUP.IssueTracker.Revit.Entry
 
                 UIDocument uidoc = app.ActiveUIDocument;
                 Document doc = uidoc.Document;
-                SelElementSet m_elementsToHide = SelElementSet.Create();
+                //Selection m_elementsToHide = uidoc.Selection; //SelElementSet.Create();
+               
                 List<ElementId> elementids = new List<ElementId>();
 
 
@@ -187,11 +188,11 @@ namespace ARUP.IssueTracker.Revit.Entry
                         var ids = collection.Where(o => bcfguid == ExportUtils.GetExportId(doc, o));
                         if (ids.Any())
                         {
-                            m_elementsToHide.Add(doc.GetElement(ids.First()));
+                            //m_elementsToHide.Add(doc.GetElement(ids.First()));
                             elementids.Add(ids.First());
                         }
                     }
-                    if (null != m_elementsToHide && !m_elementsToHide.IsEmpty)
+                    if (null != elementids && elementids.Count>0)
                     {
                         //do transaction only if there is something to hide/select
                         using (Transaction trans = new Transaction(uidoc.Document))
@@ -200,9 +201,14 @@ namespace ARUP.IssueTracker.Revit.Entry
                             {
 
                                 if (MySettings.Get("selattachedelems") == "0")
-                                    uidoc.ActiveView.IsolateElementsTemporary(elementids);
+                                {
+                                   uidoc.ActiveView.IsolateElementsTemporary(elementids);
+                                }
                                 else
-                                    uidoc.Selection.Elements = m_elementsToHide;
+                                {
+                                   uidoc.Selection.SetElementIds(elementids);
+                                }
+                                    
                             }
                             trans.Commit();
                         }
