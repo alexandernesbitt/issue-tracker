@@ -31,6 +31,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "2016", "2016", "{19F721B5-6
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ARUP.IssueTracker.Revit", "2016\ARUP.IssueTracker.Revit\ARUP.IssueTracker.Revit.csproj", "{FC3952A7-6229-4370-B193-F785BAB7A57B}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ARUP.IssueTracker.Navisworks", "2016\ARUP.IssueTracker.Navisworks\ARUP.IssueTracker.Navisworks.csproj", "{0A8ABFCD-E357-45F6-B6BD-3348637FA5F1}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		2014|Any CPU = 2014|Any CPU
@@ -118,6 +120,16 @@ Global
 		{FC3952A7-6229-4370-B193-F785BAB7A57B}.ManualObfuscation|Any CPU.Build.0 = ManualObfuscation|Any CPU
 		{FC3952A7-6229-4370-B193-F785BAB7A57B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FC3952A7-6229-4370-B193-F785BAB7A57B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0A8ABFCD-E357-45F6-B6BD-3348637FA5F1}.2014|Any CPU.ActiveCfg = ManualObfuscation|Any CPU
+		{0A8ABFCD-E357-45F6-B6BD-3348637FA5F1}.2014|Any CPU.Build.0 = ManualObfuscation|Any CPU
+		{0A8ABFCD-E357-45F6-B6BD-3348637FA5F1}.2015|Any CPU.ActiveCfg = ManualObfuscation|Any CPU
+		{0A8ABFCD-E357-45F6-B6BD-3348637FA5F1}.2015|Any CPU.Build.0 = ManualObfuscation|Any CPU
+		{0A8ABFCD-E357-45F6-B6BD-3348637FA5F1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0A8ABFCD-E357-45F6-B6BD-3348637FA5F1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0A8ABFCD-E357-45F6-B6BD-3348637FA5F1}.ManualObfuscation|Any CPU.ActiveCfg = ManualObfuscation|Any CPU
+		{0A8ABFCD-E357-45F6-B6BD-3348637FA5F1}.ManualObfuscation|Any CPU.Build.0 = ManualObfuscation|Any CPU
+		{0A8ABFCD-E357-45F6-B6BD-3348637FA5F1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0A8ABFCD-E357-45F6-B6BD-3348637FA5F1}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -128,5 +140,6 @@ Global
 		{C8DABF50-AE26-4A2E-B1C7-6BE6AFC6B0B1} = {A3106AD5-572B-4709-91F1-3F7E94CAF531}
 		{2D132990-5674-42DF-93BF-55BA8FDC6A23} = {A3106AD5-572B-4709-91F1-3F7E94CAF531}
 		{FC3952A7-6229-4370-B193-F785BAB7A57B} = {19F721B5-6051-4130-8249-90001A81F8F2}
+		{0A8ABFCD-E357-45F6-B6BD-3348637FA5F1} = {19F721B5-6051-4130-8249-90001A81F8F2}
 	EndGlobalSection
 EndGlobal
