@@ -27,13 +27,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ARUP.IssueTracker.Naviswork
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ARUP.IssueTracker.Revit", "2015\ARUP.IssueTracker.Revit\ARUP.IssueTracker.Revit.csproj", "{2D132990-5674-42DF-93BF-55BA8FDC6A23}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{7675A79C-7098-4897-9F54-FD1B847DEEA2}"
-	ProjectSection(SolutionItems) = preProject
-		.nuget\NuGet.Config = .nuget\NuGet.Config
-		.nuget\NuGet.exe = .nuget\NuGet.exe
-		.nuget\NuGet.targets = .nuget\NuGet.targets
-	EndProjectSection
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "2016", "2016", "{19F721B5-6051-4130-8249-90001A81F8F2}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ARUP.IssueTracker.Revit", "2016\ARUP.IssueTracker.Revit\ARUP.IssueTracker.Revit.csproj", "{FC3952A7-6229-4370-B193-F785BAB7A57B}"
