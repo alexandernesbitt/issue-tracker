@@ -27,8 +27,9 @@ namespace ARUP.IssueTracker.Classes
                 }
                 if (key == "guidfield")
                 {
-                    if (System.IO.File.Exists(System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "CASE", "ARUP Issue Tracker", "usecaseserver")))
-                        return "customfield_11600";
+                   string guidfile = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "CASE", "ARUP Issue Tracker", "guidfieldid");
+                   if (System.IO.File.Exists(guidfile))
+                      return System.IO.File.ReadAllText(guidfile).Replace(" ", "");
                     else
                         return "customfield_10900";
 
