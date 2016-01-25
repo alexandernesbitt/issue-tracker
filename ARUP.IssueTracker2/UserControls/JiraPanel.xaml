@@ -136,6 +136,25 @@
                                 </StackPanel>
                             </StackPanel>
                         </GroupBox>
+                        <GroupBox   Margin="10,0,0,0" Header="Assignation">
+                            <StackPanel Orientation="Horizontal">
+                                <StackPanel Name="groupAssignation"  Orientation="Vertical" Margin="5,0">
+                                    <RadioButton Name="unassignedRadioButton" Content="Unassigned" GroupName="assignation" Margin="2"/>
+                                    <RadioButton Name="assignedRadioButton" Content="Assigned" GroupName="assignation" Margin="2"/>
+                                    <RadioButton Name="assignedToMeRadioButton" Content="Assigned to me" GroupName="assignation" Margin="2"/>
+                                    <RadioButton Name="allAssignationRadioButton" Content="All" IsChecked="True" GroupName="assignation" Margin="2"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </GroupBox>
+                        <GroupBox   Margin="10,0,0,0" Header="Creator">
+                            <StackPanel Orientation="Horizontal">
+                                <StackPanel Name="groupCreator" Orientation="Vertical" Margin="5,0">
+                                    <RadioButton Name="meCreatorRadioButton" GroupName="creator" Content="Me" Margin="2"/>
+                                    <RadioButton Name="othersCreatorRadioButton" GroupName="creator" Content="Others" Margin="2"/>
+                                    <RadioButton Name="allCreatorRadioButton" GroupName="creator" Content="All" IsChecked="True" Margin="2"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </GroupBox>
                         <ctr:FilterGroup x:Name="typefilter" Header="Type" Value="issuetype" />
                         <ctr:FilterGroup x:Name="statusfilter" Header="Status" Value="status" />
                         <ctr:FilterGroup x:Name="priorityfilter" Header="Priority" Value="priority" />

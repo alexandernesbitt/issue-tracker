@@ -61,6 +61,54 @@ namespace ARUP.IssueTracker.UserControls
             }
 
         }
+
+        public string Assignation
+        {
+            get
+            {
+                string assignation = "";
+                if (unassignedRadioButton.IsChecked.Value)
+                {
+                    assignation = "+AND+assignee=EMPTY";
+                }
+                else if (assignedRadioButton.IsChecked.Value)
+                {
+                    assignation = "+AND+assignee!=EMPTY";
+                }
+                else if (assignedToMeRadioButton.IsChecked.Value)
+                {
+                    assignation = "+AND+assignee=currentUser()";
+                }
+                else if (allAssignationRadioButton.IsChecked.Value)
+                {
+                    assignation = "";
+                }
+                return assignation;
+            }
+        }
+
+        public string Creator
+        {
+            get
+            {
+                string creator = "";
+                if (meCreatorRadioButton.IsChecked.Value)
+                {
+                    creator = "+AND+creator=currentUser()";
+                }
+                else if (othersCreatorRadioButton.IsChecked.Value)
+                {
+                    creator = "+AND+creator!=currentUser()";
+                }
+                else if (allCreatorRadioButton.IsChecked.Value)
+                {
+                    creator = "";
+                }
+                
+                return creator;
+            }
+        }
+
         public string Order
         {
             get

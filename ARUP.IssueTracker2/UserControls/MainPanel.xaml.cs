@@ -201,7 +201,7 @@ namespace ARUP.IssueTracker.UserControls
 
                 var request = new RestRequest();
                 string fields = "&fields=summary,key,created,updated,description,assignee,comment,attachment,creator,status,priority,resolution,issuetype,components," + MySettings.Get("guidfield") + "&startAt=" + startAt;
-                string query = "search?jql=project=" + jira.ProjectsCollection[jiraPan.projIndex].key + jiraPan.Filters + jiraPan.Order + fields;
+                string query = "search?jql=project=" + jira.ProjectsCollection[jiraPan.projIndex].key + jiraPan.Assignation + jiraPan.Creator + jiraPan.Filters + jiraPan.Order + fields;
 
                 request = new RestRequest(query, Method.GET);
                 request.AddHeader("Content-Type", "application/json");
@@ -1068,31 +1068,34 @@ namespace ARUP.IssueTracker.UserControls
 
         }
         public List<User> getAssigneesIssue()
-        {
-            
-            
-
+        {      
             List<User> userlist = new List<User>();
-            
-            
 
-            var maxresults = 1000;
-            for (var i = 0; i < 100; i++)
+            if (jiraPan.issueList.Items.Count != 0)
             {
-                var apicall = "user/assignable/search?issueKey=" +
-                          jira.IssuesCollection[jiraPan.issueList.SelectedIndex].key + "&maxResults="+maxresults+"&startAt="+(i*maxresults);
-                var request = new RestRequest(apicall, Method.GET);
-                request.AddHeader("Content-Type", "application/json");
-                request.RequestFormat = RestSharp.DataFormat.Json;
-                request.OnBeforeDeserialization = resp => { resp.ContentType = "application/json"; };
-                var response = JiraClient.Client.Execute<List<User>>(request);
-                if (!RestCallback.Check(response) || !response.Data.Any())
-                    break;
-             
-                userlist.AddRange(response.Data);
-                if (response.Data.Count<maxresults)
-                    break;
+                var maxresults = 1000;
+                for (var i = 0; i < 100; i++)
+                {
+                    var apicall = "user/assignable/search?issueKey=" +
+                              jira.IssuesCollection[jiraPan.issueList.SelectedIndex].key + "&maxResults=" + maxresults + "&startAt=" + (i * maxresults);
+                    var request = new RestRequest(apicall, Method.GET);
+                    request.AddHeader("Content-Type", "application/json");
+                    request.RequestFormat = RestSharp.DataFormat.Json;
+                    request.OnBeforeDeserialization = resp => { resp.ContentType = "application/json"; };
+                    var response = JiraClient.Client.Execute<List<User>>(request);
+                    if (!RestCallback.Check(response) || !response.Data.Any())
+                        break;
+
+                    userlist.AddRange(response.Data);
+                    if (response.Data.Count < maxresults)
+                        break;
+                }
             }
+            else
+            {
+                MessageBox.Show("You are adding the first issue in the project!", "Arup Issue Tracker");
+            }
+            
             return userlist;
         }
         public List<User> getAssigneesProj()
