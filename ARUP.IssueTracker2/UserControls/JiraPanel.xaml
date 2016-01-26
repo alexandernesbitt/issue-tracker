@@ -6,8 +6,8 @@
              xmlns:src="clr-namespace:ARUP.IssueTracker.Converters"
              xmlns:ctr="clr-namespace:ARUP.IssueTracker.UserControls"
              xmlns:toolkit="http://schemas.microsoft.com/wpf/2008/toolkit"
-            
-             mc:Ignorable="d" MinHeight="300" MinWidth="700" Background="White" >
+             xmlns:sys="clr-namespace:System;assembly=mscorlib"
+             mc:Ignorable="d" MinHeight="300" MinWidth="700" Background="White">
     <UserControl.Resources>
 
         <ResourceDictionary>
@@ -155,9 +155,22 @@
                                 </StackPanel>
                             </StackPanel>
                         </GroupBox>
+                        <ctr:FilterGroup x:Name="componentfilter" Header="Component" Value="component" />
                         <ctr:FilterGroup x:Name="typefilter" Header="Type" Value="issuetype" />
                         <ctr:FilterGroup x:Name="statusfilter" Header="Status" Value="status" />
                         <ctr:FilterGroup x:Name="priorityfilter" Header="Priority" Value="priority" />
+                        <GroupBox   Margin="10,0,0,0" Header="Label (Tag)">
+                            <StackPanel Orientation="Horizontal">
+                                <StackPanel Name="groupLabel" Orientation="Vertical" Margin="5,0">
+                                    <Label Content="Type to search labels (case sensitive)" />
+                                    <ComboBox x:Name="labelSearchComboBox" KeyUp="labelSearchComboBox_KeyUp" IsTextSearchEnabled="False" IsEditable="True" Width="200" Margin="2">
+                                        <ComboBox.Resources>
+                                            <sys:Double x:Key="{x:Static SystemParameters.VerticalScrollBarWidthKey}">0</sys:Double>
+                                        </ComboBox.Resources>
+                                    </ComboBox>
+                                </StackPanel>
+                            </StackPanel>
+                        </GroupBox>
                        
 
                     </WrapPanel>

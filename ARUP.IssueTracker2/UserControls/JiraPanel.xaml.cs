@@ -2,6 +2,10 @@
 using System.Windows;
 using System.Windows.Controls;
 using ARUP.IssueTracker.Classes;
+using System.Windows.Media;
+using System.Windows.Controls.Primitives;
+using System.Windows.Input;
+using System.Collections.Generic;
 
 namespace ARUP.IssueTracker.UserControls
 {
@@ -12,11 +16,25 @@ namespace ARUP.IssueTracker.UserControls
     {
         public event EventHandler<IntArg> ComponentsShowBCFEH;
 
+        /// <summary>
+        /// For MainPanel to send auto-complete items
+        /// </summary>
+        private MainPanel mainPanel = null;
+
         public JiraPanel()
         {
             InitializeComponent();
-
         }
+
+        /// <summary>
+        /// For setting auto-complete items
+        /// </summary>
+        /// <param name="mainPanel">An instance of the MainPanel</param>
+        public void SetMainPanel(MainPanel mainPanel)
+        {
+            this.mainPanel = mainPanel;
+        }
+
         public int projIndex
         {
             get { return projCombo.SelectedIndex; }
@@ -48,20 +66,44 @@ namespace ARUP.IssueTracker.UserControls
             }
         }
 
-        public string Filters
+        /// <summary>
+        /// For indicating filter active/inactive
+        /// </summary>
+        public bool IsFilterActive
         {
             get
             {
                 string filters = "";
                 if (customFilters.IsEnabled)
                 {
-                    filters = statusfilter.Result + typefilter.Result + priorityfilter.Result;
+                    filters = this.Filters + this.Assignation + this.Creator;
                 }
-                return filters;
+
+                return filters == "" ? false : true;
             }
 
         }
 
+        /// <summary>
+        /// Filter for all project-specific attributes
+        /// </summary>
+        public string Filters
+        {
+            get
+            {
+                string filters = "";
+                if (customFilters.IsEnabled)
+                {                   
+                    string textFilter = string.IsNullOrWhiteSpace(labelSearchComboBox.Text) ? string.Empty : string.Format("+AND+labels={0}", labelSearchComboBox.Text);
+                    filters = statusfilter.Result + typefilter.Result + priorityfilter.Result + componentfilter.Result + textFilter;
+                }
+                return filters;
+            }
+        }
+
+        /// <summary>
+        /// Filter for assignation
+        /// </summary>
         public string Assignation
         {
             get
@@ -87,6 +129,9 @@ namespace ARUP.IssueTracker.UserControls
             }
         }
 
+        /// <summary>
+        /// Filter for creator
+        /// </summary>
         public string Creator
         {
             get
@@ -139,7 +184,11 @@ namespace ARUP.IssueTracker.UserControls
             statusfilter.Clear();
             typefilter.Clear();
             priorityfilter.Clear();
-           
+            componentfilter.Clear();
+            allCreatorRadioButton.IsChecked = true;
+            allAssignationRadioButton.IsChecked = true;
+            labelSearchComboBox.Text = string.Empty;
+            
                 //IM.getIssues();
         }
         private void ChangeStatus_Click(object sender, RoutedEventArgs e)
@@ -162,8 +211,52 @@ namespace ARUP.IssueTracker.UserControls
 
         }
 
+        private void labelSearchComboBox_KeyUp(object sender, System.Windows.Input.KeyEventArgs e)
+        {
+            ComboBox cbox = sender as ComboBox;
+            if (e.Key == Key.Up || e.Key == Key.Down || e.Key == Key.Enter || e.Key == Key.LeftShift || e.Key == Key.RightShift)
+            {
+                return;
+            }
+            else if (e.Key == Key.Left || e.Key == Key.Right)
+            {
+                cbox.IsDropDownOpen = false;
+                return;
+            }
 
-        
+            cbox.Items.Clear();
+            TextBox txt = GetTextBoxInComboBox(cbox);
+            if (string.IsNullOrWhiteSpace(txt.Text))
+            {
+                return;
+            }
+
+            // Make sure mainPanel is not null
+            if (this.mainPanel != null)
+            {
+                this.mainPanel.getLabels(txt.Text);
+            } 
+        }
+
+        /// <summary>
+        /// For setting auto-complete items
+        /// </summary>
+        /// <param name="labels">Suggested names of labels</param>
+        public void SetAutoCompleteItems(List<string> labels)
+        {
+            if (labels.Count > 0 && labelSearchComboBox.Items.Count == 0)
+            {
+                labels.ForEach(label => labelSearchComboBox.Items.Add(label));
+                labelSearchComboBox.IsDropDownOpen = true;
+            }            
+        }
+
+        private TextBox GetTextBoxInComboBox(ComboBox cbox)
+        {
+            TextBox txt = cbox.Template.FindName("PART_EditableTextBox", cbox) as TextBox;
+            return txt;
+        }
+
     }
        
 }

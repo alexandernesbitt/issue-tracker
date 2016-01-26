@@ -17,6 +17,9 @@ using Ionic.Zip;
 using System.Xml.Linq;
 using System.Xml.Serialization;
 using System.Reflection;
+using ARUP.IssueTracker.Classes.JIRA;
+using System.Windows.Controls.Primitives;
+using System.Windows.Media;
 
 namespace ARUP.IssueTracker.UserControls
 {
@@ -29,6 +32,9 @@ namespace ARUP.IssueTracker.UserControls
         {
             InitializeComponent();
             JiraClient.Waiter = jiraPan.waiter;
+
+            // Assign "this" to JiraPanel for passing auto-complete items
+            jiraPan.SetMainPanel(this);
 
             string codeBase = System.Reflection.Assembly.GetExecutingAssembly().CodeBase;
             UriBuilder uri = new UriBuilder(codeBase);
@@ -206,7 +212,7 @@ namespace ARUP.IssueTracker.UserControls
                 request = new RestRequest(query, Method.GET);
                 request.AddHeader("Content-Type", "application/json");
                 request.RequestFormat = RestSharp.DataFormat.Json;
-                if (jiraPan.Filters != "")
+                if (jiraPan.IsFilterActive)
                 {
                     jiraPan.filterExpander.Header = "Filters - FILTERS ARE ACTIVE";
                     jiraPan.filterExpander.Background = System.Windows.Media.Brushes.LightGoldenrodYellow;
@@ -311,6 +317,8 @@ namespace ARUP.IssueTracker.UserControls
                 IRestResponse<List<Classes.Component>> response = e.Responses.Last() as IRestResponse<List<Classes.Component>>;
                 if (RestCallback.Check(response) && response.Data != null && response.Data.Any())
                 {
+                    List<String> stats = response.Data.Select(item => item.name).ToList();
+                    jiraPan.componentfilter.updateList(stats);
                     foreach (var p in response.Data)
                     {
                         jira.ComponentsCollection.Add(p);
@@ -407,6 +415,54 @@ namespace ARUP.IssueTracker.UserControls
                 MessageBox.Show("exception: " + ex1);
             }
         }
+
+        public void getLabels(string labelToSearch)
+        {
+            try
+            {
+                string queryString = string.Format("jql/autocompletedata/suggestions?fieldName=labels&fieldValue={0}", labelToSearch);
+                var request = new RestRequest(queryString, Method.GET);
+                request.AddHeader("Content-Type", "application/json");
+                request.RequestFormat = RestSharp.DataFormat.Json;
+                request.OnBeforeDeserialization = resp => { resp.ContentType = "application/json"; };
+
+                List<RestRequest> requests = new List<RestRequest>();
+                requests.Add(request);
+                BackgroundJira bj = new BackgroundJira();
+                bj.WorkerComplete += new EventHandler<ResponseArg>(getLabelsCompleted);
+                bj.Start<AutoCompleteQuery>(requests);
+
+            }
+            catch (System.Exception ex1)
+            {
+                MessageBox.Show("exception: " + ex1.Message);
+            }
+        }
+
+        private void getLabelsCompleted(object sender, ResponseArg e)
+        {
+            try
+            {
+                IRestResponse<AutoCompleteQuery> response = e.Responses.Last() as IRestResponse<AutoCompleteQuery>;
+                if (RestCallback.Check(response) && response.Data != null)
+                {
+                    if (response.Data.results != null)
+                    {
+                        if (response.Data.results.Count() > 0)
+                        {
+                            List<string> items = new List<string>();
+                            response.Data.results.ToList().ForEach(result => items.Add(result.value));
+                            jiraPan.SetAutoCompleteItems(items);
+                        }
+                    }
+                }
+            }
+            catch (System.Exception ex1)
+            {
+                MessageBox.Show("exception: " + ex1);
+            }
+        }
+
         private void connectClick(object sender, RoutedEventArgs e)
         {
             if (jira.Self != null && !string.IsNullOrWhiteSpace(jira.Self.key))
@@ -1829,5 +1885,7 @@ namespace ARUP.IssueTracker.UserControls
         {
             System.Diagnostics.Process.Start(@"http://to.arup.com/CASEIssueTracker");
         }
+
+        
     }
 }
