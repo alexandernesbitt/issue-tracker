@@ -13,7 +13,6 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 
 using System.ComponentModel;
-using RestSharp;
 using ARUP.IssueTracker.Classes;
 
 namespace ARUP.IssueTracker.UserControls

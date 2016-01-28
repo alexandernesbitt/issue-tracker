@@ -10,7 +10,6 @@ using System.IO;
 using IOPath = System.IO.Path;
 using System.ComponentModel;
 using System.Collections.ObjectModel;
-using RestSharp;
 using ARUP.IssueTracker.Classes;
 using ARUP.IssueTracker.Windows;
 using Ionic.Zip;
@@ -18,8 +17,7 @@ using System.Xml.Linq;
 using System.Xml.Serialization;
 using System.Reflection;
 using ARUP.IssueTracker.Classes.JIRA;
-using System.Windows.Controls.Primitives;
-using System.Windows.Media;
+using Arup.RestSharp;
 
 namespace ARUP.IssueTracker.UserControls
 {
@@ -40,21 +38,18 @@ namespace ARUP.IssueTracker.UserControls
             UriBuilder uri = new UriBuilder(codeBase);
             string path = Uri.UnescapeDataString(uri.Path);
 
-
-
             if (!File.Exists(Path.Combine(Path.GetDirectoryName(path), "Ionic.Zip.dll")))
             {
                 MessageBox.Show("Required Ionic.Zip.dll Not Found");
                 this.IsEnabled = false;
                 return;
             }
-            if (!File.Exists(Path.Combine(Path.GetDirectoryName(path), "RestSharp.dll")))
+            if (!File.Exists(Path.Combine(Path.GetDirectoryName(path), "Arup.RestSharp.dll")))
             {
-                MessageBox.Show("Required RestSharp.dll Not Found");
+                MessageBox.Show("Required Arup.RestSharp.dll Not Found");
                 this.IsEnabled = false;
                 return;
             }
-
 
             version.Content = "v"+Assembly.GetExecutingAssembly().GetName().Version.ToString();
             try
@@ -117,7 +112,7 @@ namespace ARUP.IssueTracker.UserControls
                 var request = new RestRequest("issue/createmeta?expand=projects.issuetypes.fields", Method.GET);
 
                 request.AddHeader("Content-Type", "application/json");
-                request.RequestFormat = RestSharp.DataFormat.Json;
+                request.RequestFormat = Arup.RestSharp.DataFormat.Json;
 
                 List<RestRequest> requests = new List<RestRequest>();
                 requests.Add(request);
@@ -211,7 +206,7 @@ namespace ARUP.IssueTracker.UserControls
 
                 request = new RestRequest(query, Method.GET);
                 request.AddHeader("Content-Type", "application/json");
-                request.RequestFormat = RestSharp.DataFormat.Json;
+                request.RequestFormat = Arup.RestSharp.DataFormat.Json;
                 if (jiraPan.IsFilterActive)
                 {
                     jiraPan.filterExpander.Header = "Filters - FILTERS ARE ACTIVE";
@@ -296,7 +291,7 @@ namespace ARUP.IssueTracker.UserControls
                 jira.ComponentsCollection = new ObservableCollection<Classes.Component>();
                 var request = new RestRequest("project/" + jira.ProjectsCollection[jiraPan.projIndex].key + "/components", Method.GET);
                 request.AddHeader("Content-Type", "application/json");
-                request.RequestFormat = RestSharp.DataFormat.Json;
+                request.RequestFormat = Arup.RestSharp.DataFormat.Json;
                 request.OnBeforeDeserialization = resp => { resp.ContentType = "application/json"; };
 
                 List<RestRequest> requests = new List<RestRequest>();
@@ -339,7 +334,7 @@ namespace ARUP.IssueTracker.UserControls
                 jira.PrioritiesCollection = new ObservableCollection<Priority>();
                 var request = new RestRequest("priority", Method.GET);
                 request.AddHeader("Content-Type", "application/json");
-                request.RequestFormat = RestSharp.DataFormat.Json;
+                request.RequestFormat = Arup.RestSharp.DataFormat.Json;
                 request.OnBeforeDeserialization = resp => { resp.ContentType = "application/json"; };
 
                 List<RestRequest> requests = new List<RestRequest>();
@@ -381,7 +376,7 @@ namespace ARUP.IssueTracker.UserControls
                 // GET STATUSES
                 var request = new RestRequest("project/" + jira.ProjectsCollection[jiraPan.projIndex].key + "/statuses", Method.GET);
                 request.AddHeader("Content-Type", "application/json");
-                request.RequestFormat = RestSharp.DataFormat.Json;
+                request.RequestFormat = Arup.RestSharp.DataFormat.Json;
                 request.OnBeforeDeserialization = resp => { resp.ContentType = "application/json"; };
 
                 List<RestRequest> requests = new List<RestRequest>();
@@ -423,7 +418,7 @@ namespace ARUP.IssueTracker.UserControls
                 string queryString = string.Format("jql/autocompletedata/suggestions?fieldName=labels&fieldValue={0}", labelToSearch);
                 var request = new RestRequest(queryString, Method.GET);
                 request.AddHeader("Content-Type", "application/json");
-                request.RequestFormat = RestSharp.DataFormat.Json;
+                request.RequestFormat = Arup.RestSharp.DataFormat.Json;
                 request.OnBeforeDeserialization = resp => { resp.ContentType = "application/json"; };
 
                 List<RestRequest> requests = new List<RestRequest>();
@@ -498,7 +493,7 @@ namespace ARUP.IssueTracker.UserControls
                 JiraClient.Client.CookieContainer = new CookieContainer();
                 var request = new RestRequest("rest/auth/1/session", Method.POST);
                 request.AddHeader("Content-Type", "application/json");
-                request.RequestFormat = RestSharp.DataFormat.Json;
+                request.RequestFormat = Arup.RestSharp.DataFormat.Json;
                 // request.Timeout = 4000;
 
                 request.AddBody(new
@@ -513,7 +508,7 @@ namespace ARUP.IssueTracker.UserControls
 
                 var request2 = new RestRequest("rest/api/2/myself", Method.GET);
                 request2.AddHeader("Content-Type", "application/json");
-                request2.RequestFormat = RestSharp.DataFormat.Json;
+                request2.RequestFormat = Arup.RestSharp.DataFormat.Json;
 
 
                 requests.Add(request2);
@@ -635,7 +630,7 @@ namespace ARUP.IssueTracker.UserControls
                         //Post the comment
                         var request = new RestRequest("issue/" + jira.IssuesCollection[index].key + "/comment", Method.POST);
                         request.AddHeader("Content-Type", "application/json");
-                        request.RequestFormat = RestSharp.DataFormat.Json;
+                        request.RequestFormat = Arup.RestSharp.DataFormat.Json;
                         var newcomment = new { body = ac.comment.Text };
                         request.AddBody(newcomment);
 
@@ -688,7 +683,7 @@ namespace ARUP.IssueTracker.UserControls
 
                 var request = new RestRequest("issue/" + jira.IssuesCollection[index].id + ".json", Method.DELETE);
                 request.AddHeader("Content-Type", "application/json");
-                request.RequestFormat = RestSharp.DataFormat.Json;
+                request.RequestFormat = Arup.RestSharp.DataFormat.Json;
                 requests.Add(request);
             }
 
@@ -933,7 +928,7 @@ namespace ARUP.IssueTracker.UserControls
                         int index = jiraPan.issueList.Items.IndexOf(jiraPan.issueList.SelectedItems[i]);
                         var request = new RestRequest("issue/" + jira.IssuesCollection[index].key, Method.PUT);
                         request.AddHeader("Content-Type", "application/json");
-                        request.RequestFormat = RestSharp.DataFormat.Json;
+                        request.RequestFormat = Arup.RestSharp.DataFormat.Json;
                         var newissue =
                             new
                             {
@@ -1029,7 +1024,7 @@ namespace ARUP.IssueTracker.UserControls
                     string trid = jira.TypesCollection[cv.valuesList.SelectedIndex].id;
                     var request = new RestRequest("issue/" + jira.IssuesCollection[index].key, Method.PUT);
                     request.AddHeader("Content-Type", "application/json");
-                    request.RequestFormat = RestSharp.DataFormat.Json;
+                    request.RequestFormat = Arup.RestSharp.DataFormat.Json;
 
                     var newissue =
                             new
@@ -1093,7 +1088,7 @@ namespace ARUP.IssueTracker.UserControls
                         string user = (cv.valuesList.SelectedIndex == -1) ? null : ((User)cv.valuesList.SelectedItem).name;
                         var request2 = new RestRequest("issue/" + jira.IssuesCollection[index].key + "/assignee", Method.PUT);
                         request2.AddHeader("Content-Type", "application/json");
-                        request2.RequestFormat = RestSharp.DataFormat.Json;
+                        request2.RequestFormat = Arup.RestSharp.DataFormat.Json;
                         var newissue =
                                 new
                                 {
@@ -1136,7 +1131,7 @@ namespace ARUP.IssueTracker.UserControls
                               jira.IssuesCollection[jiraPan.issueList.SelectedIndex].key + "&maxResults=" + maxresults + "&startAt=" + (i * maxresults);
                     var request = new RestRequest(apicall, Method.GET);
                     request.AddHeader("Content-Type", "application/json");
-                    request.RequestFormat = RestSharp.DataFormat.Json;
+                    request.RequestFormat = Arup.RestSharp.DataFormat.Json;
                     request.OnBeforeDeserialization = resp => { resp.ContentType = "application/json"; };
                     var response = JiraClient.Client.Execute<List<User>>(request);
                     if (!RestCallback.Check(response) || !response.Data.Any())
@@ -1164,7 +1159,7 @@ namespace ARUP.IssueTracker.UserControls
                       jira.ProjectsCollection[jiraPan.projIndex].key + "&maxResults=" + maxresults + "&startAt=" + (i * maxresults);
             var request = new RestRequest(apicall, Method.GET);
             request.AddHeader("Content-Type", "application/json");
-            request.RequestFormat = RestSharp.DataFormat.Json;
+            request.RequestFormat = Arup.RestSharp.DataFormat.Json;
             request.OnBeforeDeserialization = resp => { resp.ContentType = "application/json"; };
             var response = JiraClient.Client.Execute<List<User>>(request);
             if (!RestCallback.Check(response) || !response.Data.Any())
@@ -1886,6 +1881,6 @@ namespace ARUP.IssueTracker.UserControls
             System.Diagnostics.Process.Start(@"http://to.arup.com/CASEIssueTracker");
         }
 
-        
+
     }
 }

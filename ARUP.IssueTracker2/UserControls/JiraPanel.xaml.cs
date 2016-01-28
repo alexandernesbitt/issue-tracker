@@ -73,13 +73,13 @@ namespace ARUP.IssueTracker.UserControls
         {
             get
             {
-                string filters = "";
+                string filters = string.Empty;
                 if (customFilters.IsEnabled)
                 {
                     filters = this.Filters + this.Assignation + this.Creator;
                 }
 
-                return filters == "" ? false : true;
+                return filters == string.Empty ? false : true;
             }
 
         }
@@ -91,11 +91,12 @@ namespace ARUP.IssueTracker.UserControls
         {
             get
             {
-                string filters = "";
+                string filters = string.Empty;
                 if (customFilters.IsEnabled)
                 {                   
-                    string textFilter = string.IsNullOrWhiteSpace(labelSearchComboBox.Text) ? string.Empty : string.Format("+AND+labels={0}", labelSearchComboBox.Text);
-                    filters = statusfilter.Result + typefilter.Result + priorityfilter.Result + componentfilter.Result + textFilter;
+                    string labelSearchFilter = string.IsNullOrWhiteSpace(labelSearchComboBox.Text) ? string.Empty : string.Format("+AND+labels={0}", labelSearchComboBox.Text);
+                    string textSearchFilter = string.IsNullOrWhiteSpace(textSearchTextBox.Text) ? string.Empty : string.Format("+AND+text+~+\"{0}\"", textSearchTextBox.Text);
+                    filters = statusfilter.Result + typefilter.Result + priorityfilter.Result + componentfilter.Result + labelSearchFilter + textSearchFilter;
                 }
                 return filters;
             }
@@ -188,7 +189,8 @@ namespace ARUP.IssueTracker.UserControls
             allCreatorRadioButton.IsChecked = true;
             allAssignationRadioButton.IsChecked = true;
             labelSearchComboBox.Text = string.Empty;
-            
+            textSearchTextBox.Text = string.Empty;
+
                 //IM.getIssues();
         }
         private void ChangeStatus_Click(object sender, RoutedEventArgs e)
@@ -213,29 +215,15 @@ namespace ARUP.IssueTracker.UserControls
 
         private void labelSearchComboBox_KeyUp(object sender, System.Windows.Input.KeyEventArgs e)
         {
-            ComboBox cbox = sender as ComboBox;
-            if (e.Key == Key.Up || e.Key == Key.Down || e.Key == Key.Enter || e.Key == Key.LeftShift || e.Key == Key.RightShift)
+            string text = string.Empty;
+            if (ComboBoxInputCheck(sender, e, out text))
             {
-                return;
-            }
-            else if (e.Key == Key.Left || e.Key == Key.Right)
-            {
-                cbox.IsDropDownOpen = false;
-                return;
-            }
-
-            cbox.Items.Clear();
-            TextBox txt = GetTextBoxInComboBox(cbox);
-            if (string.IsNullOrWhiteSpace(txt.Text))
-            {
-                return;
-            }
-
-            // Make sure mainPanel is not null
-            if (this.mainPanel != null)
-            {
-                this.mainPanel.getLabels(txt.Text);
-            } 
+                // Make sure mainPanel is not null
+                if (this.mainPanel != null)
+                {
+                    this.mainPanel.getLabels(text);
+                }
+            }             
         }
 
         /// <summary>
@@ -255,8 +243,34 @@ namespace ARUP.IssueTracker.UserControls
         {
             TextBox txt = cbox.Template.FindName("PART_EditableTextBox", cbox) as TextBox;
             return txt;
-        }
+        }        
 
+        private bool ComboBoxInputCheck(object sender, System.Windows.Input.KeyEventArgs e, out string text)
+        {
+            ComboBox cbox = sender as ComboBox;
+            if (e.Key == Key.Up || e.Key == Key.Down || e.Key == Key.Enter || e.Key == Key.LeftShift || e.Key == Key.RightShift)
+            {
+                text = string.Empty;
+                return false;
+            }
+            else if (e.Key == Key.Left || e.Key == Key.Right)
+            {
+                cbox.IsDropDownOpen = false;
+                text = string.Empty;
+                return false;
+            }
+
+            cbox.Items.Clear();
+            TextBox txt = GetTextBoxInComboBox(cbox);
+            if (string.IsNullOrWhiteSpace(txt.Text))
+            {
+                text = string.Empty;
+                return false;
+            }
+
+            text = txt.Text;
+            return true;
+        }
     }
        
 }

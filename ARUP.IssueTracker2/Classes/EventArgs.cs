@@ -1,6 +1,6 @@
-﻿using System;
+﻿using Arup.RestSharp;
+using System;
 using System.Collections.Generic;
-using RestSharp;
 
 namespace ARUP.IssueTracker.Classes
 {

@@ -1,8 +1,8 @@
-﻿using System;
+﻿using Arup.RestSharp;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using RestSharp;
 
 namespace ARUP.IssueTracker.Classes
 {
@@ -18,7 +18,7 @@ namespace ARUP.IssueTracker.Classes
         {
             var request = new RestRequest("issue/" + IssueKey + "/transitions", Method.GET);
             request.AddHeader("Content-Type", "application/json");
-            request.RequestFormat = DataFormat.Json;
+            request.RequestFormat = Arup.RestSharp.DataFormat.Json;
 
             var response2 = JiraClient.Client.Execute<IssueTransitions>(request);
 
@@ -41,7 +41,7 @@ namespace ARUP.IssueTracker.Classes
                     "issue/" + IssueKey + "/transitions",
                     Method.POST);
             request.AddHeader("Content-Type", "application/json");
-            request.RequestFormat = RestSharp.DataFormat.Json;
+            request.RequestFormat = Arup.RestSharp.DataFormat.Json;
             var newcomment = new { transition = new { id = TransitionId } };
             request.AddBody(newcomment);
             List<RestRequest> requests = new List<RestRequest>();
@@ -65,7 +65,7 @@ namespace ARUP.IssueTracker.Classes
             {
                 var request = new RestRequest("issue/" + issueKey, Method.PUT);
                 request.AddHeader("Content-Type", "application/json");
-                request.RequestFormat = RestSharp.DataFormat.Json;
+                request.RequestFormat = Arup.RestSharp.DataFormat.Json;
                 var newissue =
                     new
                     {

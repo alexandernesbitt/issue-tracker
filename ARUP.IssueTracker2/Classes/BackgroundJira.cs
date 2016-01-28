@@ -2,13 +2,12 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-
 using System.ComponentModel;
 using System.Windows.Threading;
-using RestSharp;
 using ARUP.IssueTracker.Classes;
 using ARUP.IssueTracker.UserControls;
 using System.Windows;
+using Arup.RestSharp;
 
 namespace ARUP.IssueTracker.Classes
 {

@@ -53,6 +53,10 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="ARUP.IssueTracker, Version=2015.11.6.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>C:\Program Files (x86)\CASE\ARUP Issue Tracker\ARUP.IssueTracker.dll</HintPath>
+    </Reference>
     <Reference Include="RevitAPI">
       <HintPath>C:\Program Files\Autodesk\Revit 2016\RevitAPI.dll</HintPath>
       <Private>False</Private>
@@ -132,13 +136,6 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\ARUP.IssueTracker2\ARUP.IssueTracker.csproj">
-      <Project>{1b969ad1-c7e6-40fb-b3b0-20e7eb735876}</Project>
-      <Name>ARUP.IssueTracker</Name>
-      <Private>False</Private>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
     <Content Include="ARUP.IssueTracker.Revit.addin" />
     <Resource Include="Assets\snapshot.png" />
   </ItemGroup>
@@ -151,8 +148,7 @@
     </PreBuildEvent>
   </PropertyGroup>
   <PropertyGroup>
-    <PostBuildEvent>
-    </PostBuildEvent>
+    <PostBuildEvent>copy /Y "$(TargetDir)ARUP.IssueTracker.Revit.dll" "C:\ProgramData\Autodesk\Revit\Addins\2016\CASE\ARUP.IssueTracker.Revit\ARUP.IssueTracker.Revit.dll"</PostBuildEvent>
   </PropertyGroup>
   <!--<Import Project="$(SolutionDir)\.nuget\nuget.targets" />-->
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

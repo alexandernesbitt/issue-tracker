@@ -89,7 +89,7 @@
 
 
                 </DockPanel>
-                <TextBox x:Name="CommentBox" Grid.Row="1" Margin="5" Height="70" HorizontalAlignment="Stretch" TextWrapping="Wrap" />
+                <TextBox x:Name="CommentBox" Grid.Row="1" Margin="5" Height="70" HorizontalAlignment="Stretch" TextWrapping="Wrap" AcceptsReturn="True"/>
             </Grid>
         </GroupBox>
         <Image Margin="5"  Grid.Row="6" Source="Assets/snapshot.png"  x:Name="SnapshotImg" >

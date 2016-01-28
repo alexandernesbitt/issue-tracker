@@ -30,9 +30,8 @@ namespace ARUP.IssueTracker.Revit.Entry
 		{
 
 			try
-			{
-
-				// Version
+			{          
+                // Version
 				if (!application.ControlledApplication.VersionName.Contains("2014") && !application.ControlledApplication.VersionName.Contains("2015") && !application.ControlledApplication.VersionName.Contains("2016"))
 				{
 					using (TaskDialog td = new TaskDialog("Cannot Continue"))
@@ -90,7 +89,12 @@ namespace ARUP.IssueTracker.Revit.Entry
 					m_pushButton.LargeImage = LoadPngImgSource("ARUP.IssueTracker.Assets.ARUPIssueTrackerIcon32x32.png", m_issuetracker);
 					m_pushButton.ToolTip = "Arup Issue Manager";
 				}
-			}
+
+                // Initiate RestSharp first to avoid the conflict with Dynamo
+                // string restSharpDllPath = Path.Combine(ProgramFilesx86(), "CASE", "ARUP Issue Tracker", "RestSharp.dll");
+                // Assembly.LoadFrom(restSharpDllPath);
+
+            }
 			catch (Exception ex1)
 			{
 				MessageBox.Show("exception: " + ex1);

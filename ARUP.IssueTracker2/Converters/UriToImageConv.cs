@@ -1,5 +1,5 @@
 ﻿using ARUP.IssueTracker.Classes;
-using RestSharp;
+using Arup.RestSharp;
 using System;
 using System.Globalization;
 using System.IO;

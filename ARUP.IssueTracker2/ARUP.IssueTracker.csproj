@@ -53,12 +53,11 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Arup.RestSharp">
+      <HintPath>.\Arup.RestSharp.dll</HintPath>
+    </Reference>
     <Reference Include="Ionic.Zip, Version=1.9.2.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\DotNetZip.1.9.2\lib\net20\Ionic.Zip.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="RestSharp, Version=104.4.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\RestSharp.104.4.0\lib\net4\RestSharp.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="System" />
@@ -291,8 +290,12 @@
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>copy /Y "$(TargetDir)ARUP.IssueTracker.dll" "C:\Program Files (x86)\CASE\ARUP Issue Tracker\ARUP.IssueTracker.dll"
-copy /Y "$(TargetDir)RestSharp.dll" "C:\Program Files (x86)\CASE\ARUP Issue Tracker\RestSharp.dll"
+copy /Y "$(TargetDir)Arup.RestSharp.dll" "C:\Program Files (x86)\CASE\ARUP Issue Tracker\Arup.RestSharp.dll"
 copy /Y "$(TargetDir)Ionic.Zip.dll" "C:\Program Files (x86)\CASE\ARUP Issue Tracker\Ionic.Zip.dll"</PostBuildEvent>
+  </PropertyGroup>
+  <PropertyGroup>
+    <PreBuildEvent>
+    </PreBuildEvent>
   </PropertyGroup>
   <!--<Import Project="$(SolutionDir)\.nuget\nuget.targets" />-->
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it.

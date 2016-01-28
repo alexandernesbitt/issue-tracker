@@ -6,9 +6,8 @@ using System.Xml.Serialization;
 using System.IO;
 using System.Text.RegularExpressions;
 using ARUP.IssueTracker.Windows;
-using RestSharp;
 using System.Windows;
-
+using Arup.RestSharp;
 
 namespace ARUP.IssueTracker.Classes
 {
@@ -84,7 +83,7 @@ namespace ARUP.IssueTracker.Classes
 
                     var request4 = new RestRequest(query, Method.GET);
                     request4.AddHeader("Content-Type", "application/json");
-                    request4.RequestFormat = RestSharp.DataFormat.Json;
+                    request4.RequestFormat = Arup.RestSharp.DataFormat.Json;
                     var response4 = JiraClient.Client.Execute<Issues>(request4);
 
                     if (!RestCallback.Check(response4))
@@ -108,7 +107,7 @@ namespace ARUP.IssueTracker.Classes
 
                         var request = new RestRequest("issue", Method.POST);
                         request.AddHeader("Content-Type", "application/json");
-                        request.RequestFormat = RestSharp.DataFormat.Json;
+                        request.RequestFormat = Arup.RestSharp.DataFormat.Json;
 
 
                         var newissue =
@@ -139,7 +138,7 @@ namespace ARUP.IssueTracker.Classes
                         var responseIssue = new Issue();
                         if (RestCallback.Check(response))
                         {
-                            responseIssue = RestSharp.SimpleJson.DeserializeObject<Issue>(response.Content);
+                            responseIssue = Arup.RestSharp.SimpleJson.DeserializeObject<Issue>(response.Content);
                             key = responseIssue.key;//attach and comment sent to the new issue
                         }
                         else
@@ -151,7 +150,7 @@ namespace ARUP.IssueTracker.Classes
                         //upload viewpoint and snapshot
                         var request2 = new RestRequest("issue/" + key + "/attachments", Method.POST);
                         request2.AddHeader("X-Atlassian-Token", "nocheck");
-                        request2.RequestFormat = RestSharp.DataFormat.Json;
+                        request2.RequestFormat = Arup.RestSharp.DataFormat.Json;
                         request2.AddFile("file", File.ReadAllBytes(snapshot), "snapshot.png");
                         request2.AddFile("file", File.ReadAllBytes(viewpoint), "viewpoint.bcfv");
                         var response2 = JiraClient.Client.Execute(request2);
@@ -165,7 +164,7 @@ namespace ARUP.IssueTracker.Classes
                             {
                                 var request3 = new RestRequest("issue/" + key + "/comment", Method.POST);
                                 request3.AddHeader("Content-Type", "application/json");
-                                request3.RequestFormat = RestSharp.DataFormat.Json;
+                                request3.RequestFormat = Arup.RestSharp.DataFormat.Json;
                                 var newcomment = new { body = c.Comment1 };
                                 request3.AddBody(newcomment);
                                 var response3 = JiraClient.Client.Execute<Comment2>(request3);
@@ -192,7 +191,7 @@ namespace ARUP.IssueTracker.Classes
 
                                 var request3 = new RestRequest("issue/" + oldIssue.key + "/comment", Method.POST);
                                 request3.AddHeader("Content-Type", "application/json");
-                                request3.RequestFormat = RestSharp.DataFormat.Json;
+                                request3.RequestFormat =  Arup.RestSharp.DataFormat.Json;
                                 var newcomment = new { body = c.Comment1 };
                                 request3.AddBody(newcomment);
                                 var response3 = JiraClient.Client.Execute<Comment2>(request3);
