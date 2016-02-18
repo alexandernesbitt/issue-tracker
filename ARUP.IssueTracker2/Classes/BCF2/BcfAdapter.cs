@@ -61,39 +61,38 @@ namespace ARUP.IssueTracker.Classes
                                     Comment1 = bcf1Comment.Comment1,
                                     Date = bcf1Comment.Date,
                                     Guid = bcf1Comment.Guid,
-                                    ModifiedAuthor = bcf1Comment.Author,  // default the same as author
-                                  //ModifiedDate = null, //// default null
-                                    ReplyToComment = null, // default null
-                                    Status = bcf1Comment.Status.ToString(), // check if it accepts user input
-                                    Topic = null, // all referenced to markup's topic
+                                    ModifiedAuthor = bcf1Comment.Author,  // default the same as author for now
+                                  //ModifiedDate = null,   // mismatch attribute
+                                    ReplyToComment = null, // mismatch attribute
+                                    Status = bcf1Comment.Status.ToString(),
+                                    Topic = new BCF2.CommentTopic() { Guid = bcf1Issue.markup.Topic.Guid }, // all referenced to markup's topic
                                     VerbalStatus = bcf1Comment.VerbalStatus,
-                                    Viewpoint = null // check if there's a CommentViewPoint
+                                    Viewpoint = null //  mismatch attribute
                                 });
                             }
                         }
                     }                   
 
-                    // haven't checked null
                     // Convert Topic
                     BCF2.Topic bcf2Topic = new BCF2.Topic()
                     {
-                        AssignedTo = null,
-                        BimSnippet = null,
-                        CreationAuthor = null,
-                        //CreationDate = null,
-                        Description = null,
-                        DocumentReferences = null,
+                        AssignedTo = null,  // mismatch attribute
+                        BimSnippet = null,  // mismatch attribute
+                        CreationAuthor = null,  // mismatch attribute
+                        //CreationDate = null,  // mismatch attribute
+                        Description = null,  // mismatch attribute
+                        DocumentReferences = null,  // mismatch attribute
                         Guid = bcf1Issue.markup.Topic.Guid,
-                        Index = null,
-                        Labels = null,
-                        ModifiedAuthor = null,
-                        //ModifiedDate = ,
-                        Priority = null,
+                        Index = null,  // mismatch attribute
+                        Labels = null,  // mismatch attribute
+                        ModifiedAuthor = null,  // mismatch attribute
+                        //ModifiedDate = ,  // mismatch attribute
+                        Priority = null,  // mismatch attribute
                         ReferenceLink = bcf1Issue.markup.Topic.ReferenceLink,
-                        RelatedTopics = null,
+                        RelatedTopics = null,  // mismatch attribute
                         Title = bcf1Issue.markup.Topic.Title,
-                        TopicStatus = null,
-                        TopicType = null
+                        TopicStatus = null,  // mismatch attribute
+                        TopicType = null  // mismatch attribute
                     };
 
                     // Convert ClippingPlane
@@ -134,12 +133,11 @@ namespace ARUP.IssueTracker.Classes
                                 bcf2Components.Add(new BCF2.Component()
                                 {
                                     AuthoringToolId = bcf1Component.AuthoringToolId,
-                                    // Color = bcf1Component,    // check if this is correct
+                                    // Color = bcf1Component,    // mismatch attribute
                                     IfcGuid = bcf1Component.IfcGuid,
                                     OriginatingSystem = bcf1Component.OriginatingSystem
-                                    // Selected = bcf1Component,   // check if this is correct
-                                    // SelectedSpecified = ,    // check if this is correct
-                                    // Visible = bcf1Component.v    // check if this is correct
+                                    // Selected = bcf1Component,   // mismatch attribute
+                                    // Visible = bcf1Component    // mismatch attribute
                                 });
                             }
                         }
@@ -247,8 +245,8 @@ namespace ARUP.IssueTracker.Classes
                     ObservableCollection<BCF2.ViewPoint> bcf2ViewPoints = new ObservableCollection<BCF2.ViewPoint>();
                     bcf2ViewPoints.Add(new BCF2.ViewPoint()
                     {
-                        //Guid = null,    // check if this is correct
-                        Snapshot = bcf1Issue.snapshot,    // check if this is correct
+                        //Guid = null,    // no guid for viewpoint
+                        Snapshot = bcf1Issue.snapshot,
                         Viewpoint = "viewpoint.bcfv",
                         VisInfo = bcf2VizInfo
                     });
@@ -308,7 +306,7 @@ namespace ARUP.IssueTracker.Classes
                     }
 
                     // Create temp. folder
-                    string issueGuid = issue.formattedguid.Substring(5, issue.formattedguid.Length - 5);
+                    string issueGuid = issue.fields.guid;
                     if (!Directory.Exists(Path.Combine(ReportFolder, issueGuid)))
                         Directory.CreateDirectory(Path.Combine(ReportFolder, issueGuid));
 
@@ -316,13 +314,11 @@ namespace ARUP.IssueTracker.Classes
                     List<BCF2.HeaderFile> bcf2Headers = new List<BCF2.HeaderFile>();
                     bcf2Headers.Add(new BCF2.HeaderFile()
                     {
-                        Date = DateTime.Parse(issue.fields.created),
+                        Date = issue.fields.created == null ? new DateTime() : DateTime.Parse(issue.fields.created),
                         Filename = "Jira Export " + DateTime.Now.ToShortDateString().Replace("/", "-"),
-                        //IfcProject = bcf1Header.IfcProject,    // check if this is correct
-                        //IfcSpatialStructureElement = bcf1Header.IfcSpatialStructureElement,    // check if this is correct
                         isExternal = true, // default true for now
                         Reference = "" // default empty for now
-                    });                     
+                    });
 
                     // Convert Comments
                     ObservableCollection<BCF2.Comment> bcf2Comments = new ObservableCollection<BCF2.Comment>();
@@ -332,43 +328,43 @@ namespace ARUP.IssueTracker.Classes
                         {
                             bcf2Comments.Add(new BCF2.Comment()
                             {
-                                Author = comm.author.displayName,
-                                Comment1 = comm.body,
-                                Date = DateTime.Parse(comm.created),
+                                Author = comm.author == null ? null : comm.author.displayName,
+                                Comment1 = comm.body == null ? null : comm.body,
+                                Date = comm.created == null ? new DateTime() : DateTime.Parse(comm.created),
                                 Guid = Guid.NewGuid().ToString(),
-                                ModifiedAuthor = comm.updateAuthor.displayName,
-                                ModifiedDate = DateTime.Parse(comm.updated),
+                                ModifiedAuthor = comm.updateAuthor == null ? null : comm.updateAuthor.displayName,
+                                ModifiedDate = comm.updated == null ? new DateTime() : DateTime.Parse(comm.updated),
                                 ReplyToComment = null, // default null
-                                Status = "Unknown", // check if it accepts user input
-                                Topic = null, // all referenced to markup's topic
-                                VerbalStatus = issue.fields.status.name,
-                                Viewpoint = null // check if there's a CommentViewPoint
+                                Status = "Unknown",
+                                Topic = new BCF2.CommentTopic() { Guid = issueGuid }, // all referenced to markup's topic
+                                VerbalStatus = issue.fields.status == null ? null : issue.fields.status.name,
+                                Viewpoint = null
                             });
                         }
-                    }                    
+                    }
 
                     // haven't checked null
                     // Convert Topic
                     BCF2.Topic bcf2Topic = new BCF2.Topic()
                     {
-                        AssignedTo = null,
+                        AssignedTo = issue.fields.assignee == null ? null : issue.fields.assignee.displayName,
                         BimSnippet = null,
-                        CreationAuthor = null,
-                        //CreationDate = null,
-                        Description = null,
+                        CreationAuthor = issue.fields.creator == null ? null : issue.fields.creator.displayName,
+                        CreationDate = issue.fields.created == null ? new DateTime() : DateTime.Parse(issue.fields.created),
+                        Description = issue.fields.description == null ? null : issue.fields.description,
                         DocumentReferences = null,
                         Guid = issueGuid,
                         Index = null,
                         Labels = null,
                         ModifiedAuthor = null,
-                        //ModifiedDate = ,
-                        Priority = null,
-                        ReferenceLink = null,    // check if this is correct
+                        ModifiedDate = issue.fields.updated == null ? new DateTime() : DateTime.Parse(issue.fields.updated),
+                        Priority = issue.fields.priority == null ? null : issue.fields.priority.name,
+                        ReferenceLink = null, 
                         RelatedTopics = null,
-                        Title = issue.fields.summary,
-                        TopicStatus = null,
-                        TopicType = null
-                    };   
+                        Title = issue.fields.summary == null ? null : issue.fields.summary,
+                        TopicStatus = issue.fields.status == null ? null : issue.fields.status.name,
+                        TopicType = issue.fields.issuetype == null ? null : issue.fields.issuetype.name
+                    };
 
                     // Add BCF 2.0 issues/markups
                     bcf2.Issues.Add(new BCF2.Markup()
