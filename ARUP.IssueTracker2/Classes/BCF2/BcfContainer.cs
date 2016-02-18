@@ -303,31 +303,38 @@ namespace ARUP.IssueTracker.Classes.BCF2
           if (!Directory.Exists(issuePath))
             Directory.CreateDirectory(issuePath);
 
-          //BCF 1 compatibility
-          //there needs to be a view whose viewpoint and snapshot are named as follows and not with a guid
-          //uniqueness is still guarenteed by the guid field
-          if (issue.Viewpoints.Any() && (issue.Viewpoints.Count == 1 || issue.Viewpoints.All(o => o.Viewpoint != "viewpoint.bcfv")))
-          {
-            if (File.Exists(Path.Combine(issuePath, issue.Viewpoints[0].Viewpoint)))
-              File.Delete(Path.Combine(issuePath, issue.Viewpoints[0].Viewpoint));
-            issue.Viewpoints[0].Viewpoint = "viewpoint.bcfv";
-            if (File.Exists(Path.Combine(issuePath, issue.Viewpoints[0].Snapshot)))
-              File.Move(Path.Combine(issuePath, issue.Viewpoints[0].Snapshot), Path.Combine(issuePath, "snapshot.png"));
-            issue.Viewpoints[0].Snapshot = "snapshot.png";
-          }
+            //BCF 1 compatibility
+            //there needs to be a view whose viewpoint and snapshot are named as follows and not with a guid
+            //uniqueness is still guarenteed by the guid field
+
+            if (issue.Viewpoints != null)
+            {
+                if (issue.Viewpoints.Any() && (issue.Viewpoints.Count == 1 || issue.Viewpoints.All(o => o.Viewpoint != "viewpoint.bcfv")))
+                {
+                    if (File.Exists(Path.Combine(issuePath, issue.Viewpoints[0].Viewpoint)))
+                        File.Delete(Path.Combine(issuePath, issue.Viewpoints[0].Viewpoint));
+                    issue.Viewpoints[0].Viewpoint = "viewpoint.bcfv";
+                    if (File.Exists(Path.Combine(issuePath, issue.Viewpoints[0].Snapshot)))
+                        File.Move(Path.Combine(issuePath, issue.Viewpoints[0].Snapshot), Path.Combine(issuePath, "snapshot.png"));
+                    issue.Viewpoints[0].Snapshot = "snapshot.png";
+                }
+            }
+          
           //serialize markup with updated content
           Stream writerM = new FileStream(Path.Combine(issuePath, "markup.bcf"), FileMode.Create);
           serializerM.Serialize(writerM, issue);
           writerM.Close();
-          //serialize views
-          foreach (var bcfViewpoint in issue.Viewpoints)
-          {
-            Stream writerV = new FileStream(Path.Combine(issuePath, bcfViewpoint.Viewpoint), FileMode.Create);
-            serializerV.Serialize(writerV, bcfViewpoint.VisInfo);
-            writerV.Close();
-          }
 
-
+            //serialize views
+            if (issue.Viewpoints != null)
+            {
+                foreach (var bcfViewpoint in issue.Viewpoints)
+                {
+                    Stream writerV = new FileStream(Path.Combine(issuePath, bcfViewpoint.Viewpoint), FileMode.Create);
+                    serializerV.Serialize(writerV, bcfViewpoint.VisInfo);
+                    writerV.Close();
+                }
+            }  
         }
 
         //overwrite, without doubts
@@ -335,6 +342,7 @@ namespace ARUP.IssueTracker.Classes.BCF2
           File.Delete(filename);
 
         ZipFile.CreateFromDirectory(bcffile.TempPath, filename, CompressionLevel.Optimal, false);
+        
 
         //Open browser at location
         Uri uri2 = new Uri(filename);

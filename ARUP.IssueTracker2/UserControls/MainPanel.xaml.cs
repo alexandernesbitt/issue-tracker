@@ -18,6 +18,7 @@ using System.Xml.Serialization;
 using System.Reflection;
 using ARUP.IssueTracker.Classes.JIRA;
 using Arup.RestSharp;
+using System.Windows.Input;
 
 namespace ARUP.IssueTracker.UserControls
 {
@@ -61,13 +62,13 @@ namespace ARUP.IssueTracker.UserControls
                 bcfPan.AddCommBtn.Click += new RoutedEventHandler(AddBCFComment);
                 bcfPan.DelCommBtn.Click += new RoutedEventHandler(DelBCFComm);
                 bcfPan.NewBCFBtn.Click += new RoutedEventHandler(NewBCF);
-                bcfPan.SaveBCFBtn.Click += new RoutedEventHandler(SaveBCF);
+                bcfPan.SaveBCFBtn.Click += new RoutedEventHandler(SaveBCF2);
                 bcfPan.OpenBCFBtn.Click += new RoutedEventHandler(OpenBCFFile);
                 bcfPan.ComponentsShowBCFEH += new EventHandler<IntArg>(ComponentsShowBCF);
                 bcfPan.OpenImageBtn.Click += new RoutedEventHandler(OpenImage);
                 //JIRA events
                 jiraPan.DelIssueBtn.Click += new RoutedEventHandler(DelJiraIssueButt_Click);
-                jiraPan.ExpIssueBtn.Click += new RoutedEventHandler(ExportJiraIssue);
+                jiraPan.ExpIssueBtn.Click += new RoutedEventHandler(ExportJiraIssueToBcf2);
                 jiraPan.ConncetBtn.Click += new RoutedEventHandler(connectClick);
                 jiraPan.RefreshBtn.Click += new RoutedEventHandler(refresh);
                 jiraPan.projCombo.SelectionChanged += new SelectionChangedEventHandler(projCombo_SelectionChanged);
@@ -737,8 +738,6 @@ namespace ARUP.IssueTracker.UserControls
                             continue;
                         }
 
-
-
                         Guid guid = Guid.NewGuid();
                         if (!string.IsNullOrWhiteSpace(issue.fields.guid))
                             Guid.TryParse(issue.fields.guid, out guid);
@@ -746,8 +745,6 @@ namespace ARUP.IssueTracker.UserControls
 
                         if (!Directory.Exists(IOPath.Combine(ReportFolder, g)))
                             Directory.CreateDirectory(IOPath.Combine(ReportFolder, g));
-
-
 
                         XDocument markup = new XDocument(
                             new XElement("Markup",
@@ -816,7 +813,35 @@ namespace ARUP.IssueTracker.UserControls
                 MessageBox.Show("exception: " + ex1);
             }
         }
-        private void saveSnapshotViewpoint(string ca, string path)
+        private void ExportJiraIssueToBcf2(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                if (jiraPan.issueList.SelectedItems.Count == 0)
+                {
+                    MessageBox.Show("Please select one or more Isses first.", "No Issue selected", MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
+                }
+
+                if (Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl))
+                {
+                    MessageBoxResult result = MessageBox.Show("Do you want to save as BCF 1.0 format? (not recommended)", "Save as BCF 1.0", MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.No);
+                    if (result == MessageBoxResult.Yes)
+                    {
+                        ExportJiraIssue(sender, e);
+                        return;
+                    }
+                }
+
+                // Save to BCF 2.0
+                BcfAdapter.SaveBcf2FromJira(this);
+            }
+            catch (System.Exception ex1)
+            {
+                MessageBox.Show("exception: " + ex1);
+            }
+        }
+        public void saveSnapshotViewpoint(string ca, string path)
         {
             var client = new RestClient();
             client.CookieContainer = JiraClient.Client.CookieContainer;
@@ -1286,6 +1311,7 @@ namespace ARUP.IssueTracker.UserControls
                     MessageBox.Show("The current BCF Report is empty.", "No Issue", MessageBoxButton.OK, MessageBoxImage.Error);
                     return;
                 }
+
                 // Show save file dialog box
                 string filename = SaveDialog(jira.Bcf.Filename);
 
@@ -1307,10 +1333,7 @@ namespace ARUP.IssueTracker.UserControls
                         Stream writerM = new FileStream(IOPath.Combine(jira.Bcf.path, issue.guid.ToString(), "markup.bcf"), FileMode.Create);
                         serializerM.Serialize(writerM, issue.markup);
                         writerM.Close();
-
-
                     }
-
 
                     if (File.Exists(filename))
                         File.Delete(filename);
@@ -1320,7 +1343,6 @@ namespace ARUP.IssueTracker.UserControls
                         zip.AddDirectory(jira.Bcf.path);
                         zip.Save(filename);
                     }
-
 
                     Uri uri2 = new Uri(filename);
                     string reportname = IOPath.GetFileName(uri2.LocalPath);
@@ -1336,6 +1358,34 @@ namespace ARUP.IssueTracker.UserControls
 
                     this.IsEnabled = true;
                 }
+            }
+            catch (System.Exception ex1)
+            {
+                MessageBox.Show("exception: " + ex1);
+            }
+        }
+        private void SaveBCF2(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                if (jira.Bcf.Issues.Count == 0)
+                {
+                    MessageBox.Show("The current BCF Report is empty.", "No Issue", MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
+                }
+
+                if (Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl))
+                {
+                    MessageBoxResult result = MessageBox.Show("Do you want to save as BCF 1.0 format? (not recommended)", "Save as BCF 1.0", MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.No);
+                    if (result == MessageBoxResult.Yes)
+                    {
+                        SaveBCF(sender, e);
+                        return;
+                    }                    
+                }
+
+                // Save to BCF 2.0
+                ARUP.IssueTracker.Classes.BcfAdapter.SaveBcf2FromBcf1(jira.Bcf);                
             }
             catch (System.Exception ex1)
             {
