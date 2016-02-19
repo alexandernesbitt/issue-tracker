@@ -1554,12 +1554,16 @@ namespace ARUP.IssueTracker.UserControls
                     }
                 }
 
+                int errorCount = 0;
                 //ADD ISSUES FOR EACH SUBFOLDER
                 foreach (var folder in dir.GetDirectories())
                 {
                     //BCF ISSUE is not complete
-                    if (!File.Exists(IOPath.Combine(folder.FullName, "snapshot.png")) || !File.Exists(IOPath.Combine(folder.FullName, "markup.bcf")) || !File.Exists(IOPath.Combine(folder.FullName, "viewpoint.bcfv")))
+                    if (!File.Exists(IOPath.Combine(folder.FullName, "snapshot.png")) || !File.Exists(IOPath.Combine(folder.FullName, "markup.bcf")) || !File.Exists(IOPath.Combine(folder.FullName, "viewpoint.bcfv"))) 
+                    {
+                        errorCount++;
                         continue;
+                    }                        
 
                     IssueBCF i = null;
 
@@ -1609,6 +1613,12 @@ namespace ARUP.IssueTracker.UserControls
 
                 this.IsEnabled = true;
                 tabControl.SelectedIndex = 1;
+
+                if (errorCount > 0) 
+                {
+                    MessageBox.Show(errorCount + " Issue/s were not imported because of missing viewpoint and snapshot.",
+                        "Warning", MessageBoxButton.OK, MessageBoxImage.Warning);
+                }
 
 
             }
