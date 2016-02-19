@@ -1543,34 +1543,67 @@ namespace ARUP.IssueTracker.UserControls
 
                 var dir = new DirectoryInfo(jira.Bcf.path);
 
-                //ADD ISSUES FOR EACH SUBFOLDER
+                // Check BCF version
+                bool isBCF2 = false;
+                foreach (var file in dir.GetFiles()) 
+                {
+                    if (File.Exists(IOPath.Combine(dir.FullName, "bcf.version")))
+                    {
+                        // This is a BCF 2.0 file
+                        isBCF2 = true;
+                    }
+                }
 
+                //ADD ISSUES FOR EACH SUBFOLDER
                 foreach (var folder in dir.GetDirectories())
                 {
                     //BCF ISSUE is not complete
                     if (!File.Exists(IOPath.Combine(folder.FullName, "snapshot.png")) || !File.Exists(IOPath.Combine(folder.FullName, "markup.bcf")) || !File.Exists(IOPath.Combine(folder.FullName, "viewpoint.bcfv")))
                         continue;
 
-                    IssueBCF i = new IssueBCF();
-                    i.guid = new Guid(folder.Name);
+                    IssueBCF i = null;
 
                     FileStream viewpointFile = new FileStream(IOPath.Combine(folder.FullName, "viewpoint.bcfv"), FileMode.Open);
-                    XmlSerializer serializerS = new XmlSerializer(typeof(VisualizationInfo));
-                    i.viewpoint = serializerS.Deserialize(viewpointFile) as VisualizationInfo;
-                    viewpointFile.Close();
-
-
                     FileStream markupFile = new FileStream(IOPath.Combine(folder.FullName, "markup.bcf"), FileMode.Open);
-                    XmlSerializer serializerM = new XmlSerializer(typeof(Markup));
-                    i.markup = serializerM.Deserialize(markupFile) as Markup;
+
+                    if (isBCF2)
+                    {
+                        XmlSerializer serializerS = new XmlSerializer(typeof(ARUP.IssueTracker.Classes.BCF2.VisualizationInfo));
+                        ARUP.IssueTracker.Classes.BCF2.VisualizationInfo viewpoint = serializerS.Deserialize(viewpointFile) as ARUP.IssueTracker.Classes.BCF2.VisualizationInfo;
+
+                        XmlSerializer serializerM = new XmlSerializer(typeof(ARUP.IssueTracker.Classes.BCF2.Markup));
+                        ARUP.IssueTracker.Classes.BCF2.Markup markup = serializerM.Deserialize(markupFile) as ARUP.IssueTracker.Classes.BCF2.Markup;
+
+                        if (markup != null && viewpoint != null)
+                        {
+                            i = BcfAdapter.LoadBcf1IssueFromBcf2(markup, viewpoint);
+                            if (Guid.Empty == i.guid)
+                            {
+                                i.guid = new Guid(folder.Name);
+                            }
+                        }  
+                    }
+                    else
+                    {
+                        i = new IssueBCF();
+                        i.guid = new Guid(folder.Name);
+
+                        XmlSerializer serializerS = new XmlSerializer(typeof(VisualizationInfo));
+                        i.viewpoint = serializerS.Deserialize(viewpointFile) as VisualizationInfo;
+
+                        XmlSerializer serializerM = new XmlSerializer(typeof(Markup));
+                        i.markup = serializerM.Deserialize(markupFile) as Markup;
+                    }   
+
+                    viewpointFile.Close();
                     markupFile.Close();
 
                     i.markup.Comment = new ObservableCollection<CommentBCF>(i.markup.Comment.OrderByDescending(o => o.Date));
-
                     i.snapshot = IOPath.Combine(folder.FullName, "snapshot.png");
 
                     jira.Bcf.Issues.Add(i);
                 }
+
                 if (jira.Bcf.Issues.Any())
                     bcfPan.listIndex = 0;
 

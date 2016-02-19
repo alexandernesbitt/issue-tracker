@@ -273,7 +273,7 @@ namespace ARUP.IssueTracker.Classes
                 var frame = st.GetFrame(0);
                 // Get the line number from the stack frame
                 var line = frame.GetFileLineNumber();
-                System.Windows.MessageBox.Show("==...:" + line + "=====" + ex.ToString());
+                System.Windows.MessageBox.Show("Exception:" + line + "=====" + ex.ToString());
             }            
             
         }
@@ -293,10 +293,11 @@ namespace ARUP.IssueTracker.Classes
                 bcf2.ProjectName = ((Project)(mainPan.jiraPan.projCombo.SelectedItem)).name;
                 //bcf2.ProjectId = ;      // Is there a guid for a Jira project?
 
+                int errors = 0;
+
                 // Add issues (markups)
                 foreach (object t in mainPan.jiraPan.issueList.SelectedItems)
-                {
-                    int errors = 0;
+                {                    
                     int index = mainPan.jiraPan.issueList.Items.IndexOf(t);
                     Issue issue = mainPan.jira.IssuesCollection[index];
                     if (issue.viewpoint == "" || issue.snapshotFull == "")
@@ -343,7 +344,6 @@ namespace ARUP.IssueTracker.Classes
                         }
                     }
 
-                    // haven't checked null
                     // Convert Topic
                     BCF2.Topic bcf2Topic = new BCF2.Topic()
                     {
@@ -389,6 +389,18 @@ namespace ARUP.IssueTracker.Classes
                     }                    
                 }
 
+                if (errors != 0)
+                {
+                    MessageBox.Show(errors + " Issue/s were not exported because not formatted correctly.",
+                        "Warning", MessageBoxButton.OK, MessageBoxImage.Warning);
+
+                    if (errors == mainPan.jiraPan.issueList.SelectedItems.Count)
+                    {
+                        mainPan.DeleteDirectory(ReportFolder);
+                        return;
+                    }
+                }
+
                 // Save BCF 2.0 file
                 BCF2.BcfContainer.SaveBcfFile(bcf2);
             }
@@ -400,7 +412,7 @@ namespace ARUP.IssueTracker.Classes
                 var frame = st.GetFrame(0);
                 // Get the line number from the stack frame
                 var line = frame.GetFileLineNumber();
-                MessageBox.Show("==...:" + line + "=====" + ex.ToString());
+                MessageBox.Show("Exception:" + line + "=====" + ex.ToString());
             }
         }
 
@@ -409,9 +421,204 @@ namespace ARUP.IssueTracker.Classes
         /// </summary>
         /// <param name="bcf2">BCF 2.0 file</param>
         /// <returns></returns>
-        public static BCF LoadBcf1FromBcf2(BCF2.BcfFile bcf2)
+        public static IssueBCF LoadBcf1IssueFromBcf2(BCF2.Markup bcf2Markup, BCF2.VisualizationInfo bcf2Viewpoint)
         {
-            return null;
+            // Convert headers            
+            List<HeaderFile> bcf1Headers = new List<HeaderFile>();            
+            foreach (BCF2.HeaderFile bcf2Header in bcf2Markup.Header)    
+            {
+                HeaderFile bcf1Header = new HeaderFile()
+                {
+                    Filename = bcf2Header.Filename,
+                    Date = bcf2Header.Date,
+                    IfcProject = bcf2Header.IfcProject,
+                    IfcSpatialStructureElement = bcf2Header.IfcSpatialStructureElement
+                };
+                bcf1Headers.Add(bcf1Header);
+            }
+
+            // Convert topic
+            Topic bcf1Topic = new Topic();
+            if (bcf2Markup.Topic != null)
+            {
+                bcf1Topic.Guid = bcf2Markup.Topic.Guid;
+                bcf1Topic.ReferenceLink = bcf2Markup.Topic.ReferenceLink; 
+                bcf1Topic.Title = bcf2Markup.Topic.Title;
+            };
+
+            // Convert comments
+            ObservableCollection<CommentBCF> bcf1Comments = new ObservableCollection<CommentBCF>();
+            foreach(BCF2.Comment bcf2Comment in bcf2Markup.Comment)
+            {
+                CommentBCF bcf1Comment = new CommentBCF()
+                {
+                    Author = bcf2Comment.Author, 
+                    Comment1 = bcf2Comment.Comment1, 
+                    Date = bcf2Comment.Date, 
+                    Guid = bcf2Comment.Guid, 
+                    Status = CommentStatus.Unknown,    // default unknown for now
+                    Topic = new CommentTopic() { Guid = bcf2Markup.Topic == null ? Guid.NewGuid().ToString() : bcf2Markup.Topic.Guid }, 
+                    VerbalStatus = bcf2Comment.VerbalStatus
+                };
+                bcf1Comments.Add(bcf1Comment);
+            }
+
+            // Convert markups/issues
+            Markup bcf1Markup = new Markup()
+            {
+                Header = bcf1Headers.ToArray(),
+                Topic = bcf1Topic,
+                Comment = bcf1Comments
+            };
+
+            // Convert ClippingPlane
+            List<ClippingPlane> bcf1ClippingPlanes = new List<ClippingPlane>();
+            if (bcf2Viewpoint.ClippingPlanes != null)
+            {                        
+                foreach (BCF2.ClippingPlane bcf2ClippingPlane in bcf2Viewpoint.ClippingPlanes)
+                {
+                    if (bcf2ClippingPlane != null)
+                    {
+                        bcf1ClippingPlanes.Add(new ClippingPlane()
+                        {
+                            Direction = new Direction()
+                            {
+                                X = bcf2ClippingPlane.Direction.X,
+                                Y = bcf2ClippingPlane.Direction.Y,
+                                Z = bcf2ClippingPlane.Direction.Z
+                            },
+                            Location = new Point()
+                            {
+                                X = bcf2ClippingPlane.Location.X,
+                                Y = bcf2ClippingPlane.Location.Y,
+                                Z = bcf2ClippingPlane.Location.Z
+                            }
+                        });
+                    }
+                }
+            }
+
+            // Convert Components
+            List<Component> bcf1Components = new List<Component>();
+            if (bcf2Viewpoint.Components != null)
+            {                        
+                foreach (BCF2.Component bcf2Component in bcf2Viewpoint.Components)
+                {
+                    if (bcf2Component != null)
+                    {
+                        bcf1Components.Add(new Component()
+                        {
+                            AuthoringToolId = bcf2Component.AuthoringToolId,
+                            IfcGuid = bcf2Component.IfcGuid,
+                            OriginatingSystem = bcf2Component.OriginatingSystem
+                        });
+                    }
+                }
+            }
+
+            // Convert Lines
+            List<Line> bcf1Lines = new List<Line>();
+            if (bcf2Viewpoint.Lines != null)
+            {                        
+                foreach (BCF2.Line bcf2Line in bcf2Viewpoint.Lines)
+                {
+                    if (bcf2Line != null)
+                    {
+                        bcf1Lines.Add(new Line()
+                        {
+                            StartPoint = new Point()
+                            {
+                                X = bcf2Line.StartPoint.X,
+                                Y = bcf2Line.StartPoint.Y,
+                                Z = bcf2Line.StartPoint.Z
+                            },
+                            EndPoint = new Point()
+                            {
+                                X = bcf2Line.EndPoint.X,
+                                Y = bcf2Line.EndPoint.Y,
+                                Z = bcf2Line.EndPoint.Z
+                            }
+                        });
+                    }
+                }
+            }
+
+            // Convert viewpoints
+            VisualizationInfo bcf1Viewpoint = new VisualizationInfo()
+            {
+                ClippingPlanes = bcf1ClippingPlanes.ToArray(), 
+                Components = bcf1Components.ToArray(), 
+                Lines = bcf1Lines.ToArray(),
+                OrthogonalCamera = bcf2Viewpoint.OrthogonalCamera == null ? null : new OrthogonalCamera()
+                {
+                    CameraDirection = new Direction()
+                    {
+                        X = bcf2Viewpoint.OrthogonalCamera.CameraDirection.X,
+                        Y = bcf2Viewpoint.OrthogonalCamera.CameraDirection.Y,
+                        Z = bcf2Viewpoint.OrthogonalCamera.CameraDirection.Z
+                    },
+                    CameraUpVector = new Direction()
+                    {
+                        X = bcf2Viewpoint.OrthogonalCamera.CameraUpVector.X,
+                        Y = bcf2Viewpoint.OrthogonalCamera.CameraUpVector.Y,
+                        Z = bcf2Viewpoint.OrthogonalCamera.CameraUpVector.Z
+                    },
+                    CameraViewPoint = new Point()
+                    {
+                        X = bcf2Viewpoint.OrthogonalCamera.CameraViewPoint.X,
+                        Y = bcf2Viewpoint.OrthogonalCamera.CameraViewPoint.Y,
+                        Z = bcf2Viewpoint.OrthogonalCamera.CameraViewPoint.Z
+                    },
+                    ViewToWorldScale = bcf2Viewpoint.OrthogonalCamera.ViewToWorldScale
+                },
+                PerspectiveCamera = bcf2Viewpoint.PerspectiveCamera == null ? null : new PerspectiveCamera()
+                {
+                    CameraDirection = new Direction()
+                    {
+                        X = bcf2Viewpoint.PerspectiveCamera.CameraDirection.X,
+                        Y = bcf2Viewpoint.PerspectiveCamera.CameraDirection.Y,
+                        Z = bcf2Viewpoint.PerspectiveCamera.CameraDirection.Z
+                    },
+                    CameraUpVector = new Direction()
+                    {
+                        X = bcf2Viewpoint.PerspectiveCamera.CameraUpVector.X,
+                        Y = bcf2Viewpoint.PerspectiveCamera.CameraUpVector.Y,
+                        Z = bcf2Viewpoint.PerspectiveCamera.CameraUpVector.Z
+                    },
+                    CameraViewPoint = new Point()
+                    {
+                        X = bcf2Viewpoint.PerspectiveCamera.CameraViewPoint.X,
+                        Y = bcf2Viewpoint.PerspectiveCamera.CameraViewPoint.Y,
+                        Z = bcf2Viewpoint.PerspectiveCamera.CameraViewPoint.Z
+                    },
+                    FieldOfView = bcf2Viewpoint.PerspectiveCamera.FieldOfView
+                },
+                SheetCamera = bcf2Viewpoint.SheetCamera == null ? null : new SheetCamera()
+                {
+                    SheetID = bcf2Viewpoint.SheetCamera.SheetID,
+                    TopLeft = new Point()
+                    {
+                        X = bcf2Viewpoint.SheetCamera.TopLeft.X,
+                        Y = bcf2Viewpoint.SheetCamera.TopLeft.Y,
+                        Z = bcf2Viewpoint.SheetCamera.TopLeft.Z
+                    },
+                    BottomRight = new Point()
+                    {
+                        X = bcf2Viewpoint.SheetCamera.BottomRight.X,
+                        Y = bcf2Viewpoint.SheetCamera.BottomRight.Y,
+                        Z = bcf2Viewpoint.SheetCamera.BottomRight.Z
+                    }
+                }
+            };
+
+            // Create a new BCF 1.0 issue
+            IssueBCF bcf1 = new IssueBCF()
+            {
+                markup = bcf1Markup,
+                viewpoint = bcf1Viewpoint
+            };
+
+            return bcf1;
         }
     }
 }
