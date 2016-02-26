@@ -6,6 +6,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Windows;
+using System.Xml;
 using System.Xml.Serialization;
 
 namespace ARUP.IssueTracker.Classes.BCF2
@@ -278,9 +279,9 @@ namespace ARUP.IssueTracker.Classes.BCF2
             ProjectId = bcffile.ProjectId.Equals(Guid.Empty) ? Guid.NewGuid().ToString() : bcffile.ProjectId.ToString()
           },
           ExtensionSchema = ""
-
+           
         };
-        var bcfVersion = new Version { VersionId = "2.0", DetailedVersion = "2.0" };
+        var bcfVersion = new Version { VersionId = "2.0", DetailedVersion = "2.0 RC" };
 
         var serializerP = new XmlSerializer(typeof(ProjectExtension));
         Stream writerP = new FileStream(Path.Combine(bcffile.TempPath, "project.bcfp"), FileMode.Create);
@@ -297,7 +298,6 @@ namespace ARUP.IssueTracker.Classes.BCF2
         
         foreach (var issue in bcffile.Issues)
         {
-
           // Serialize the object, and close the TextWriter
           string issuePath = Path.Combine(bcffile.TempPath, issue.Topic.Guid);
           if (!Directory.Exists(issuePath))
@@ -312,7 +312,7 @@ namespace ARUP.IssueTracker.Classes.BCF2
                 if (issue.Viewpoints.Any() && (issue.Viewpoints.Count == 1 || issue.Viewpoints.All(o => o.Viewpoint != "viewpoint.bcfv")))
                 {
                     if (File.Exists(Path.Combine(issuePath, issue.Viewpoints[0].Viewpoint)))
-                        File.Delete(Path.Combine(issuePath, issue.Viewpoints[0].Viewpoint));
+                        File.Move(Path.Combine(issuePath, issue.Viewpoints[0].Viewpoint), Path.Combine(issuePath, "viewpoint.bcfv"));
                     issue.Viewpoints[0].Viewpoint = "viewpoint.bcfv";
                     if (File.Exists(Path.Combine(issuePath, issue.Viewpoints[0].Snapshot)))
                         File.Move(Path.Combine(issuePath, issue.Viewpoints[0].Snapshot), Path.Combine(issuePath, "snapshot.png"));
@@ -330,9 +330,32 @@ namespace ARUP.IssueTracker.Classes.BCF2
             {
                 foreach (var bcfViewpoint in issue.Viewpoints)
                 {
-                    Stream writerV = new FileStream(Path.Combine(issuePath, bcfViewpoint.Viewpoint), FileMode.Create);
-                    serializerV.Serialize(writerV, bcfViewpoint.VisInfo);
-                    writerV.Close();
+                    string viewpointPath = Path.Combine(issuePath, bcfViewpoint.Viewpoint);
+                    if (bcfViewpoint.VisInfo != null)
+                    {
+                        Stream writerV = new FileStream(viewpointPath, FileMode.Create);
+                        serializerV.Serialize(writerV, bcfViewpoint.VisInfo);
+                        writerV.Close();
+                    }
+                    else if (File.Exists(viewpointPath))    // this code block is for Solibri
+                    {
+                        XmlDocument doc = new XmlDocument();
+                        doc.PreserveWhitespace = true;
+                        try 
+                        {
+                            doc.Load(viewpointPath);
+                            doc.DocumentElement.SetAttribute("noNamespaceSchemaLocation",
+                                              "http://www.w3.org/2001/XMLSchema-instance",
+                                              "visinfo.xsd"
+                                             );
+                            doc.Save(viewpointPath);
+                        }
+                        catch(Exception ex)
+                        {
+                            MessageBox.Show("Failed to write schema info. Cannot be imported to Solibri.",
+                                               "Warning", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        }                        
+                    }
                 }
             }  
         }
@@ -341,7 +364,14 @@ namespace ARUP.IssueTracker.Classes.BCF2
         if (File.Exists(filename))
           File.Delete(filename);
 
-        ZipFile.CreateFromDirectory(bcffile.TempPath, filename, CompressionLevel.Optimal, false);
+        using (Ionic.Zip.ZipFile zip = new Ionic.Zip.ZipFile())
+        {
+            zip.AddDirectory(bcffile.TempPath);
+            zip.Save(filename);
+        }
+
+        //this library cause conflicts with Solibri
+        //ZipFile.CreateFromDirectory(bcffile.TempPath, filename, CompressionLevel.Fastest, false);
         
 
         //Open browser at location
@@ -382,7 +412,7 @@ namespace ARUP.IssueTracker.Classes.BCF2
       return result == true ? saveFileDialog.FileName : "";
     }
 
-    private static VisualizationInfo DeserializeViewpoint(string path)
+    public static VisualizationInfo DeserializeViewpoint(string path)
     {
       VisualizationInfo output = null;
       try

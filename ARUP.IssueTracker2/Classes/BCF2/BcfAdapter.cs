@@ -29,6 +29,9 @@ namespace ARUP.IssueTracker.Classes
                 // Add issues (markups)
                 foreach (IssueBCF bcf1Issue in bcf1.Issues)
                 {
+                    // Set up a snapshot/viewpoint guid for Solibri
+                    string snapshotGuid = Guid.NewGuid().ToString();
+
                     // Convert header files
                     List<BCF2.HeaderFile> bcf2Headers = new List<BCF2.HeaderFile>();
                     if (bcf1Issue.markup.Header != null)
@@ -37,7 +40,8 @@ namespace ARUP.IssueTracker.Classes
                         {
                             bcf2Headers.Add(new BCF2.HeaderFile()
                             {
-                                Date = bcf1Header.Date,
+                                Date = DateTime.Now, 
+                                DateSpecified = true,
                                 Filename = bcf1Header.Filename,
                                 IfcProject = bcf1Header.IfcProject,
                                 IfcSpatialStructureElement = bcf1Header.IfcSpatialStructureElement,
@@ -62,12 +66,13 @@ namespace ARUP.IssueTracker.Classes
                                     Date = bcf1Comment.Date,
                                     Guid = bcf1Comment.Guid,
                                     ModifiedAuthor = bcf1Comment.Author,  // default the same as author for now
-                                  //ModifiedDate = null,   // mismatch attribute
+                                    ModifiedDate = DateTime.Now,  // set to now for Solibri
+                                    ModifiedDateSpecified = true,
                                     ReplyToComment = null, // mismatch attribute
                                     Status = bcf1Comment.Status.ToString(),
                                     Topic = new BCF2.CommentTopic() { Guid = bcf1Issue.markup.Topic.Guid }, // all referenced to markup's topic
                                     VerbalStatus = bcf1Comment.VerbalStatus,
-                                    Viewpoint = null //  mismatch attribute
+                                    Viewpoint = new BCF2.CommentViewpoint() { Guid = snapshotGuid } // for Solibri
                                 });
                             }
                         }
@@ -79,14 +84,16 @@ namespace ARUP.IssueTracker.Classes
                         AssignedTo = null,  // mismatch attribute
                         BimSnippet = null,  // mismatch attribute
                         CreationAuthor = null,  // mismatch attribute
-                        //CreationDate = null,  // mismatch attribute
+                        CreationDate = DateTime.Now,  // set to now for Solibri
+                        CreationDateSpecified = true,
                         Description = null,  // mismatch attribute
                         DocumentReferences = null,  // mismatch attribute
                         Guid = bcf1Issue.markup.Topic.Guid,
                         Index = null,  // mismatch attribute
                         Labels = null,  // mismatch attribute
                         ModifiedAuthor = null,  // mismatch attribute
-                        //ModifiedDate = ,  // mismatch attribute
+                        ModifiedDate = DateTime.Now,  // set to now for Solibri
+                        ModifiedDateSpecified = true,
                         Priority = null,  // mismatch attribute
                         ReferenceLink = bcf1Issue.markup.Topic.ReferenceLink,
                         RelatedTopics = null,  // mismatch attribute
@@ -134,7 +141,7 @@ namespace ARUP.IssueTracker.Classes
                                 {
                                     AuthoringToolId = bcf1Component.AuthoringToolId,
                                     // Color = bcf1Component,    // mismatch attribute
-                                    IfcGuid = bcf1Component.IfcGuid,
+                                    IfcGuid = string.IsNullOrWhiteSpace(bcf1Component.IfcGuid) ? IfcGuid.ToIfcGuid(Guid.NewGuid()) : bcf1Component.IfcGuid,
                                     OriginatingSystem = bcf1Component.OriginatingSystem
                                     // Selected = bcf1Component,   // mismatch attribute
                                     // Visible = bcf1Component    // mismatch attribute
@@ -245,7 +252,7 @@ namespace ARUP.IssueTracker.Classes
                     ObservableCollection<BCF2.ViewPoint> bcf2ViewPoints = new ObservableCollection<BCF2.ViewPoint>();
                     bcf2ViewPoints.Add(new BCF2.ViewPoint()
                     {
-                        //Guid = null,    // no guid for viewpoint
+                        Guid = snapshotGuid,    // for Solibri
                         Snapshot = bcf1Issue.snapshot,
                         Viewpoint = "viewpoint.bcfv",
                         VisInfo = bcf2VizInfo
@@ -311,14 +318,19 @@ namespace ARUP.IssueTracker.Classes
                     if (!Directory.Exists(Path.Combine(ReportFolder, issueGuid)))
                         Directory.CreateDirectory(Path.Combine(ReportFolder, issueGuid));
 
+                    // Set up a snapshot/viewpoint guid for Solibri
+                    string snapshotGuid = Guid.NewGuid().ToString();
+
                     // Convert header files
                     List<BCF2.HeaderFile> bcf2Headers = new List<BCF2.HeaderFile>();
                     bcf2Headers.Add(new BCF2.HeaderFile()
                     {
-                        Date = issue.fields.created == null ? new DateTime() : DateTime.Parse(issue.fields.created),
+                        Date = string.IsNullOrWhiteSpace(issue.fields.created) ? DateTime.Now : DateTime.Parse(issue.fields.created),
+                        DateSpecified = true,
                         Filename = "Jira Export " + DateTime.Now.ToShortDateString().Replace("/", "-"),
                         isExternal = true, // default true for now
-                        Reference = "" // default empty for now
+                        Reference = "",  // default empty for now
+                        IfcProject = IfcGuid.ToIfcGuid(Guid.NewGuid())
                     });
 
                     // Convert Comments
@@ -331,15 +343,16 @@ namespace ARUP.IssueTracker.Classes
                             {
                                 Author = comm.author == null ? null : comm.author.displayName,
                                 Comment1 = comm.body == null ? null : comm.body,
-                                Date = comm.created == null ? new DateTime() : DateTime.Parse(comm.created),
+                                Date = string.IsNullOrWhiteSpace(comm.created) ? DateTime.Now : DateTime.Parse(comm.created),
                                 Guid = Guid.NewGuid().ToString(),
                                 ModifiedAuthor = comm.updateAuthor == null ? null : comm.updateAuthor.displayName,
-                                ModifiedDate = comm.updated == null ? new DateTime() : DateTime.Parse(comm.updated),
+                                ModifiedDate = string.IsNullOrWhiteSpace(comm.updated) ? DateTime.Now : DateTime.Parse(comm.updated),
+                                ModifiedDateSpecified = true,
                                 ReplyToComment = null, // default null
                                 Status = "Unknown",
                                 Topic = new BCF2.CommentTopic() { Guid = issueGuid }, // all referenced to markup's topic
                                 VerbalStatus = issue.fields.status == null ? null : issue.fields.status.name,
-                                Viewpoint = null
+                                Viewpoint = new BCF2.CommentViewpoint() { Guid = snapshotGuid }  // for Solibri
                             });
                         }
                     }
@@ -350,14 +363,16 @@ namespace ARUP.IssueTracker.Classes
                         AssignedTo = issue.fields.assignee == null ? null : issue.fields.assignee.displayName,
                         BimSnippet = null,
                         CreationAuthor = issue.fields.creator == null ? null : issue.fields.creator.displayName,
-                        CreationDate = issue.fields.created == null ? new DateTime() : DateTime.Parse(issue.fields.created),
+                        CreationDate = string.IsNullOrWhiteSpace(issue.fields.created) ? DateTime.Now : DateTime.Parse(issue.fields.created),
+                        CreationDateSpecified = true,
                         Description = issue.fields.description == null ? null : issue.fields.description,
                         DocumentReferences = null,
                         Guid = issueGuid,
                         Index = null,
                         Labels = null,
                         ModifiedAuthor = null,
-                        ModifiedDate = issue.fields.updated == null ? new DateTime() : DateTime.Parse(issue.fields.updated),
+                        ModifiedDate = string.IsNullOrWhiteSpace(issue.fields.updated) ? DateTime.Now : DateTime.Parse(issue.fields.updated),
+                        ModifiedDateSpecified = true,
                         Priority = issue.fields.priority == null ? null : issue.fields.priority.name,
                         ReferenceLink = null, 
                         RelatedTopics = null,
@@ -366,13 +381,24 @@ namespace ARUP.IssueTracker.Classes
                         TopicType = issue.fields.issuetype == null ? null : issue.fields.issuetype.name
                     };
 
+                    // Convert viewpoints
+                    // BCF 1.0 can only have one viewpoint
+                    ObservableCollection<BCF2.ViewPoint> bcf2ViewPoints = new ObservableCollection<BCF2.ViewPoint>();
+                    bcf2ViewPoints.Add(new BCF2.ViewPoint()
+                    {
+                        Guid = snapshotGuid,    // for Solibri
+                        Snapshot = "snapshot.png",
+                        Viewpoint = "viewpoint.bcfv", 
+                        //VisInfo = null    // use the one on Jira
+                    });
+
                     // Add BCF 2.0 issues/markups
                     bcf2.Issues.Add(new BCF2.Markup()
                     {
                         Header = bcf2Headers,
                         Comment = bcf2Comments,
                         Topic = bcf2Topic,
-                        // Viewpoints = bcf2ViewPoints    // use the one saved on Jira
+                        Viewpoints = bcf2ViewPoints
                     });
 
                     // Save viewpoint and snapshot
@@ -391,7 +417,7 @@ namespace ARUP.IssueTracker.Classes
 
                 if (errors != 0)
                 {
-                    MessageBox.Show(errors + " Issue/s were not exported because not formatted correctly.",
+                    MessageBox.Show(errors + " Issue(s) were not exported because only issues created via the issue tracker plugin with a viewpoint and a snapshot can be exported.",
                         "Warning", MessageBoxButton.OK, MessageBoxImage.Warning);
 
                     if (errors == mainPan.jiraPan.issueList.SelectedItems.Count)

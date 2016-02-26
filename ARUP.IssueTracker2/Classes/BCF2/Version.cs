@@ -27,6 +27,9 @@ namespace ARUP.IssueTracker.Classes.BCF2
   public partial class Version
   {
 
+    [XmlAttribute(AttributeName = "noNamespaceSchemaLocation", Namespace = "http://www.w3.org/2001/XMLSchema-instance")]
+    public string Schema = @"version.xsd";
+
     private string detailedVersionField;
 
     private string versionIdField;

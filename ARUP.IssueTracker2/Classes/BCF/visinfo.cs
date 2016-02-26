@@ -24,6 +24,8 @@ namespace ARUP.IssueTracker.Classes
     [System.Xml.Serialization.XmlRootAttribute(Namespace = "", IsNullable = false)]
     public partial class VisualizationInfo
     {
+        [System.Xml.Serialization.XmlAttribute(AttributeName = "noNamespaceSchemaLocation", Namespace = "http://www.w3.org/2001/XMLSchema-instance")]
+        public string Schema = @"visinfo.xsd";
 
         private Component[] componentsField;
 
