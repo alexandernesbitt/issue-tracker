@@ -372,7 +372,8 @@ namespace ARUP.IssueTracker.Classes.BCF2
 
         //this library cause conflicts with Solibri
         //ZipFile.CreateFromDirectory(bcffile.TempPath, filename, CompressionLevel.Fastest, false);
-        
+
+        DeleteDirectory(bcffile.TempPath);
 
         //Open browser at location
         Uri uri2 = new Uri(filename);
@@ -464,6 +465,33 @@ namespace ARUP.IssueTracker.Classes.BCF2
         MessageBox.Show("exception: " + ex1);
       }
       return output;
+    }
+
+    public static void DeleteDirectory(string target_dir)
+    {
+        try
+        {
+            if (Directory.Exists(target_dir))
+            {
+                string[] files = Directory.GetFiles(target_dir);
+                string[] dirs = Directory.GetDirectories(target_dir);
+                foreach (string file in files)
+                {
+                    File.SetAttributes(file, FileAttributes.Normal);
+                    File.Delete(file);
+                }
+
+                foreach (string dir in dirs)
+                {
+                    DeleteDirectory(dir);
+                }
+                Directory.Delete(target_dir, false);
+            }
+        }
+        catch (System.Exception ex1)
+        {
+            MessageBox.Show("exception: " + ex1);
+        }
     }
 
 

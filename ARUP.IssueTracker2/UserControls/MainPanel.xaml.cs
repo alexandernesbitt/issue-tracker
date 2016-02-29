@@ -63,12 +63,15 @@ namespace ARUP.IssueTracker.UserControls
                 bcfPan.DelCommBtn.Click += new RoutedEventHandler(DelBCFComm);
                 bcfPan.NewBCFBtn.Click += new RoutedEventHandler(NewBCF);
                 bcfPan.SaveBCFBtn.Click += new RoutedEventHandler(SaveBCF2);
+                bcfPan.btnBcfOption.Click += new RoutedEventHandler(ExportJiraIssueOption);
+                bcfPan.SaveBcf1.Click += new RoutedEventHandler(SaveBCF);
+                bcfPan.SaveBcf2.Click += new RoutedEventHandler(SaveBCF2);
                 bcfPan.OpenBCFBtn.Click += new RoutedEventHandler(OpenBCFFile);
                 bcfPan.ComponentsShowBCFEH += new EventHandler<IntArg>(ComponentsShowBCF);
                 bcfPan.OpenImageBtn.Click += new RoutedEventHandler(OpenImage);
                 //JIRA events
                 jiraPan.DelIssueBtn.Click += new RoutedEventHandler(DelJiraIssueButt_Click);
-                jiraPan.ExpIssueBtn.Click += new RoutedEventHandler(ExportJiraIssueToBcf2);
+                jiraPan.ExpIssueBtn.Click += new RoutedEventHandler(ExportJiraIssueToBcf2);                
                 jiraPan.ConncetBtn.Click += new RoutedEventHandler(connectClick);
                 jiraPan.RefreshBtn.Click += new RoutedEventHandler(refresh);
                 jiraPan.projCombo.SelectionChanged += new SelectionChangedEventHandler(projCombo_SelectionChanged);
@@ -813,6 +816,15 @@ namespace ARUP.IssueTracker.UserControls
                 MessageBox.Show("exception: " + ex1);
             }
         }
+        private void ExportJiraIssueOption(object sender, RoutedEventArgs e) 
+        {
+            bcfPan.popupExportBCF.IsOpen = true;
+            bcfPan.popupExportBCF.Closed += (senderClosed, eClosed) =>
+            {
+                bcfPan.btnBcfOption.IsChecked = false;
+            };
+
+        }
         private void ExportJiraIssueToBcf2(object sender, RoutedEventArgs e)
         {
             try
@@ -821,16 +833,6 @@ namespace ARUP.IssueTracker.UserControls
                 {
                     MessageBox.Show("Please select one or more Isses first.", "No Issue selected", MessageBoxButton.OK, MessageBoxImage.Error);
                     return;
-                }
-
-                if (Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl))
-                {
-                    MessageBoxResult result = MessageBox.Show("Do you want to save as BCF 1.0 format? (not recommended)", "Save as BCF 1.0", MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.No);
-                    if (result == MessageBoxResult.Yes)
-                    {
-                        ExportJiraIssue(sender, e);
-                        return;
-                    }
                 }
 
                 // Save to BCF 2.0
@@ -1312,6 +1314,12 @@ namespace ARUP.IssueTracker.UserControls
                     return;
                 }
 
+                MessageBoxResult result = MessageBox.Show("BCF 1.0 is an outdated format. Only one snapshot will be exported and some attributes will be ignored. Do you want to save as BCF 1.0 format? (not recommended)", "Save as BCF 1.0", MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.No);
+                if (result == MessageBoxResult.No)
+                {
+                    return;
+                }                    
+
                 // Show save file dialog box
                 string filename = SaveDialog(jira.Bcf.Filename);
 
@@ -1339,8 +1347,18 @@ namespace ARUP.IssueTracker.UserControls
                         File.Delete(filename);
 
                     using (Ionic.Zip.ZipFile zip = new Ionic.Zip.ZipFile())
-                    {
+                    {                        
                         zip.AddDirectory(jira.Bcf.path);
+                        //check files to avoid including BCF 2.0 files
+                        List<string> filesToBeExcluded = new List<string>();
+                        foreach (ZipEntry entry in zip.Entries)
+                        {
+                            if (!entry.FileName.Contains("viewpoint.bcfv") && !entry.FileName.Contains("markup.bcf") && !entry.FileName.Contains("snapshot.png"))
+                            {
+                                filesToBeExcluded.Add(entry.FileName);
+                            }
+                        }
+                        zip.RemoveEntries(filesToBeExcluded);
                         zip.Save(filename);
                     }
 
@@ -1372,16 +1390,6 @@ namespace ARUP.IssueTracker.UserControls
                 {
                     MessageBox.Show("The current BCF Report is empty.", "No Issue", MessageBoxButton.OK, MessageBoxImage.Error);
                     return;
-                }
-
-                if (Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl))
-                {
-                    MessageBoxResult result = MessageBox.Show("Do you want to save as BCF 1.0 format? (not recommended)", "Save as BCF 1.0", MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.No);
-                    if (result == MessageBoxResult.Yes)
-                    {
-                        SaveBCF(sender, e);
-                        return;
-                    }                    
                 }
 
                 // Save to BCF 2.0

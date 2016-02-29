@@ -370,11 +370,11 @@ namespace ARUP.IssueTracker.Classes
                         Guid = issueGuid,
                         Index = null,
                         Labels = null,
-                        ModifiedAuthor = null,
+                        ModifiedAuthor = issue.fields.creator == null ? null : issue.fields.creator.displayName,
                         ModifiedDate = string.IsNullOrWhiteSpace(issue.fields.updated) ? DateTime.Now : DateTime.Parse(issue.fields.updated),
                         ModifiedDateSpecified = true,
                         Priority = issue.fields.priority == null ? null : issue.fields.priority.name,
-                        ReferenceLink = null, 
+                        ReferenceLink = string.Format("http://jira.arup.com/browse/{0}", issue.key), 
                         RelatedTopics = null,
                         Title = issue.fields.summary == null ? null : issue.fields.summary,
                         TopicStatus = issue.fields.status == null ? null : issue.fields.status.name,
@@ -641,7 +641,9 @@ namespace ARUP.IssueTracker.Classes
             IssueBCF bcf1 = new IssueBCF()
             {
                 markup = bcf1Markup,
-                viewpoint = bcf1Viewpoint
+                viewpoint = bcf1Viewpoint,
+                bcf2Markup = bcf2Markup,
+                bcf2Viewpoint = bcf2Viewpoint
             };
 
             return bcf1;

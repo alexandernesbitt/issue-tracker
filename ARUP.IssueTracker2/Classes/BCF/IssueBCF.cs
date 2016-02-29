@@ -11,6 +11,10 @@ namespace ARUP.IssueTracker.Classes
         public Guid guid { get; set; }
         public string snapshot { get; set; }
 
+        //for BCF 2.0 cache
+        public ARUP.IssueTracker.Classes.BCF2.Markup bcf2Markup { get; set; }
+        public ARUP.IssueTracker.Classes.BCF2.VisualizationInfo bcf2Viewpoint { get; set; }
+
         public IssueBCF()
         {
             guid = Guid.NewGuid();

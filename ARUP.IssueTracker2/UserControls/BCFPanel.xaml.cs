@@ -50,6 +50,13 @@ namespace ARUP.IssueTracker.UserControls
             set { issueList.SelectedIndex = value; }
         }
 
+        private void popup_Click(object sender, RoutedEventArgs e)
+        {
+            System.Windows.Controls.Primitives.Popup popup = sender as System.Windows.Controls.Primitives.Popup;
+            if (popup != null)
+                popup.IsOpen = false;
+        }
+
 
     }
 }
