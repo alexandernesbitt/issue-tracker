@@ -205,7 +205,7 @@ namespace ARUP.IssueTracker.UserControls
 
 
                 var request = new RestRequest();
-                string fields = "&fields=summary,key,created,updated,description,assignee,comment,attachment,creator,status,priority,resolution,issuetype,components," + MySettings.Get("guidfield") + "&startAt=" + startAt;
+                string fields = "&fields=summary,key,created,updated,description,assignee,comment,attachment,creator,status,priority,resolution,issuetype,components,labels," + MySettings.Get("guidfield") + "&startAt=" + startAt;
                 string query = "search?jql=project=" + jira.ProjectsCollection[jiraPan.projIndex].key + jiraPan.Assignation + jiraPan.Creator + jiraPan.Filters + jiraPan.Order + fields;
 
                 request = new RestRequest(query, Method.GET);
@@ -243,7 +243,6 @@ namespace ARUP.IssueTracker.UserControls
                 IRestResponse<Issues> response = e.Responses.Last() as IRestResponse<Issues>;
                 if (RestCallback.Check(response) && response.Data.issues != null && response.Data.issues.Any())
                 {
-
                     jira.maxResults = response.Data.maxResults;
                     jira.Total = response.Data.total;
                     jira.startAt = response.Data.startAt;
@@ -1489,6 +1488,26 @@ namespace ARUP.IssueTracker.UserControls
                         var issueJira = new Issue();
                         issueJira.fields = new Fields();
                         issueJira.fields.issuetype = (Issuetype) ub.issueTypeCombo.SelectedItem;
+                        issueJira.fields.creator = new User() { name = jira.Self.name };
+
+                        // add assignee if present
+                        if (jira.Bcf.Issues[index].bcf2Markup != null)
+                        {
+                            if (jira.Bcf.Issues[index].bcf2Markup.Topic.AssignedTo != null) 
+                            {
+                                issueJira.fields.assignee = new User() { name = jira.Bcf.Issues[index].bcf2Markup.Topic.AssignedTo };                            
+                            }
+                        }
+
+                        // add labels if present
+                        if (jira.Bcf.Issues[index].bcf2Markup != null)
+                        {
+                            if (jira.Bcf.Issues[index].bcf2Markup.Topic.Labels != null)
+                            {
+                                issueJira.fields.labels = jira.Bcf.Issues[index].bcf2Markup.Topic.Labels.ToList();
+                            }
+                        }
+                        
                         issues.Add(jira.Bcf.Issues[index]);
                         issuesJira.Add(issueJira);
                     }

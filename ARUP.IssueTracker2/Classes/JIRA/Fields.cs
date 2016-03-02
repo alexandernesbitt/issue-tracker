@@ -34,7 +34,7 @@ namespace ARUP.IssueTracker.Classes
         }
         //public List<User> customfield_11400 { get; set; }
         //public List<Component> components { get; set; }
-       // public List<string> labels { get; set; }
+        public List<string> labels { get; set; }
     }
 
 

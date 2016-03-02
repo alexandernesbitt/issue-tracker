@@ -356,11 +356,11 @@ namespace ARUP.IssueTracker.Classes
                             });
                         }
                     }
-
+                   
                     // Convert Topic
                     BCF2.Topic bcf2Topic = new BCF2.Topic()
                     {
-                        AssignedTo = issue.fields.assignee == null ? null : issue.fields.assignee.displayName,
+                        AssignedTo = issue.fields.assignee == null ? null : issue.fields.assignee.name,
                         BimSnippet = null,
                         CreationAuthor = issue.fields.creator == null ? null : issue.fields.creator.displayName,
                         CreationDate = string.IsNullOrWhiteSpace(issue.fields.created) ? DateTime.Now : DateTime.Parse(issue.fields.created),
@@ -369,7 +369,7 @@ namespace ARUP.IssueTracker.Classes
                         DocumentReferences = null,
                         Guid = issueGuid,
                         Index = null,
-                        Labels = null,
+                        Labels = issue.fields.labels == null ? null : issue.fields.labels.ToArray(),
                         ModifiedAuthor = issue.fields.creator == null ? null : issue.fields.creator.displayName,
                         ModifiedDate = string.IsNullOrWhiteSpace(issue.fields.updated) ? DateTime.Now : DateTime.Parse(issue.fields.updated),
                         ModifiedDateSpecified = true,

@@ -83,7 +83,6 @@
     <Compile Include="Classes\BCF2\BcfAdapter.cs" />
     <Compile Include="Classes\BCF2\BcfContainer.cs" />
     <Compile Include="Classes\BCF2\BcfFile.cs" />
-    <Compile Include="Classes\BCF2\JiraDataForBcf2.cs" />
     <Compile Include="Classes\BCF2\Markup.cs" />
     <Compile Include="Classes\BCF2\Project.cs" />
     <Compile Include="Classes\BCF2\Utils.cs" />
@@ -99,6 +98,7 @@
     <Compile Include="Classes\JiraUtils.cs" />
     <Compile Include="Classes\JIRA\AutoCompleteQuery.cs" />
     <Compile Include="Classes\JIRA\AutoCompleteQueryResult.cs" />
+    <Compile Include="Classes\JIRA\Lead.cs" />
     <Compile Include="Classes\JIRA\ErrorMsg.cs" />
     <Compile Include="Classes\JIRA\Issues.cs" />
     <Compile Include="Classes\JIRA\IssueTransitions.cs" />

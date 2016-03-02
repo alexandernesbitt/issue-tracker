@@ -122,14 +122,31 @@ namespace ARUP.IssueTracker.Classes
                         newissue.fields.Add("issuetype", new { id = issuesJira[i].fields.issuetype.id });
                         newissue.fields.Add(MySettings.Get("guidfield"), issue.guid.ToString());
 
-                        if (issuesJira[i].fields.assignee != null)
-                            newissue.fields.Add("assignee", new { name = issuesJira[i].fields.assignee.name });
+                        // validate assignee name if present
+                        if (issuesJira[i].fields.assignee != null) 
+                        {
+                            if (!string.IsNullOrWhiteSpace(issuesJira[i].fields.assignee.name))
+                            {
+                                if (isAssigneeAssignable(issuesJira[i].fields.assignee.name, projectKey))
+                                {
+                                    newissue.fields.Add("assignee", new { name = issuesJira[i].fields.assignee.name });
+                                }
+                                else
+                                {
+                                    newissue.fields.Add("assignee", new { name = issuesJira[i].fields.creator.name });
+                                }
+                            }
+                        }                                              
+                            
 
                         if (issuesJira[i].fields.priority != null)
                             newissue.fields.Add("priority", new { id = issuesJira[i].fields.priority.id });
 
                         if (issuesJira[i].fields.components != null && issuesJira[i].fields.components.Any())
                             newissue.fields.Add("components",  issuesJira[i].fields.components );
+
+                        if (issuesJira[i].fields.labels != null && issuesJira[i].fields.labels.Any())
+                            newissue.fields.Add("labels", issuesJira[i].fields.labels);
 
 
                         request.AddBody(newissue);
@@ -283,6 +300,50 @@ namespace ARUP.IssueTracker.Classes
             {
                 MessageBox.Show("exception: " + ex1);
             }
+        }
+
+        /// <summary>
+        /// Check if the presented assignee is valid in a project.
+        /// </summary>
+        /// <param name="assigneeName">The (Arup/Jira) account name of the assignee</param>
+        /// <returns></returns>
+        private bool isAssigneeAssignable(string assigneeName, string projectKey)    
+        {
+            try 
+            {
+                List<User> userlist = new List<User>();
+                var maxresults = 1000;
+                for (var i = 0; i < 100; i++)
+                {
+                    var apicall = "user/assignable/search?project=" +
+                              projectKey + "&maxResults=" + maxresults + "&startAt=" + (i * maxresults);
+                    var request = new RestRequest(apicall, Method.GET);
+                    request.AddHeader("Content-Type", "application/json");
+                    request.RequestFormat = Arup.RestSharp.DataFormat.Json;
+                    request.OnBeforeDeserialization = resp => { resp.ContentType = "application/json"; };
+                    var response = JiraClient.Client.Execute<List<User>>(request);
+                    if (!RestCallback.Check(response) || !response.Data.Any())
+                        break;
+
+                    userlist.AddRange(response.Data);
+                    if (response.Data.Count < maxresults)
+                        break;
+                }
+
+                foreach (User user in userlist)
+                {
+                    if (user.name == assigneeName)
+                    {
+                        return true;
+                    }
+                }
+            }
+            catch(Exception ex)
+            {
+                MessageBox.Show(ex.ToString());
+            }
+
+            return false;            
         }
     }
 }
