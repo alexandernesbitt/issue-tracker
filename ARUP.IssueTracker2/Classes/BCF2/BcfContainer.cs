@@ -5,8 +5,10 @@ using System.ComponentModel;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using System.Text;
 using System.Windows;
 using System.Xml;
+using System.Xml.Schema;
 using System.Xml.Serialization;
 
 namespace ARUP.IssueTracker.Classes.BCF2
@@ -271,6 +273,7 @@ namespace ARUP.IssueTracker.Classes.BCF2
         // Process save file dialog box results
         if (string.IsNullOrWhiteSpace(filename))
           return false;
+
         var bcfProject = new ProjectExtension
         {
           Project = new Project
@@ -278,7 +281,7 @@ namespace ARUP.IssueTracker.Classes.BCF2
             Name =string.IsNullOrEmpty(bcffile.ProjectName) ? bcffile.Filename : bcffile.ProjectName,
             ProjectId = bcffile.ProjectId.Equals(Guid.Empty) ? Guid.NewGuid().ToString() : bcffile.ProjectId.ToString()
           },
-          ExtensionSchema = ""
+          ExtensionSchema = "ExtensionSchema.xsd"
            
         };
         var bcfVersion = new Version { VersionId = "2.0", DetailedVersion = "2.0 RC" };

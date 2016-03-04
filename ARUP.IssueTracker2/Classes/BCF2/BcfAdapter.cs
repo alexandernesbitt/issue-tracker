@@ -6,6 +6,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Xml;
+using System.Xml.Schema;
 
 namespace ARUP.IssueTracker.Classes
 {
@@ -297,8 +299,19 @@ namespace ARUP.IssueTracker.Classes
                 string ReportFolder = Path.Combine(Path.GetTempPath(), "BCFtemp", Path.GetRandomFileName());
                 bcf2.TempPath = ReportFolder;
 
+                if (!Directory.Exists(ReportFolder))
+                    Directory.CreateDirectory(ReportFolder);
+
                 bcf2.ProjectName = ((Project)(mainPan.jiraPan.projCombo.SelectedItem)).name;
                 //bcf2.ProjectId = ;      // Is there a guid for a Jira project?
+
+                //inject ExtensionSchema.xsd
+                List<string> statues = new List<string>();
+                mainPan.jiraPan.statusfilter.checkboxes.ForEach(o => statues.Add(o.Content.ToString()));
+                List<string> types = mainPan.jira.TypesCollection.Select(o => o.name).ToList();
+                List<string> priorities = mainPan.jira.PrioritiesCollection.Select(o => o.name).ToList();
+
+                WriteExtensionSchema(Path.Combine(ReportFolder, "ExtensionSchema.xsd"), types, statues, priorities);
 
                 int errors = 0;
 
@@ -647,6 +660,70 @@ namespace ARUP.IssueTracker.Classes
             };
 
             return bcf1;
+        }
+
+
+        /// <summary>
+        /// Write ExtensionSchema.xsd to the temp folder using available types, statuses, and priorities in a Jira project.
+        /// </summary>
+        private static void WriteExtensionSchema(string path, List<string> types, List<string> statuses, List<string> priorities)
+        {
+            try
+            {
+                XmlTextReader reader = new XmlTextReader("ExtensionSchema.xsd");
+                XmlSchema myschema = XmlSchema.Read(reader, ValidationCallback);
+                //myschema.Write(Console.Out);
+
+                XmlSchemaRedefine redefine = myschema.Includes[0] as XmlSchemaRedefine;
+                if (redefine != null)
+                {
+                    foreach(XmlSchemaSimpleType simpleType in redefine.Items)
+                    {
+                        if (simpleType.Name == "TopicType")
+                        {
+                            simpleType.Content = GetXmlSchemaSimpleTypeRestriction(types);
+                        }
+                        else if (simpleType.Name == "TopicStatus")
+                        {
+                            simpleType.Content = GetXmlSchemaSimpleTypeRestriction(statuses);
+                        }
+                        else if (simpleType.Name == "Priority")
+                        {
+                            simpleType.Content = GetXmlSchemaSimpleTypeRestriction(priorities);
+                        }
+                    }
+                }
+
+                FileStream file = new FileStream(path, FileMode.Create, FileAccess.ReadWrite);
+                XmlTextWriter xwriter = new XmlTextWriter(file, new UTF8Encoding());
+                xwriter.Formatting = Formatting.Indented;
+                myschema.Write(xwriter);
+                file.Close();
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show("exception: " + e);
+            }
+        }
+
+        private static XmlSchemaSimpleTypeRestriction GetXmlSchemaSimpleTypeRestriction(List<string> enumerations) 
+        {
+            XmlSchemaSimpleTypeRestriction restriction = new XmlSchemaSimpleTypeRestriction();
+            enumerations.ForEach(
+                e => restriction.Facets.Add(new XmlSchemaEnumerationFacet() { Value = e })
+            );
+
+            return restriction;            
+        }
+
+        private static void ValidationCallback(object sender, ValidationEventArgs args)
+        {
+            if (args.Severity == XmlSeverityType.Warning)
+                MessageBox.Show("WARNING: ");
+            else if (args.Severity == XmlSeverityType.Error)
+                MessageBox.Show("ERROR: ");
+
+            MessageBox.Show(args.Message);
         }
     }
 }
