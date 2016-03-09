@@ -20,48 +20,8 @@
 				<xs:enumeration value="Closed"/>
 				<xs:enumeration value="ReOpened"/>
 			</xs:restriction>
-		</xs:simpleType>
-		<!--Sample of a redefinition for the topic label-->
-		<xs:simpleType name="TopicLabel">
-			<xs:restriction base="TopicLabel">
-				<xs:enumeration value="Architecture"/>
-				<xs:enumeration value="Structure"/>
-				<xs:enumeration value="Mechanical"/>
-				<xs:enumeration value="Electrical"/>
-				<xs:enumeration value="Specifications"/>
-				<xs:enumeration value="Technology"/>
-			</xs:restriction>
-		</xs:simpleType>
-		<!--Sample of a redefinition for the snippet type-->
-		<xs:simpleType name="SnippetType">
-			<xs:restriction base="SnippetType">
-				<xs:enumeration value=".ifc"/>
-				<xs:enumeration value=".ifcXML"/>
-				<xs:enumeration value=".xlsx"/>
-			</xs:restriction>
-		</xs:simpleType>
-		<!--Sample of a redefinition for the topic priority-->
-		<xs:simpleType name="Priority">
-			<xs:restriction base="Priority">
-				<xs:enumeration value="1"/>
-				<xs:enumeration value="2"/>
-				<xs:enumeration value="3"/>
-				<xs:enumeration value="4"/>
-			</xs:restriction>
-		</xs:simpleType>
-			<!--List of UserId´s-->
-		<xs:simpleType name="UserIdType">
-			<xs:restriction base="UserIdType">
-				<xs:enumeration value="karl@mustermann.de"/>
-				<xs:enumeration value="hans@mustermann.de"/>
-				<xs:enumeration value="fritz@domain1.com"/>
-			</xs:restriction>
-		</xs:simpleType>		
+		</xs:simpleType>	
 	</xs:redefine>
 	<xs:element name="ExtendedTopicType" type="TopicType"/>
 	<xs:element name="ExtendedTopicStatus" type="TopicStatus"/>
-	<xs:element name="ExtendedTopicLabel" type="TopicLabel"/>
-	<xs:element name="ExtendedSnippetType" type="SnippetType"/>
-	<xs:element name="ExtendedPriority" type="Priority"/>
-	<xs:element name="ExtendedUserIdType" type="UserIdType"/>
 </xs:schema>

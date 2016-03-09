@@ -110,6 +110,7 @@
     <Compile Include="Classes\BCF\visinfo.cs" />
     <Compile Include="Classes\EventArgs.cs" />
     <Compile Include="Classes\JIRA\Transition.cs" />
+    <Compile Include="Classes\MetadataTables.cs" />
     <Compile Include="Classes\MySettings.cs" />
     <Compile Include="Classes\RestCallback.cs" />
     <Compile Include="Converters\AssigneeConverter.cs" />
@@ -284,9 +285,9 @@
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <None Include="Classes\BCF2\ExtensionSchema.xsd">
+    <EmbeddedResource Include="Classes\BCF2\ExtensionSchema.xsd">
       <SubType>Designer</SubType>
-    </None>
+    </EmbeddedResource>
     <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>

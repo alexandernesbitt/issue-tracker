@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Xml;
 using System.Xml.Schema;
+using System.Reflection;
 
 namespace ARUP.IssueTracker.Classes
 {
@@ -670,9 +671,12 @@ namespace ARUP.IssueTracker.Classes
         {
             try
             {
-                XmlTextReader reader = new XmlTextReader("ExtensionSchema.xsd");
+                var assembly = Assembly.GetExecutingAssembly();
+                var resourceName = "ARUP.IssueTracker.Classes.BCF2.ExtensionSchema.xsd";
+
+                Stream stream = assembly.GetManifestResourceStream(resourceName);
+                XmlTextReader reader = new XmlTextReader(stream);
                 XmlSchema myschema = XmlSchema.Read(reader, ValidationCallback);
-                //myschema.Write(Console.Out);
 
                 XmlSchemaRedefine redefine = myschema.Includes[0] as XmlSchemaRedefine;
                 if (redefine != null)
@@ -698,6 +702,8 @@ namespace ARUP.IssueTracker.Classes
                 XmlTextWriter xwriter = new XmlTextWriter(file, new UTF8Encoding());
                 xwriter.Formatting = Formatting.Indented;
                 myschema.Write(xwriter);
+
+                stream.Close();
                 file.Close();
             }
             catch (Exception e)
