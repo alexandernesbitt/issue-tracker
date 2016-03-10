@@ -55,20 +55,19 @@
   <ItemGroup>
     <Reference Include="Autodesk.Navisworks.Api, Version=13.0.1253.9, Culture=neutral, PublicKeyToken=d85e58fa5af9b484, processorArchitecture=AMD64">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\NWDLL2014\Autodesk.Navisworks.Api.dll</HintPath>
-      <Private>False</Private>
+      <HintPath>C:\Program Files\Autodesk\Navisworks Manage 2014\Autodesk.Navisworks.Api.dll</HintPath>
     </Reference>
     <Reference Include="Autodesk.Navisworks.ComApi, Version=13.0.1253.9, Culture=neutral, PublicKeyToken=d85e58fa5af9b484, processorArchitecture=AMD64">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\NWDLL2014\Autodesk.Navisworks.ComApi.dll</HintPath>
-      <Private>False</Private>
+      <HintPath>C:\Program Files\Autodesk\Navisworks Manage 2014\Autodesk.Navisworks.ComApi.dll</HintPath>
     </Reference>
     <Reference Include="Autodesk.Navisworks.Interop.ComApi, Version=13.0.1253.9, Culture=neutral, PublicKeyToken=d85e58fa5af9b484, processorArchitecture=AMD64">
       <SpecificVersion>False</SpecificVersion>
       <EmbedInteropTypes>True</EmbedInteropTypes>
-      <HintPath>..\..\NWDLL2014\Autodesk.Navisworks.Interop.ComApi.dll</HintPath>
+      <HintPath>C:\Program Files\Autodesk\Navisworks Manage 2014\Autodesk.Navisworks.Interop.ComApi.dll</HintPath>
     </Reference>
     <Reference Include="System" />
+    <Reference Include="System.Data" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
@@ -144,10 +143,7 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>xcopy /Y "$(TargetDir)*" "C:\Program Files\Autodesk\Navisworks Manage 2014\Plugins\$(TargetName)\"
-xcopy /Y "$(ProjectDir)..\ARUP.IssueTracker2\Assets\*" "C:\Program Files\Autodesk\Navisworks Manage 2014\Plugins\$(TargetName)\"
-mkdir "C:\Program Files\Autodesk\Navisworks Manage 2014\Plugins\$(TargetName)\en-US
-copy /Y "$(TargetDir)RibbonDefinition.xaml" "C:\Program Files\Autodesk\Navisworks Manage 2014\Plugins\$(TargetName)\en-US\"</PostBuildEvent>
+    <PostBuildEvent>copy /Y "$(TargetDir)ARUP.IssueTracker.Navisworks.dll" "C:\Program Files\Autodesk\Navisworks Manage 2014\Plugins\ARUP.IssueTracker.Navisworks\ARUP.IssueTracker.Navisworks.dll"</PostBuildEvent>
   </PropertyGroup>
   <!--<Import Project="$(SolutionDir)\.nuget\nuget.targets" />-->
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it.

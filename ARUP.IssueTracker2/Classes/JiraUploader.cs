@@ -62,6 +62,10 @@ namespace ARUP.IssueTracker.Classes
 
             XmlSerializer serializerV = new XmlSerializer(typeof(VisualizationInfo));
 
+            int newIssueCounter = 0;
+            int updateIssueCounter = 0;
+            int unchangedIssueCounter = 0;
+
             for (int i = 0; i < issues.Count(); i++)
             {
                 try
@@ -109,7 +113,7 @@ namespace ARUP.IssueTracker.Classes
                         request.AddHeader("Content-Type", "application/json");
                         request.RequestFormat = Arup.RestSharp.DataFormat.Json;
 
-
+                        newIssueCounter++;
                         var newissue =
                             new
                             {
@@ -203,24 +207,32 @@ namespace ARUP.IssueTracker.Classes
                             foreach (var c in issue.markup.Comment)
                             {
                                 string normalized1 = Regex.Replace(c.Comment1, @"\s", "");
-                                if (oldIssue.fields.comment.comments.Any(o => Regex.Replace(o.body, @"\s", "").Equals(normalized1,StringComparison.OrdinalIgnoreCase)))
+                                if (oldIssue.fields.comment.comments.Any(o => Regex.Replace(o.body, @"\s", "").Equals(normalized1, StringComparison.OrdinalIgnoreCase)))
+                                {
+                                    unchangedIssueCounter++;
                                     continue;
+                                }
 
                                 var request3 = new RestRequest("issue/" + oldIssue.key + "/comment", Method.POST);
                                 request3.AddHeader("Content-Type", "application/json");
-                                request3.RequestFormat =  Arup.RestSharp.DataFormat.Json;
+                                request3.RequestFormat = Arup.RestSharp.DataFormat.Json;
                                 var newcomment = new { body = c.Comment1 };
                                 request3.AddBody(newcomment);
                                 var response3 = JiraClient.Client.Execute<Comment2>(request3);
+
+                                updateIssueCounter++;
+
                                 if (!RestCallback.Check(response3))
                                     break;
                             }
                         }
+                        else 
+                        {
+                            unchangedIssueCounter++;
+                        }
                     }
 
                 } // END TRY
-
-
                 catch (System.Exception ex1)
                 {
                     MessageBox.Show("exception: " + ex1);
@@ -228,6 +240,9 @@ namespace ARUP.IssueTracker.Classes
 
 
             }// END LOOP
+
+            string msg = string.Format("{0} new issue(s) added, {1} issue(s) updated, and {2} issue(s) unchanged.", newIssueCounter, updateIssueCounter, unchangedIssueCounter);
+            MessageBox.Show(msg, "Success", MessageBoxButton.OK, MessageBoxImage.Information);
         }
         private string getProgressString(int i)
         {

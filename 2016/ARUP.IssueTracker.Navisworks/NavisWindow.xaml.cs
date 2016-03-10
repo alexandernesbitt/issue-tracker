@@ -110,28 +110,47 @@ namespace ARUP.IssueTracker.Navisworks
                 Tuple<List<IssueBCF>, List<Issue>> tup = AddIssue(mainPan.jira.Bcf.path, true);
                 if (tup == null)
                     return;
-                List<IssueBCF> issues = tup.Item1; ;
+                List<IssueBCF> issues = tup.Item1;
                 //int typeInt = tup.Item2;
                 if (issues != null && issues.Any())
                 {
+                    int newIssueCounter = 0;
+                    int updateIssueCounter = 0;
+                    int unchangedIssueCounter = 0;
+
                     foreach (var i in issues)
                     {
                         int indexOfExistingIssue = mainPan.jira.Bcf.Issues.ToList().FindIndex(issue => issue.guid == i.guid);
                         if (indexOfExistingIssue >= 0) // Update an exisiting issue with new comments
                         {
+                            int originalCommentNumber = mainPan.jira.Bcf.Issues[indexOfExistingIssue].markup.Comment.Count;
+
                             foreach(CommentBCF newComment in i.markup.Comment)
                             {
                                 if (!newComment.Comment1.Contains("CachedId"))
                                 {
                                     mainPan.jira.Bcf.Issues[indexOfExistingIssue].markup.Comment.Add(newComment);
                                 }
+                            }
+
+                            if (mainPan.jira.Bcf.Issues[indexOfExistingIssue].markup.Comment.Count == originalCommentNumber)
+                            {
+                                unchangedIssueCounter++;
+                            }
+                            else
+                            {
+                                updateIssueCounter++;
                             }                            
                         }
                         else // Create a new issue 
                         {
                             mainPan.jira.Bcf.Issues.Add(i);
+                            newIssueCounter++;
                         }                        
                     }
+
+                    string msg = string.Format("{0} new issue(s) added, {1} issue(s) updated, and {2} issue(s) unchanged.", newIssueCounter, updateIssueCounter, unchangedIssueCounter);
+                    MessageBox.Show(msg, "Success", MessageBoxButton.OK, MessageBoxImage.Information);
 
                     //mainPan.jira.Bcf.Issues = new System.Collections.ObjectModel.ObservableCollection<IssueBCF>(issues);
                     mainPan.jira.Bcf.HasBeenSaved = false;
@@ -246,9 +265,9 @@ namespace ARUP.IssueTracker.Navisworks
                         Issue issueJira = new Issue();
                         IssueBCF issue = new IssueBCF();
 
-                        // Check if this is a saved viewpoint which was previosly created from Jira
+                        // Check if this is a saved viewpoint which was previosly created from Jira/BCF
                         string jiraIssueGuid = GetMetadata(MetadataTables.JiraIssue, sv.Parent.Guid.ToString());
-                        if (!isBcf && !string.IsNullOrEmpty(jiraIssueGuid))  // update an existing Jira issue
+                        if (!string.IsNullOrEmpty(jiraIssueGuid))  // update an existing Jira (or BCF exported from Jira) issue
                         {
                             issue.guid = Guid.Parse(jiraIssueGuid);
                         }
@@ -1329,25 +1348,5 @@ namespace ARUP.IssueTracker.Navisworks
     }
 
         #endregion
-
-            private void Button_Click(object sender, RoutedEventArgs e)
-            {
-                try 
-                {
-                    int i = _oDoc.SavedViewpoints.ToSavedItemCollection().IndexOfDisplayName("Issues from BCF/Jira");
-                    FolderItem folder = _oDoc.SavedViewpoints.ToSavedItemCollection().ElementAt(i) as FolderItem;
-                    folder.Children.ToList().ForEach(issue =>
-                    {
-                        string str = issue.Guid.ToString() + " : " + GetMetadata(MetadataTables.JiraIssue, issue.Guid.ToString());
-                        MessageBox.Show(str);
-                    });
-                }
-                catch(Exception ex)
-                {
-                    MessageBox.Show(ex.ToString());
-                }
-                
-                
-            }
     }
 }

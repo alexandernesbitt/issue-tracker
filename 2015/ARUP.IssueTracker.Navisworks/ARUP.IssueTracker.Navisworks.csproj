@@ -55,20 +55,21 @@
   <ItemGroup>
     <Reference Include="Autodesk.Navisworks.Api, Version=13.0.1253.9, Culture=neutral, PublicKeyToken=d85e58fa5af9b484, processorArchitecture=AMD64">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\NWDLL2015\Autodesk.Navisworks.Api.dll</HintPath>
+      <HintPath>C:\Program Files\Autodesk\Navisworks Manage 2015\Autodesk.Navisworks.Api.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Autodesk.Navisworks.ComApi, Version=13.0.1253.9, Culture=neutral, PublicKeyToken=d85e58fa5af9b484, processorArchitecture=AMD64">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\NWDLL2015\Autodesk.Navisworks.ComApi.dll</HintPath>
+      <HintPath>C:\Program Files\Autodesk\Navisworks Manage 2015\Autodesk.Navisworks.ComApi.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Autodesk.Navisworks.Interop.ComApi, Version=13.0.1253.9, Culture=neutral, PublicKeyToken=d85e58fa5af9b484, processorArchitecture=AMD64">
       <SpecificVersion>False</SpecificVersion>
       <EmbedInteropTypes>True</EmbedInteropTypes>
-      <HintPath>..\..\NWDLL2015\Autodesk.Navisworks.Interop.ComApi.dll</HintPath>
+      <HintPath>C:\Program Files\Autodesk\Navisworks Manage 2015\Autodesk.Navisworks.Interop.ComApi.dll</HintPath>
     </Reference>
     <Reference Include="System" />
+    <Reference Include="System.Data" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
@@ -144,8 +145,7 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>
-    </PostBuildEvent>
+    <PostBuildEvent>copy /Y "$(TargetDir)ARUP.IssueTracker.Navisworks.dll" "C:\Program Files\Autodesk\Navisworks Manage 2015\Plugins\ARUP.IssueTracker.Navisworks\ARUP.IssueTracker.Navisworks.dll"</PostBuildEvent>
   </PropertyGroup>
   <!--<Import Project="$(SolutionDir)\.nuget\nuget.targets" />-->
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it.

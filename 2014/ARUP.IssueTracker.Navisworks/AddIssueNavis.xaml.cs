@@ -14,14 +14,14 @@ namespace ARUP.IssueTracker.Navisworks
     /// </summary>
     public partial class AddIssueNavis : Window
     {
-        private List<SavedViewpoint> savedViewpoints = new List<SavedViewpoint>();
+        private Dictionary<SavedViewpoint, string> savedViewpoints = new Dictionary<SavedViewpoint, string>();
         private ObservableCollection<Issuetype> typesCollection = new ObservableCollection<Issuetype>();
         private ObservableCollection<Component> compCollection = new ObservableCollection<Component>();
         private ObservableCollection<Priority> PrioritiesCollection = new ObservableCollection<Priority>();
         private List<User> assignees = new List<User>();
         public List<Component> SelectedComponents = new List<Component>();
 
-        public AddIssueNavis(List<SavedViewpoint> _savedViewpoints, ObservableCollection<Issuetype> _typesCollection,
+        public AddIssueNavis(Dictionary<SavedViewpoint, string> _savedViewpoints, ObservableCollection<Issuetype> _typesCollection,
             List<User> _assignees, ObservableCollection<Component> _compCollection, ObservableCollection<Priority> _PrioritiesCollection, bool comp, bool prior, bool assign)
         {
             InitializeComponent();

@@ -18,6 +18,10 @@ using Autodesk.Navisworks.Api;
 using ComBridge = Autodesk.Navisworks.Api.ComApi.ComApiBridge;
 using ComApi = Autodesk.Navisworks.Api.Interop.ComApi;
 using Com = Autodesk.Navisworks.Api.Interop.ComApi;
+using Autodesk.Navisworks.Api.DocumentParts;
+using Autodesk.Navisworks.Api.Data;
+using System.Data;
+using System.Xml.Serialization;
 
 namespace ARUP.IssueTracker.Navisworks
 {
@@ -30,6 +34,7 @@ namespace ARUP.IssueTracker.Navisworks
         //const double Feet = 3.2808;
         List<ModelItem> _elementList;
         readonly Document _oDoc = Autodesk.Navisworks.Api.Application.ActiveDocument;
+        FolderItem topFolder;
 
         public NavisWindow()
         {
@@ -48,6 +53,29 @@ namespace ARUP.IssueTracker.Navisworks
             mainPan.jiraPan.CreateSavedViewpointBtn.Click += new RoutedEventHandler(CreateSavedViewpointJira);
             mainPan.bcfPan.CreateSavedViewpointBtn.Click += new RoutedEventHandler(CreateSavedViewpointBCF);
 
+            //check if the top folder exists
+            int indexOfExistingTopFolder = _oDoc.SavedViewpoints.ToSavedItemCollection().IndexOfDisplayName("Issues from BCF/Jira");
+            if (indexOfExistingTopFolder >= 0)
+            {
+                topFolder = _oDoc.SavedViewpoints.ToSavedItemCollection().ElementAt(indexOfExistingTopFolder) as FolderItem;
+            }
+            else
+            {
+                using (Transaction trans = new Transaction(_oDoc, "Create Jira/BCF Folder"))
+                {
+                    topFolder = new FolderItem() { DisplayName = "Issues from BCF/Jira", Guid = Guid.NewGuid() };
+                    _oDoc.SavedViewpoints.AddCopy(topFolder);
+                    trans.Commit();
+
+                    // Note that we add a copy of the folder item here
+                    // Need to find and assign the top folder again
+                    indexOfExistingTopFolder = _oDoc.SavedViewpoints.ToSavedItemCollection().IndexOfDisplayName("Issues from BCF/Jira");
+                    if (indexOfExistingTopFolder >= 0)
+                    {
+                        topFolder = _oDoc.SavedViewpoints.ToSavedItemCollection().ElementAt(indexOfExistingTopFolder) as FolderItem;
+                    }
+                }
+            }
    
         }
         private void AddIssueJira(object sender, EventArgs e)
@@ -82,14 +110,48 @@ namespace ARUP.IssueTracker.Navisworks
                 Tuple<List<IssueBCF>, List<Issue>> tup = AddIssue(mainPan.jira.Bcf.path, true);
                 if (tup == null)
                     return;
-                List<IssueBCF> issues = tup.Item1; ;
+                List<IssueBCF> issues = tup.Item1;
                 //int typeInt = tup.Item2;
                 if (issues != null && issues.Any())
                 {
+                    int newIssueCounter = 0;
+                    int updateIssueCounter = 0;
+                    int unchangedIssueCounter = 0;
+
                     foreach (var i in issues)
                     {
-                        mainPan.jira.Bcf.Issues.Add(i);
+                        int indexOfExistingIssue = mainPan.jira.Bcf.Issues.ToList().FindIndex(issue => issue.guid == i.guid);
+                        if (indexOfExistingIssue >= 0) // Update an exisiting issue with new comments
+                        {
+                            int originalCommentNumber = mainPan.jira.Bcf.Issues[indexOfExistingIssue].markup.Comment.Count;
+
+                            foreach (CommentBCF newComment in i.markup.Comment)
+                            {
+                                if (!newComment.Comment1.Contains("CachedId"))
+                                {
+                                    mainPan.jira.Bcf.Issues[indexOfExistingIssue].markup.Comment.Add(newComment);
+                                }
+                            }
+
+                            if (mainPan.jira.Bcf.Issues[indexOfExistingIssue].markup.Comment.Count == originalCommentNumber)
+                            {
+                                unchangedIssueCounter++;
+                            }
+                            else
+                            {
+                                updateIssueCounter++;
+                            }
+                        }
+                        else // Create a new issue 
+                        {
+                            mainPan.jira.Bcf.Issues.Add(i);
+                            newIssueCounter++;
+                        }
                     }
+
+                    string msg = string.Format("{0} new issue(s) added, {1} issue(s) updated, and {2} issue(s) unchanged.", newIssueCounter, updateIssueCounter, unchangedIssueCounter);
+                    MessageBox.Show(msg, "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+
                     //mainPan.jira.Bcf.Issues = new System.Collections.ObjectModel.ObservableCollection<IssueBCF>(issues);
                     mainPan.jira.Bcf.HasBeenSaved = false;
                     //string projFilename = !string.IsNullOrEmpty(_oDoc.FileName) ? System.IO.Path.GetFileNameWithoutExtension(_oDoc.FileName) : "New BCF Report";
@@ -153,9 +215,25 @@ namespace ARUP.IssueTracker.Navisworks
 
                 }
 
+                // Key: saved viewpoints; Value: BCF/Jira issue title (if it has)
+                Dictionary<SavedViewpoint, string> savedViewpointsAndIssueTitles = new Dictionary<SavedViewpoint, string>();
+                _savedViewpoints.ForEach(sv =>
+                {
+                    string originalIssueTitle = null;
+                    if (sv.Parent != null)
+                    {
+                        if (sv.Parent.Parent != null)
+                        {
+                            if (sv.Parent.Parent.DisplayName == "Issues from BCF/Jira")
+                            {
+                                originalIssueTitle = sv.Parent.DisplayName;
+                            }
+                        }
+                    }
+                    savedViewpointsAndIssueTitles.Add(sv, originalIssueTitle);
+                });
 
-
-                AddIssueNavis ain = new AddIssueNavis(_savedViewpoints, types, assignees, components, priorities, noCom, noPrior, noAssign);
+                AddIssueNavis ain = new AddIssueNavis(savedViewpointsAndIssueTitles, types, assignees, components, priorities, noCom, noPrior, noAssign);
                 if (isBcf)
                     ain.JiraFieldsBox.Visibility = System.Windows.Visibility.Collapsed;
                 ain.WindowStartupLocation = System.Windows.WindowStartupLocation.CenterScreen;
@@ -186,7 +264,15 @@ namespace ARUP.IssueTracker.Navisworks
                     foreach (var sv in savedViewpointsImport)
                     {
                         Issue issueJira = new Issue();
-                        if (!isBcf)
+                        IssueBCF issue = new IssueBCF();
+
+                        // Check if this is a saved viewpoint which was previosly created from Jira/BCF
+                        string jiraIssueGuid = GetMetadata(MetadataTables.JiraIssue, sv.Parent.Guid.ToString());
+                        if (!string.IsNullOrEmpty(jiraIssueGuid))  // update an existing Jira (or BCF exported from Jira) issue
+                        {
+                            issue.guid = Guid.Parse(jiraIssueGuid);
+                        }
+                        else if (!isBcf)  // new Jira issue
                         {
                             issueJira.fields = new Fields();
                             issueJira.fields.issuetype = (Issuetype)ain.issueTypeCombo.SelectedItem;
@@ -204,7 +290,6 @@ namespace ARUP.IssueTracker.Navisworks
                             }
                         }
 
-                        IssueBCF issue = new IssueBCF();
                         string folderIssue = Path.Combine(path, issue.guid.ToString());
                         if (!Directory.Exists(folderIssue))
                             Directory.CreateDirectory(folderIssue);
@@ -215,7 +300,32 @@ namespace ARUP.IssueTracker.Navisworks
                         issue.viewpoint = generateViewpoint(sv.Viewpoint, elemCheck);
                         generateSnapshot(folderIssue);
 
-                        issue.markup.Topic.Title = sv.DisplayName;
+                        string originalIssueTitle = null;
+                        // Check if this is a saved viewpoint which was previosly created from BCF
+                        if (isBcf && sv.Parent != null)
+                        {
+                            string originalBcfTopic = GetMetadata(MetadataTables.BcfTopic, sv.Parent.Guid.ToString());
+                            if (!string.IsNullOrEmpty(originalBcfTopic))
+                            {
+                                var serializer = new XmlSerializer(typeof(ARUP.IssueTracker.Classes.BCF2.Topic));
+                                using (TextReader reader = new StringReader(originalBcfTopic))
+                                {
+                                    ARUP.IssueTracker.Classes.BCF2.Topic topic = serializer.Deserialize(reader) as ARUP.IssueTracker.Classes.BCF2.Topic;
+                                    if (topic != null)
+                                    {
+                                        issue.guid = Guid.Parse(topic.Guid);
+                                    }
+                                }
+                            }
+
+                            // Check if it has an original BCF issue title
+                            if (savedViewpointsAndIssueTitles.ContainsKey(sv))
+                            {
+                                originalIssueTitle = savedViewpointsAndIssueTitles[sv];
+                            }
+                        }
+
+                        issue.markup.Topic.Title = string.IsNullOrEmpty(originalIssueTitle) ? sv.DisplayName : originalIssueTitle;
                         issue.markup.Header[0].IfcProject = "";
                         string projFilename = !string.IsNullOrEmpty(_oDoc.FileName) ? System.IO.Path.GetFileName(_oDoc.FileName) : "";
                         issue.markup.Header[0].Filename = projFilename;
@@ -224,24 +334,26 @@ namespace ARUP.IssueTracker.Navisworks
                         //comment
                         if (sv.Comments.Any())
                         {
-
                             foreach (var comm in sv.Comments)
                             {
-                                string commentMetadata = string.Empty;
-                                commentMetadata += comm.Body + Environment.NewLine;
-                                commentMetadata += string.Format("<OriginalAuthor>{0}</OriginalAuthor>{1}", comm.Author, Environment.NewLine);
-                                commentMetadata += string.Format("<CommentStatus>{0}</CommentStatus>{1}", comm.Status, Environment.NewLine);
-                                commentMetadata += string.Format("<CreationDate>{0}</CreationDate>{1}", comm.CreationDate, Environment.NewLine);
-                                var c = new CommentBCF
+                                if (!comm.Body.Contains("CachedId") || isBcf)
                                 {
-                                    Comment1 = commentMetadata,
-                                    Topic = new CommentTopic {Guid = issue.guid.ToString()}
-                                };
-                                ;
-                                c.Date = DateTime.Now;
-                                c.VerbalStatus = comm.Status.ToString();
-                                c.Author = (string.IsNullOrWhiteSpace(mainPan.jira.Self.displayName)) ? MySettings.Get("BCFusername") : mainPan.jira.Self.displayName;
-                                issue.markup.Comment.Add(c);
+                                    string commentMetadata = string.Empty;
+                                    commentMetadata += comm.Body + Environment.NewLine;
+                                    commentMetadata += string.Format("<OriginalAuthor>{0}</OriginalAuthor>{1}", comm.Author, Environment.NewLine);
+                                    commentMetadata += string.Format("<CommentStatus>{0}</CommentStatus>{1}", comm.Status, Environment.NewLine);
+                                    commentMetadata += string.Format("<CreationDate>{0}</CreationDate>{1}", comm.CreationDate, Environment.NewLine);
+                                    var c = new CommentBCF
+                                    {
+                                        Comment1 = commentMetadata,
+                                        Topic = new CommentTopic { Guid = issue.guid.ToString() }
+                                    };
+                                    ;
+                                    c.Date = DateTime.Now;
+                                    c.VerbalStatus = comm.Status.ToString();
+                                    c.Author = (string.IsNullOrWhiteSpace(mainPan.jira.Self.displayName)) ? MySettings.Get("BCFusername") : mainPan.jira.Self.displayName;
+                                    issue.markup.Comment.Add(c);
+                                }
                             }
                         }
                         issues.Add(issue);
@@ -721,63 +833,183 @@ namespace ARUP.IssueTracker.Navisworks
 
         private void CreateSavedViewpointJira(object sender, EventArgs e)
         {
-            if (mainPan.jiraPan.issueList.SelectedItems.Count == 0)
+            using (Transaction trans = new Transaction(_oDoc, "Save Viewpoints from Jira"))
             {
-                MessageBox.Show("Please select one or more Isses first.", "No Issue selected", MessageBoxButton.OK, MessageBoxImage.Error);
-                return;
+                CreateSavedViewpoint(true);
+                trans.Commit();
             }
-            CreateSavedViewpoint(true);
         }
 
         private void CreateSavedViewpointBCF(object sender, EventArgs e)
         {
-            CreateSavedViewpoint(false);
+            using (Transaction trans = new Transaction(_oDoc, "Save Viewpoints from BCF"))
+            {
+                CreateSavedViewpoint(false);
+                trans.Commit();
+            }
         }
 
-        private void CreateSavedViewpoint(bool isJira)
+        private int CreateSavedViewpoint(bool isJira)
         {
-            List<Autodesk.Navisworks.Api.SavedViewpoint> savedViewpoints = new List<Autodesk.Navisworks.Api.SavedViewpoint>();
-            int errors = 0;
-
-            if (isJira)
+            try
             {
-                if (mainPan.jiraPan.issueList.SelectedItems.Count == 0)
+                //temp containers
+                List<Autodesk.Navisworks.Api.FolderItem> folderItems = new List<Autodesk.Navisworks.Api.FolderItem>();
+
+                int errors = 0;
+
+                if (isJira)
                 {
-                    MessageBox.Show("Please select an issue.", "No Issue", MessageBoxButton.OK, MessageBoxImage.Error);
-                    return;
-                }
-                foreach (object t in mainPan.jiraPan.issueList.SelectedItems)
-                {
-                    int index = mainPan.jiraPan.issueList.Items.IndexOf(t);
-                    Issue issue = mainPan.jira.IssuesCollection[index];
-                    if (string.IsNullOrWhiteSpace(issue.viewpoint))
+                    if (mainPan.jiraPan.issueList.SelectedItems.Count == 0)
                     {
-                        errors++;
-                        continue;
+                        MessageBox.Show("Please select an issue.", "No Issue", MessageBoxButton.OK, MessageBoxImage.Error);
+                        return -1;
                     }
-                    // Save viewpoint
-                    string viewpointPath = string.Empty;
-                    try
+                    foreach (object t in mainPan.jiraPan.issueList.SelectedItems)
                     {
-                        string ReportFolder = Path.Combine(Path.GetTempPath(), "BCFtemp");
-                        if (!Directory.Exists(ReportFolder))
-                            Directory.CreateDirectory(ReportFolder);
-                        string issueFolder = Path.Combine(ReportFolder, issue.fields.guid);
-                        if (!Directory.Exists(issueFolder))
-                            Directory.CreateDirectory(issueFolder);
-                        viewpointPath = Path.Combine(issueFolder, "viewpoint.bcfv");
-                        mainPan.saveSnapshotViewpoint(issue.viewpoint, viewpointPath);
-                    }
-                    catch (Exception ex)
-                    {
-                        errors++;
-                        continue;
-                    }
-                    if (File.Exists(viewpointPath))
-                    {
+                        int index = mainPan.jiraPan.issueList.Items.IndexOf(t);
+                        Issue issue = mainPan.jira.IssuesCollection[index];
+
+                        string issueFolderName = string.Format("{0}: {1}", issue.key, issue.fields.summary);
+
+                        if (string.IsNullOrWhiteSpace(issue.viewpoint))
+                        {
+                            errors++;
+                            continue;
+                        }
+                        // Save viewpoint file
+                        string viewpointPath = string.Empty;
                         try
                         {
-                            ARUP.IssueTracker.Classes.BCF2.VisualizationInfo issueViewpoint = ARUP.IssueTracker.Classes.BCF2.BcfContainer.DeserializeViewpoint(viewpointPath);
+                            string ReportFolder = Path.Combine(Path.GetTempPath(), "BCFtemp");
+                            if (!Directory.Exists(ReportFolder))
+                                Directory.CreateDirectory(ReportFolder);
+                            string issueFolder = Path.Combine(ReportFolder, issue.fields.guid);
+                            if (!Directory.Exists(issueFolder))
+                                Directory.CreateDirectory(issueFolder);
+                            viewpointPath = Path.Combine(issueFolder, "viewpoint.bcfv");
+                            mainPan.saveSnapshotViewpoint(issue.viewpoint, viewpointPath);
+                        }
+                        catch (Exception ex)
+                        {
+                            errors++;
+                            continue;
+                        }
+                        if (File.Exists(viewpointPath))
+                        {
+                            try
+                            {
+                                ARUP.IssueTracker.Classes.BCF2.VisualizationInfo issueViewpoint = ARUP.IssueTracker.Classes.BCF2.BcfContainer.DeserializeViewpoint(viewpointPath);
+                                if (issueViewpoint == null)
+                                {
+                                    errors++;
+                                    continue;
+                                }
+                                Viewpoint navisworksViewpoint = GetViewpointFromVisualizationInfo(issueViewpoint);
+                                if (navisworksViewpoint == null)
+                                {
+                                    errors++;
+                                    continue;
+                                }
+                                else
+                                {
+                                    Guid folderGuid = Guid.NewGuid();
+                                    FolderItem issueFolder = new FolderItem() { DisplayName = issueFolderName, Guid = folderGuid };
+
+                                    //save issue guid to DB
+                                    SaveMetadata(MetadataTables.JiraIssue, folderGuid.ToString(), issue.fields.guid);
+
+                                    // save issue metadata to a folder comment
+                                    string issueMetadata = string.Empty;
+                                    if (!string.IsNullOrWhiteSpace(issue.fields.summary))
+                                        issueMetadata += string.Format("<Summary>{0}</Summary>{1}", issue.fields.summary, Environment.NewLine);
+                                    if (!string.IsNullOrWhiteSpace(issue.fields.description))
+                                        issueMetadata += string.Format("<Description>{0}</Description>{1}", issue.fields.description, Environment.NewLine);
+                                    if (issue.fields.issuetype != null)
+                                        issueMetadata += string.Format("<Type>{0}</Type>{1}", issue.fields.issuetype.name, Environment.NewLine);
+                                    if (issue.fields.status != null)
+                                        issueMetadata += string.Format("<Status>{0}</Status>{1}", issue.fields.status.name, Environment.NewLine);
+                                    if (issue.fields.priority != null)
+                                        issueMetadata += string.Format("<Priority>{0}</Priority>{1}", issue.fields.priority.name, Environment.NewLine);
+                                    if (issue.fields.creator != null)
+                                        issueMetadata += string.Format("<Creator>{0}</Creator>{1}", issue.fields.creator.displayName, Environment.NewLine);
+                                    if (!string.IsNullOrWhiteSpace(issue.fields.created))
+                                        issueMetadata += string.Format("<Created>{0}</Created>{1}", issue.fields.created, Environment.NewLine);
+                                    if (issue.fields.assignee != null)
+                                        issueMetadata += string.Format("<Assignee>{0}</Assignee>{1}", issue.fields.assignee.displayName, Environment.NewLine);
+                                    if (!string.IsNullOrWhiteSpace(issue.fields.updated))
+                                        issueMetadata += string.Format("<Updated>{0}</Updated>{1}", issue.fields.updated, Environment.NewLine);
+
+                                    issueFolder.Comments.Add(new Autodesk.Navisworks.Api.Comment(issueMetadata, Autodesk.Navisworks.Api.CommentStatus.New, issue.fields.creator.displayName));
+
+                                    // save issue comments to Navis comments
+                                    SavedViewpoint savedViewpoint = new SavedViewpoint(navisworksViewpoint);
+                                    if (issue.fields.comment.total > 0)
+                                    {
+                                        foreach (Comment2 jiraComment in issue.fields.comment.comments)
+                                        {
+                                            if (!string.IsNullOrWhiteSpace(jiraComment.body))
+                                            {
+                                                string commentMetadata = string.Empty;
+                                                commentMetadata += jiraComment.body;
+                                                commentMetadata += string.Format("{0}<Updated>{1}</Updated>", Environment.NewLine, jiraComment.updated);
+                                                commentMetadata += string.Format("{0}<CachedId>{1}</CachedId>", Environment.NewLine, jiraComment.id);
+                                                Autodesk.Navisworks.Api.Comment navisworksComment = new Autodesk.Navisworks.Api.Comment(commentMetadata, Autodesk.Navisworks.Api.CommentStatus.New, jiraComment.updateAuthor.displayName);
+                                                savedViewpoint.Comments.Add(navisworksComment);
+                                            }
+                                        }
+                                    }
+                                    Guid savedViewpointGuid = Guid.NewGuid();
+                                    savedViewpoint.DisplayName = "Snapshot 1";
+                                    savedViewpoint.Guid = savedViewpointGuid;
+
+                                    //save viewpoint to DB
+                                    SaveMetadata(MetadataTables.Viewpoint, savedViewpointGuid.ToString(), File.ReadAllText(viewpointPath));
+
+                                    //save all viewpoints to the issue folder
+                                    issueFolder.Children.Add(savedViewpoint);
+                                    //save the issue folder to folder collection
+                                    folderItems.Add(issueFolder);
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                MessageBox.Show(ex.ToString());
+                                errors++;
+                                continue;
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    if (mainPan.bcfPan.issueList.SelectedItems.Count == 0)
+                    {
+                        MessageBox.Show("Please select an issue.", "No Issue", MessageBoxButton.OK, MessageBoxImage.Error);
+                        return -1;
+                    }
+                    foreach (object t in mainPan.bcfPan.issueList.SelectedItems)
+                    {
+                        int index = mainPan.bcfPan.issueList.Items.IndexOf(t);
+                        IssueBCF issueBcf = mainPan.jira.Bcf.Issues[index];
+
+                        if (issueBcf.bcf2Markup == null)
+                        {
+                            MessageBox.Show("BCF 1.0 is not supported for this function.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                            errors++;
+                            continue;
+                        }
+                        if (issueBcf.viewpoint == null)
+                        {
+                            errors++;
+                            continue;
+                        }
+
+                        string issueFolderName = string.Format("{0} ({1})", issueBcf.bcf2Markup.Topic.Title, issueBcf.bcf2Markup.Topic.Guid);
+
+                        try
+                        {
+                            ARUP.IssueTracker.Classes.VisualizationInfo issueViewpoint = issueBcf.viewpoint;
                             if (issueViewpoint == null)
                             {
                                 errors++;
@@ -791,94 +1023,14 @@ namespace ARUP.IssueTracker.Navisworks
                             }
                             else
                             {
-                                SavedViewpoint savedViewpoint = new SavedViewpoint(navisworksViewpoint);
-                                // save issue metadata to a comment
+                                Guid folderGuid = Guid.NewGuid();
+                                FolderItem issueFolder = new FolderItem() { DisplayName = issueFolderName, Guid = folderGuid };
+
+                                //save issue guid to DB
+                                SaveMetadata(MetadataTables.BcfTopic, folderGuid.ToString(), ToXML(issueBcf.bcf2Markup.Topic));
+
+                                // save issue metadata to the issue folder
                                 string issueMetadata = string.Empty;
-                                if (!string.IsNullOrWhiteSpace(issue.fields.summary))
-                                    issueMetadata += string.Format("<Summary>{0}</Summary>{1}", issue.fields.summary, Environment.NewLine);
-                                if (!string.IsNullOrWhiteSpace(issue.fields.description))
-                                    issueMetadata += string.Format("<Description>{0}</Description>{1}", issue.fields.description, Environment.NewLine);
-                                if (issue.fields.issuetype != null)
-                                    issueMetadata += string.Format("<Type>{0}</Type>{1}", issue.fields.issuetype.name, Environment.NewLine);
-                                if (issue.fields.status != null)
-                                    issueMetadata += string.Format("<Status>{0}</Status>{1}", issue.fields.status.name, Environment.NewLine);
-                                if (issue.fields.priority != null)
-                                    issueMetadata += string.Format("<Priority>{0}</Priority>{1}", issue.fields.priority.name, Environment.NewLine);
-                                if (issue.fields.creator != null)
-                                    issueMetadata += string.Format("<Creator>{0}</Creator>{1}", issue.fields.creator.displayName, Environment.NewLine);
-                                if (!string.IsNullOrWhiteSpace(issue.fields.created))
-                                    issueMetadata += string.Format("<Created>{0}</Created>{1}", issue.fields.created, Environment.NewLine);
-                                if (issue.fields.assignee != null)
-                                    issueMetadata += string.Format("<Assignee>{0}</Assignee>{1}", issue.fields.assignee.displayName, Environment.NewLine);
-                                if (!string.IsNullOrWhiteSpace(issue.fields.updated))
-                                    issueMetadata += string.Format("<Updated>{0}</Updated>{1}", issue.fields.updated, Environment.NewLine);
-
-                                savedViewpoint.Comments.Add(new Autodesk.Navisworks.Api.Comment(issueMetadata, Autodesk.Navisworks.Api.CommentStatus.New, issue.fields.creator.displayName));
-
-                                // save issue comments to Navis comments
-                                if (issue.fields.comment.total > 0)
-                                {
-                                    foreach (Comment2 jiraComment in issue.fields.comment.comments)
-                                    {
-                                        if (!string.IsNullOrWhiteSpace(jiraComment.body))
-                                        {
-                                            string commentMetadata = string.Empty;
-                                            commentMetadata += jiraComment.body;
-                                            commentMetadata += string.Format("{0}<Updated>{1}</Updated>", Environment.NewLine, jiraComment.updated);
-                                            Autodesk.Navisworks.Api.Comment navisworksComment = new Autodesk.Navisworks.Api.Comment(commentMetadata, Autodesk.Navisworks.Api.CommentStatus.New, jiraComment.updateAuthor.displayName);
-                                            savedViewpoint.Comments.Add(navisworksComment);
-                                        }
-                                    }
-                                }
-                                savedViewpoint.DisplayName = string.Format("{0}_{1}", mainPan.jira.ProjectsCollection[mainPan.jiraPan.projIndex].name, issue.key);
-                                savedViewpoints.Add(savedViewpoint);
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            errors++;
-                            continue;
-                        }
-                    }
-                }
-            }
-            else
-            {
-                if (mainPan.bcfPan.issueList.SelectedItems.Count == 0)
-                {
-                    MessageBox.Show("Please select an issue.", "No Issue", MessageBoxButton.OK, MessageBoxImage.Error);
-                    return;
-                }
-                foreach (object t in mainPan.bcfPan.issueList.SelectedItems)
-                {
-                    int index = mainPan.bcfPan.issueList.Items.IndexOf(t);
-                    IssueBCF issueBcf = mainPan.jira.Bcf.Issues[index];
-                    if (issueBcf.viewpoint == null)
-                    {
-                        errors++;
-                        continue;
-                    }
-                    try
-                    {
-                        ARUP.IssueTracker.Classes.VisualizationInfo issueViewpoint = issueBcf.viewpoint;
-                        if (issueViewpoint == null)
-                        {
-                            errors++;
-                            continue;
-                        }
-                        Viewpoint navisworksViewpoint = GetViewpointFromVisualizationInfo(issueViewpoint);
-                        if (navisworksViewpoint == null)
-                        {
-                            errors++;
-                            continue;
-                        }
-                        else
-                        {
-                            SavedViewpoint savedViewpoint = new SavedViewpoint(navisworksViewpoint);
-                            // save issue metadata to a comment
-                            string issueMetadata = string.Empty;
-                            if (issueBcf.bcf2Markup != null)
-                            {
                                 if (!string.IsNullOrWhiteSpace(issueBcf.bcf2Markup.Topic.Title))
                                     issueMetadata += string.Format("<Title>{0}</Title>{1}", issueBcf.bcf2Markup.Topic.Title, Environment.NewLine);
                                 if (!string.IsNullOrWhiteSpace(issueBcf.bcf2Markup.Topic.Description))
@@ -901,53 +1053,160 @@ namespace ARUP.IssueTracker.Navisworks
                                     issueMetadata += string.Format("<ModifiedDate>{0}</ModifiedDate>{1}", issueBcf.bcf2Markup.Topic.ModifiedDate.ToString(), Environment.NewLine);
                                 if (!string.IsNullOrWhiteSpace(issueBcf.bcf2Markup.Topic.ReferenceLink))
                                     issueMetadata += string.Format("<ReferenceLink>{0}</ReferenceLink>{1}", issueBcf.bcf2Markup.Topic.ReferenceLink.ToString(), Environment.NewLine);
-                            }
 
-                            if (!string.IsNullOrWhiteSpace(issueMetadata))
-                                savedViewpoint.Comments.Add(new Autodesk.Navisworks.Api.Comment(issueMetadata, Autodesk.Navisworks.Api.CommentStatus.New, issueBcf.bcf2Markup.Topic.CreationAuthor));
+                                if (!string.IsNullOrWhiteSpace(issueMetadata))
+                                    issueFolder.Comments.Add(new Autodesk.Navisworks.Api.Comment(issueMetadata, Autodesk.Navisworks.Api.CommentStatus.New, issueBcf.bcf2Markup.Topic.CreationAuthor));
 
-                            // save issue comments to Navis comment
-                            if (issueBcf.bcf2Markup.Comment.Count > 0)
-                            {
-                                foreach (ARUP.IssueTracker.Classes.BCF2.Comment bcf2Comment in issueBcf.bcf2Markup.Comment)
+                                // save issue comments to Navis comment
+                                SavedViewpoint savedViewpoint = new SavedViewpoint(navisworksViewpoint);
+                                if (issueBcf.bcf2Markup.Comment.Count > 0)
                                 {
-                                    if (!string.IsNullOrWhiteSpace(bcf2Comment.Comment1))
+                                    foreach (ARUP.IssueTracker.Classes.BCF2.Comment bcf2Comment in issueBcf.bcf2Markup.Comment)
                                     {
-                                        string commentMetadata = string.Empty;
-                                        commentMetadata += bcf2Comment.Comment1;
-                                        commentMetadata += string.Format("{0}<Author>{1}</Author>", Environment.NewLine, bcf2Comment.Author);
-                                        commentMetadata += string.Format("{0}<Date>{1}</Date>", Environment.NewLine, bcf2Comment.Date);
-                                        commentMetadata += string.Format("{0}<Status>{1}</Status>", Environment.NewLine, bcf2Comment.Status);
-                                        if (!string.IsNullOrWhiteSpace(bcf2Comment.VerbalStatus))
-                                            commentMetadata += string.Format("{0}<VerbalStatus>{1}</VerbalStatus>", Environment.NewLine, bcf2Comment.VerbalStatus);
-                                        if (!string.IsNullOrWhiteSpace(bcf2Comment.ModifiedAuthor))
-                                            commentMetadata += string.Format("{0}<ModifiedAuthor>{1}</ModifiedAuthor>", Environment.NewLine, bcf2Comment.ModifiedAuthor);
-                                        if (bcf2Comment.ModifiedDateSpecified)
-                                            commentMetadata += string.Format("{0}<ModifiedDate>{1}</ModifiedDate>", Environment.NewLine, bcf2Comment.ModifiedDate);
-                                        Autodesk.Navisworks.Api.Comment navisworksComment = new Autodesk.Navisworks.Api.Comment(commentMetadata, Autodesk.Navisworks.Api.CommentStatus.New, bcf2Comment.Author);
-                                        savedViewpoint.Comments.Add(navisworksComment);
+                                        if (!string.IsNullOrWhiteSpace(bcf2Comment.Comment1))
+                                        {
+                                            string commentMetadata = string.Empty;
+                                            commentMetadata += bcf2Comment.Comment1;
+                                            commentMetadata += string.Format("{0}<Author>{1}</Author>", Environment.NewLine, bcf2Comment.Author);
+                                            commentMetadata += string.Format("{0}<Date>{1}</Date>", Environment.NewLine, bcf2Comment.Date);
+                                            commentMetadata += string.Format("{0}<Status>{1}</Status>", Environment.NewLine, bcf2Comment.Status);
+                                            if (!string.IsNullOrWhiteSpace(bcf2Comment.VerbalStatus))
+                                                commentMetadata += string.Format("{0}<VerbalStatus>{1}</VerbalStatus>", Environment.NewLine, bcf2Comment.VerbalStatus);
+                                            if (!string.IsNullOrWhiteSpace(bcf2Comment.ModifiedAuthor))
+                                                commentMetadata += string.Format("{0}<ModifiedAuthor>{1}</ModifiedAuthor>", Environment.NewLine, bcf2Comment.ModifiedAuthor);
+                                            if (bcf2Comment.ModifiedDateSpecified)
+                                                commentMetadata += string.Format("{0}<ModifiedDate>{1}</ModifiedDate>", Environment.NewLine, bcf2Comment.ModifiedDate);
+                                            commentMetadata += string.Format("{0}<CachedId>{1}</CachedId>", Environment.NewLine, bcf2Comment.Guid);
+                                            Autodesk.Navisworks.Api.Comment navisworksComment = new Autodesk.Navisworks.Api.Comment(commentMetadata, Autodesk.Navisworks.Api.CommentStatus.New, bcf2Comment.Author);
+                                            savedViewpoint.Comments.Add(navisworksComment);
+
+                                            //save cached id and comment to DB
+                                            SaveMetadata(MetadataTables.BcfComment, bcf2Comment.Guid, ToXML(bcf2Comment));
+                                        }
                                     }
                                 }
+                                Guid savedViewpointGuid = Guid.NewGuid();
+                                savedViewpoint.DisplayName = "Snapshot 1";
+                                savedViewpoint.Guid = savedViewpointGuid;
+
+                                //save viewpoint to DB
+                                SaveMetadata(MetadataTables.Viewpoint, savedViewpointGuid.ToString(), ToXML(issueBcf.bcf2Viewpoint));
+
+                                //save all viewpoints to the issue folder
+                                issueFolder.Children.Add(savedViewpoint);
+                                //save the issue folder to folder collection
+                                folderItems.Add(issueFolder);
                             }
-                            savedViewpoint.DisplayName = string.Format("{0}_{1}", mainPan.jira.ProjectsCollection[mainPan.jiraPan.projIndex].name, issueBcf.guid.ToString());
-                            savedViewpoints.Add(savedViewpoint);
+                        }
+                        catch (Exception ex)
+                        {
+                            errors++;
+                            continue;
                         }
                     }
-                    catch (Exception ex)
-                    {
-                        errors++;
-                        continue;
-                    }
+                }
+
+                // add new issues
+                folderItems.ForEach(f => _oDoc.SavedViewpoints.AddCopy(this.topFolder, f));
+
+                if (errors != 0)
+                {
+                    MessageBox.Show(errors + " viewpoints(s) were not generated because of missing files or wrong formats of viewpoint.bcfv.",
+                        "Warning", MessageBoxButton.OK, MessageBoxImage.Warning);
+                }
+
+                return -1;
+
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString());
+                return -1;
+            }
+
+        }
+
+        /// <summary>
+        /// Save metadata to embedded document database when creating saved viewpoints from Jira/BCF
+        /// </summary>
+        /// <param name="tableName"></param>
+        /// <param name="id">GUID or comment ID</param>
+        /// <param name="metadata">Serialized XML or GUID</param>
+        private void SaveMetadata(MetadataTables tableName, string id, string metadata)
+        {
+            //string text = string.Format("{0} - {1} - {2}", tableName.ToString(), id, metadata);
+            //MessageBox.Show(text);
+            //get document database 
+            DocumentDatabase database = Autodesk.Navisworks.Api.Application.ActiveDocument.Database;
+
+            // use transaction. The type for creation is Reset 
+            NavisworksTransaction trans = database.BeginTransaction(DatabaseChangedAction.Reset);
+
+            //setup SQL command  
+            NavisworksCommand cmd = trans.Connection.CreateCommand();
+            //creation of SQL syntax
+            string sql = "CREATE TABLE IF NOT EXISTS " + tableName.ToString() + "(" +
+                        "id TEXT," +
+                        "metadata TEXT)";
+
+            cmd.CommandText = sql;
+
+            // do the job
+            cmd.ExecuteNonQuery();
+            //submit the transaction
+            trans.Commit();
+
+
+            // fill in the data
+            trans = database.BeginTransaction(DatabaseChangedAction.Edited);
+            cmd = trans.Connection.CreateCommand();
+            cmd.Parameters.AddWithValue("@p1", id);
+            cmd.Parameters.AddWithValue("@p2", metadata);
+
+            //build the SQL text
+            string insert_sql = "INSERT INTO " + tableName.ToString() + "(id, metadata)" + " VALUES(@p1, @p2);";
+            cmd.CommandText = insert_sql;
+            //execute SQL
+            cmd.ExecuteNonQuery();
+            trans.Commit();
+
+            //database.Dispose();
+
+        }
+
+        private string GetMetadata(MetadataTables tableName, string id)
+        {
+            try
+            {
+                //get document database
+                DocumentDatabase database = Autodesk.Navisworks.Api.Application.ActiveDocument.Database;
+
+                //create adaptor to retrieve data from the data source.
+                NavisworksDataAdapter dataAdapter = new NavisworksDataAdapter("SELECT id, metadata FROM " + tableName, database.Value);
+
+                DataTable table = new DataTable();
+                dataAdapter.Fill(table);
+
+                foreach (DataRow row in table.Rows)
+                {
+                    if (row["id"].ToString() == id)
+                        return row["metadata"].ToString();
                 }
             }
-
-            savedViewpoints.ForEach(v => _oDoc.SavedViewpoints.AddCopy(v));
-
-            if (errors != 0)
+            catch (Exception ex)
             {
-                MessageBox.Show(errors + " viewpoints(s) were not generated because of missing files or wrong formats of viewpoint.bcfv.",
-                    "Warning", MessageBoxButton.OK, MessageBoxImage.Warning);
+
             }
+
+            return null;
+        }
+
+        public string ToXML(object o)
+        {
+            var stringwriter = new System.IO.StringWriter();
+            var serializer = new XmlSerializer(o.GetType());
+            serializer.Serialize(stringwriter, o);
+            return stringwriter.ToString();
         }
 
         //public void setVisibility(XDocument v)

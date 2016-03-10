@@ -33,17 +33,24 @@
             <ListView.View>
 
                 <GridView >
-                    <GridViewColumn Header="Viewpoint" Width="250">
+                    <GridViewColumn Header="Viewpoint" Width="200">
                         <GridViewColumn.CellTemplate>
                             <DataTemplate>
-                                <Label Content="{Binding DisplayName}" />
+                                <Label Content="{Binding Key.DisplayName}" />
                             </DataTemplate>
                         </GridViewColumn.CellTemplate>
                     </GridViewColumn>
                     <GridViewColumn Header="Comments" Width="100">
                         <GridViewColumn.CellTemplate>
                             <DataTemplate>
-                                <Label Content="{Binding Comments.Count}" />
+                                <Label Content="{Binding Key.Comments.Count}" />
+                            </DataTemplate>
+                        </GridViewColumn.CellTemplate>
+                    </GridViewColumn>
+                    <GridViewColumn Header="Jira/BCF Issue Title" Width="200">
+                        <GridViewColumn.CellTemplate>
+                            <DataTemplate>
+                                <Label Content="{Binding Value}" />
                             </DataTemplate>
                         </GridViewColumn.CellTemplate>
                     </GridViewColumn>
