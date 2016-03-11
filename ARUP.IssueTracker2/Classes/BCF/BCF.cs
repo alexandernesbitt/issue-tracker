@@ -2,20 +2,20 @@
 using System.ComponentModel;
 using System.Collections.ObjectModel;
 
-namespace ARUP.IssueTracker.Classes
+namespace ARUP.IssueTracker.Classes.BCF1
 {
     public class BCF : INotifyPropertyChanged
     {
         public string path { get; set; }
         private string filename;
         private bool hasBeenSaved;
-        private ObservableCollection<IssueBCF> issues;
+        private ObservableCollection<BCF1.IssueBCF> issues;
 
         public BCF()
         {
             hasBeenSaved = true;
             Filename = "New BCF Report";
-            Issues = new ObservableCollection<IssueBCF>();
+            Issues = new ObservableCollection<BCF1.IssueBCF>();
             path = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "BCFtemp", System.IO.Path.GetRandomFileName());
         }
         public bool HasBeenSaved
@@ -46,9 +46,9 @@ namespace ARUP.IssueTracker.Classes
             }
         }
 
-        
 
-        public ObservableCollection<IssueBCF> Issues
+
+        public ObservableCollection<BCF1.IssueBCF> Issues
         {
             get
             {

@@ -8,7 +8,7 @@ namespace ARUP.IssueTracker.Windows
     /// </summary>
     public partial class ComponentsList : Window
     {
-        public ComponentsList(Component[] components)
+        public ComponentsList(ARUP.IssueTracker.Classes.BCF2.Component[] components)
         {
             InitializeComponent();
 

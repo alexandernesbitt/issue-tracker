@@ -80,7 +80,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Classes\BackgroundJira.cs" />
-    <Compile Include="Classes\BCF2\BcfAdapter.cs" />
+    <Compile Include="Classes\BcfAdapter.cs" />
     <Compile Include="Classes\BCF2\BcfContainer.cs" />
     <Compile Include="Classes\BCF2\BcfFile.cs" />
     <Compile Include="Classes\BCF2\Markup.cs" />

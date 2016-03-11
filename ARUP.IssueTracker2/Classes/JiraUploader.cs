@@ -8,6 +8,7 @@ using System.Text.RegularExpressions;
 using ARUP.IssueTracker.Windows;
 using System.Windows;
 using Arup.RestSharp;
+using ARUP.IssueTracker.Classes.BCF2;
 
 namespace ARUP.IssueTracker.Classes
 {
@@ -15,7 +16,7 @@ namespace ARUP.IssueTracker.Classes
     {
         private string projectKey = "";
         private List<Issue> issuesJira = new List<Issue>();
-        private List<IssueBCF> issues = new List<IssueBCF>();
+        private List<Markup> issues = new List<Markup>();
         private string path = "";
         private bool delAfter;
         ProgressWin progressWin = new ProgressWin();
@@ -29,7 +30,7 @@ namespace ARUP.IssueTracker.Classes
         BackgroundWorker worker = new BackgroundWorker();
 
 
-        public JiraUploader(string pk, List<Issue> _issuesJira, List<IssueBCF> i, string p, int pi, bool _delAfter)
+        public JiraUploader(string pk, List<Issue> _issuesJira, List<Markup> i, string p, int pi, bool _delAfter)
         {
             //initialize
             projectKey = pk;
@@ -70,7 +71,7 @@ namespace ARUP.IssueTracker.Classes
             {
                 try
                 {
-                    IssueBCF issue = issues[i];
+                    Markup issue = issues[i];
                     worker.ReportProgress((100 * i + 1) / issues.Count(), getProgressString(i + 1));// HAS TO BE OUT OF THE DISPATCHER!
                     // check status on each step
                     if (worker.CancellationPending == true)
@@ -82,7 +83,7 @@ namespace ARUP.IssueTracker.Classes
                     //CHECK IF ALREADY EXISTING
                     // could use the expression: cf[11600] ~ "aaaa"
                     // = operator not supported
-                    string fields = " AND  GUID~" + issue.guid.ToString() + "&fields=key,comment";
+                    string fields = " AND  GUID~" + issue.Topic.Guid + "&fields=key,comment";
                     string query = "search?jql=project=" + projectKey + fields;
 
                     var request4 = new RestRequest(query, Method.GET);
@@ -97,15 +98,15 @@ namespace ARUP.IssueTracker.Classes
                     if (!response4.Data.issues.Any())
                     {
 
-                        string snapshot = Path.Combine(path, issue.guid.ToString(), "snapshot.png");
-                        string viewpoint = Path.Combine(path, issue.guid.ToString(), "viewpoint.bcfv");
+                        string snapshot = Path.Combine(path, issue.Topic.Guid, "snapshot.png");
+                        string viewpoint = Path.Combine(path, issue.Topic.Guid, "viewpoint.bcfv");
                         string key = "";
 
 
                         //update view - it might be a new issue
                         // Serialize the object, and close the TextWriter
                         Stream writerV = new FileStream(viewpoint, FileMode.Create);
-                        serializerV.Serialize(writerV, issue.viewpoint);
+                        serializerV.Serialize(writerV, issue.Viewpoints[0].VisInfo);
                         writerV.Close();
 
 
@@ -122,9 +123,9 @@ namespace ARUP.IssueTracker.Classes
     
                             };
                         newissue.fields.Add("project", new { key = projectKey });
-                        newissue.fields.Add("summary", (string.IsNullOrWhiteSpace(issue.markup.Topic.Title)) ? "no title" : issue.markup.Topic.Title);
+                        newissue.fields.Add("summary", (string.IsNullOrWhiteSpace(issue.Topic.Title)) ? "no title" : issue.Topic.Title);
                         newissue.fields.Add("issuetype", new { id = issuesJira[i].fields.issuetype.id });
-                        newissue.fields.Add(MySettings.Get("guidfield"), issue.guid.ToString());
+                        newissue.fields.Add(MySettings.Get("guidfield"), issue.Topic.Guid);
 
                         // validate assignee name if present
                         if (issuesJira[i].fields.assignee != null) 
@@ -178,10 +179,10 @@ namespace ARUP.IssueTracker.Classes
                         RestCallback.Check(response2);
 
                         //ADD COMMENTS
-                        if (issue.markup.Comment.Any())
+                        if (issue.Comment.Any())
                         {
-                            issue.markup.Comment = new System.Collections.ObjectModel.ObservableCollection<CommentBCF>(issue.markup.Comment.Reverse());
-                            foreach (var c in issue.markup.Comment)
+                            issue.Comment = new System.Collections.ObjectModel.ObservableCollection<BCF2.Comment>(issue.Comment.Reverse());
+                            foreach (var c in issue.Comment)
                             {
                                 var request3 = new RestRequest("issue/" + key + "/comment", Method.POST);
                                 request3.AddHeader("Content-Type", "application/json");
@@ -201,10 +202,10 @@ namespace ARUP.IssueTracker.Classes
                     else //UPDATE ISSUE
                     {
                         var oldIssue = response4.Data.issues.First();
-                        if (issue.markup.Comment.Any())
+                        if (issue.Comment.Any())
                         {
-                            issue.markup.Comment = new System.Collections.ObjectModel.ObservableCollection<CommentBCF>(issue.markup.Comment.Reverse());
-                            foreach (var c in issue.markup.Comment)
+                            issue.Comment = new System.Collections.ObjectModel.ObservableCollection<BCF2.Comment>(issue.Comment.Reverse());
+                            foreach (var c in issue.Comment)
                             {
                                 string normalized1 = Regex.Replace(c.Comment1, @"\s", "");
                                 if (oldIssue.fields.comment.comments.Any(o => Regex.Replace(o.body, @"\s", "").Equals(normalized1, StringComparison.OrdinalIgnoreCase)))

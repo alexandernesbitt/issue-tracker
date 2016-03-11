@@ -11,6 +11,7 @@ using IOPath = System.IO.Path;
 using System.ComponentModel;
 using System.Collections.ObjectModel;
 using ARUP.IssueTracker.Classes;
+using ARUP.IssueTracker.Classes.BCF2;
 using ARUP.IssueTracker.Windows;
 using Ionic.Zip;
 using System.Xml.Linq;
@@ -64,7 +65,7 @@ namespace ARUP.IssueTracker.UserControls
                 bcfPan.NewBCFBtn.Click += new RoutedEventHandler(NewBCF);
                 bcfPan.SaveBCFBtn.Click += new RoutedEventHandler(SaveBCF2);
                 bcfPan.btnBcfOption.Click += new RoutedEventHandler(ExportJiraIssueOption);
-                bcfPan.SaveBcf1.Click += new RoutedEventHandler(SaveBCF);
+                bcfPan.SaveBcf1.Click += new RoutedEventHandler(SaveBCF1);
                 bcfPan.SaveBcf2.Click += new RoutedEventHandler(SaveBCF2);
                 bcfPan.OpenBCFBtn.Click += new RoutedEventHandler(OpenBCFFile);
                 bcfPan.ComponentsShowBCFEH += new EventHandler<IntArg>(ComponentsShowBCF);
@@ -91,7 +92,7 @@ namespace ARUP.IssueTracker.UserControls
                 #endregion
                 DataContext = jira;
                 //initialize
-                jira.ProjectsCollection = new ObservableCollection<Project>();
+                jira.ProjectsCollection = new ObservableCollection<ARUP.IssueTracker.Classes.Project>();
                 jira.IssuesCollection = new ObservableCollection<Issue>();
                 NewBCF(null, null);
                 tabControl.SelectedIndex = SettingsTabIndexGet();
@@ -140,7 +141,7 @@ namespace ARUP.IssueTracker.UserControls
 
                 if (RestCallback.Check(response) && response.Data.projects != null && response.Data.projects.Any())
                 {
-                    jira.ProjectsCollection = new ObservableCollection<Project>();
+                    jira.ProjectsCollection = new ObservableCollection<ARUP.IssueTracker.Classes.Project>();
                     foreach (var project in response.Data.projects)
                     {
                         jira.ProjectsCollection.Add(project);
@@ -566,7 +567,7 @@ namespace ARUP.IssueTracker.UserControls
             try
             {
                 jira.Self = new Self();
-                jira.ProjectsCollection = new ObservableCollection<Project>();
+                jira.ProjectsCollection = new ObservableCollection<ARUP.IssueTracker.Classes.Project>();
                 jira.IssuesCollection = new ObservableCollection<Issue>();
                 jiraPan.lastSynced.Text = "Logged out";
                 jiraPan.ConncetBtn.Content = "Connect";
@@ -602,7 +603,7 @@ namespace ARUP.IssueTracker.UserControls
 
                 VisualizationInfo viewpoint = deserializeView(response3.Content);
                 if (null != viewpoint)
-                    ComponentsShow(viewpoint.Components);
+                    ComponentsShow(viewpoint.Components.ToArray());
             }
             catch (System.Exception ex1)
             {
@@ -707,7 +708,9 @@ namespace ARUP.IssueTracker.UserControls
                 MessageBox.Show("exception: " + ex1);
             }
         }
-        private void ExportJiraIssue(object sender, RoutedEventArgs e)
+
+        [Obsolete("Should always export as BCF 2.0 from Jira.")]
+        private void ExportJiraIssueBcf1(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -1213,20 +1216,20 @@ namespace ARUP.IssueTracker.UserControls
                 ac.ShowDialog();
                 if (ac.DialogResult.HasValue && ac.DialogResult.Value)
                 {
-                    CommentBCF c = new CommentBCF();
+                    ARUP.IssueTracker.Classes.BCF2.Comment c = new ARUP.IssueTracker.Classes.BCF2.Comment();
                     c.Guid = Guid.NewGuid().ToString();
                     c.Comment1 = ac.comment.Text;
                     c.Topic = new CommentTopic();
-                    c.Topic.Guid = (string.IsNullOrWhiteSpace(jira.Bcf.Issues[bcfPan.listIndex].markup.Topic.Guid)) ? Guid.Empty.ToString() : jira.Bcf.Issues[bcfPan.listIndex].markup.Topic.Guid;
+                    c.Topic.Guid = (string.IsNullOrWhiteSpace(jira.Bcf.Issues[bcfPan.listIndex].Topic.Guid)) ? Guid.Empty.ToString() : jira.Bcf.Issues[bcfPan.listIndex].Topic.Guid;
                     c.Date = DateTime.Now;
                     c.VerbalStatus = ac.VerbalStatus.Text;
-                    c.Status = CommentStatus.Unknown;
+                    c.Status = ac.VerbalStatus.Text;
                     c.Author = (string.IsNullOrWhiteSpace(jira.Self.displayName)) ? MySettings.Get("BCFusername") : jira.Self.displayName;
                     for (int i = 0; i < bcfPan.issueList.SelectedItems.Count; i++)
                     {
                         int index = bcfPan.issueList.Items.IndexOf(bcfPan.issueList.SelectedItems[i]);
-                        jira.Bcf.Issues[index].markup.Comment.Add(c);
-                        jira.Bcf.Issues[index].markup.Comment.Move(jira.Bcf.Issues[index].markup.Comment.Count - 1, 0);
+                        jira.Bcf.Issues[index].Comment.Add(c);
+                        jira.Bcf.Issues[index].Comment.Move(jira.Bcf.Issues[index].Comment.Count - 1, 0);
                     }
                     jira.Bcf.HasBeenSaved = false;
                 }
@@ -1263,7 +1266,7 @@ namespace ARUP.IssueTracker.UserControls
             indices.Reverse();
             foreach (var i in indices)
             {
-                jira.Bcf.Issues[bcfPan.listIndex].markup.Comment.RemoveAt(i);
+                jira.Bcf.Issues[bcfPan.listIndex].Comment.RemoveAt(i);
             }
 
             jira.Bcf.HasBeenSaved = false;
@@ -1290,7 +1293,7 @@ namespace ARUP.IssueTracker.UserControls
             indices.Reverse();
             foreach (var i in indices)
             {
-                DeleteDirectory(IOPath.Combine(jira.Bcf.path, jira.Bcf.Issues[i].guid.ToString()));
+                DeleteDirectory(IOPath.Combine(jira.Bcf.TempPath, jira.Bcf.Issues[i].Topic.Guid.ToString()));
                 jira.Bcf.Issues.RemoveAt(i);
             }
 
@@ -1303,7 +1306,7 @@ namespace ARUP.IssueTracker.UserControls
 
 
         }
-        private void SaveBCF(object sender, RoutedEventArgs e)
+        private void SaveBCF1(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -1329,15 +1332,16 @@ namespace ARUP.IssueTracker.UserControls
 
                     XmlSerializer serializerV = new XmlSerializer(typeof(VisualizationInfo));
                     XmlSerializer serializerM = new XmlSerializer(typeof(Markup));
-                    foreach (var issue in jira.Bcf.Issues)
+                    foreach (var i in jira.Bcf.Issues)
                     {
-                        issue.markup.Comment = new ObservableCollection<CommentBCF>(issue.markup.Comment.Reverse());
+                        ARUP.IssueTracker.Classes.BCF1.IssueBCF issue = BcfAdapter.LoadBcf1IssueFromBcf2(i, i.Viewpoints[0].VisInfo);
+                       
                         // Serialize the object, and close the TextWriter
-                        Stream writerV = new FileStream(IOPath.Combine(jira.Bcf.path, issue.guid.ToString(), "viewpoint.bcfv"), FileMode.Create);
+                        Stream writerV = new FileStream(IOPath.Combine(jira.Bcf.TempPath, issue.guid.ToString(), "viewpoint.bcfv"), FileMode.Create);
                         serializerV.Serialize(writerV, issue.viewpoint);
                         writerV.Close();
 
-                        Stream writerM = new FileStream(IOPath.Combine(jira.Bcf.path, issue.guid.ToString(), "markup.bcf"), FileMode.Create);
+                        Stream writerM = new FileStream(IOPath.Combine(jira.Bcf.TempPath, issue.guid.ToString(), "markup.bcf"), FileMode.Create);
                         serializerM.Serialize(writerM, issue.markup);
                         writerM.Close();
                     }
@@ -1347,7 +1351,7 @@ namespace ARUP.IssueTracker.UserControls
 
                     using (Ionic.Zip.ZipFile zip = new Ionic.Zip.ZipFile())
                     {                        
-                        zip.AddDirectory(jira.Bcf.path);
+                        zip.AddDirectory(jira.Bcf.TempPath);
                         //check files to avoid including BCF 2.0 files
                         List<string> filesToBeExcluded = new List<string>();
                         foreach (ZipEntry entry in zip.Entries)
@@ -1391,8 +1395,8 @@ namespace ARUP.IssueTracker.UserControls
                     return;
                 }
 
-                // Save to BCF 2.0
-                ARUP.IssueTracker.Classes.BcfAdapter.SaveBcf2FromBcf1(jira.Bcf);                
+                // Save BCF 2.0 file
+                ARUP.IssueTracker.Classes.BCF2.BcfContainer.SaveBcfFile(jira.Bcf);
             }
             catch (System.Exception ex1)
             {
@@ -1409,7 +1413,7 @@ namespace ARUP.IssueTracker.UserControls
                     MessageBoxButton.YesNoCancel, MessageBoxImage.Question, MessageBoxResult.Cancel);
                     if (answer == MessageBoxResult.Yes)
                     {
-                        SaveBCF(null, null);
+                        SaveBCF2(null, null);
                         return false;
                     }
                     else if (answer == MessageBoxResult.Cancel)
@@ -1479,7 +1483,7 @@ namespace ARUP.IssueTracker.UserControls
                 ub.ShowDialog();
                 if (ub.DialogResult.HasValue && ub.DialogResult.Value)
                 {
-                    List<IssueBCF> issues = new List<IssueBCF>();
+                    List<Markup> issues = new List<Markup>();
                     List<Issue> issuesJira = new List<Issue>();
 
                     for (int i = 0; i < bcfPan.issueList.SelectedItems.Count; i++)
@@ -1489,22 +1493,19 @@ namespace ARUP.IssueTracker.UserControls
                         issueJira.fields = new Fields();
                         issueJira.fields.issuetype = (Issuetype) ub.issueTypeCombo.SelectedItem;
                         issueJira.fields.creator = new User() { name = jira.Self.name };
-
-                        // add assignee if present
-                        if (jira.Bcf.Issues[index].bcf2Markup != null)
+                        
+                        if (jira.Bcf.Issues[index] != null)
                         {
-                            if (jira.Bcf.Issues[index].bcf2Markup.Topic.AssignedTo != null) 
+                            // add assignee if present
+                            if (jira.Bcf.Issues[index].Topic.AssignedTo != null) 
                             {
-                                issueJira.fields.assignee = new User() { name = jira.Bcf.Issues[index].bcf2Markup.Topic.AssignedTo };                            
+                                issueJira.fields.assignee = new User() { name = jira.Bcf.Issues[index].Topic.AssignedTo };                            
                             }
-                        }
 
-                        // add labels if present
-                        if (jira.Bcf.Issues[index].bcf2Markup != null)
-                        {
-                            if (jira.Bcf.Issues[index].bcf2Markup.Topic.Labels != null)
+                            // add labels if present
+                            if (jira.Bcf.Issues[index].Topic.Labels != null)
                             {
-                                issueJira.fields.labels = jira.Bcf.Issues[index].bcf2Markup.Topic.Labels.ToList();
+                                issueJira.fields.labels = jira.Bcf.Issues[index].Topic.Labels.ToList();
                             }
                         }
                         
@@ -1512,7 +1513,7 @@ namespace ARUP.IssueTracker.UserControls
                         issuesJira.Add(issueJira);
                     }
 
-                    doUploadIssue(issues, jira.Bcf.path, false, ub.projCombo.SelectedIndex, issuesJira);
+                    doUploadIssue(issues, jira.Bcf.TempPath, false, ub.projCombo.SelectedIndex, issuesJira);
 
                 }
             }
@@ -1539,13 +1540,13 @@ namespace ARUP.IssueTracker.UserControls
             try
             {
                 int index = e.Myint;
-                var v = jira.Bcf.Issues[index].viewpoint;
+                var v = jira.Bcf.Issues[index].Viewpoints[0].VisInfo;
                 if (null == v)
                 {
                     MessageBox.Show("No viewpoint found.", "No Viewpoint", MessageBoxButton.OK, MessageBoxImage.Error);
                     return;
                 }
-                ComponentsShow(v.Components);
+                ComponentsShow(v.Components.ToArray());
             }
             catch (System.Exception ex1)
             {
@@ -1565,10 +1566,10 @@ namespace ARUP.IssueTracker.UserControls
 
                 using (ZipFile zip = ZipFile.Read(bcfzipfile))
                 {
-                    zip.ExtractAll(jira.Bcf.path);
+                    zip.ExtractAll(jira.Bcf.TempPath);
                 }
 
-                var dir = new DirectoryInfo(jira.Bcf.path);
+                var dir = new DirectoryInfo(jira.Bcf.TempPath);
 
                 // Check BCF version
                 bool isBCF2 = false;
@@ -1592,10 +1593,25 @@ namespace ARUP.IssueTracker.UserControls
                         continue;
                     }                        
 
-                    IssueBCF i = null;
-
+                    // This is a BCF 2.0 issue object
+                    Markup i = null;
                     FileStream viewpointFile = new FileStream(IOPath.Combine(folder.FullName, "viewpoint.bcfv"), FileMode.Open);
                     FileStream markupFile = new FileStream(IOPath.Combine(folder.FullName, "markup.bcf"), FileMode.Open);
+
+                    // all other viewpoints and snapshots
+                    List<string> otherViewpointFiles = new List<string>();
+                    List<string> otherSnapshotFiles = new List<string>();
+                    foreach(var file in folder.GetFiles())
+                    {
+                        if(file.Name != "viewpoint.bcfv" && file.Extension == ".bcfv")
+                        {
+                            otherViewpointFiles.Add(file.Name);
+                        }
+                        else if(file.Name != "snapshot.png" && (file.Extension == ".png" || file.Extension == ".jpg" || file.Extension == ".bmp"))
+                        {
+                            otherSnapshotFiles.Add(file.Name);
+                        }
+                    }
 
                     if (isBCF2)
                     {
@@ -1607,29 +1623,50 @@ namespace ARUP.IssueTracker.UserControls
 
                         if (markup != null && viewpoint != null)
                         {
-                            i = BcfAdapter.LoadBcf1IssueFromBcf2(markup, viewpoint);
-                            i.guid = new Guid(folder.Name);  // need to overwrite the guid generated by default constructor
+                            i = markup;
+                            foreach (var v in i.Viewpoints)
+                            {
+                                if(v.Viewpoint == "viewpoint.bcfv")
+                                {
+                                    v.VisInfo = viewpoint;
+                                    v.SnapshotPath = IOPath.Combine(folder.FullName, "snapshot.png");
+                                }
+                                else if (otherViewpointFiles.Contains(v.Viewpoint) && otherSnapshotFiles.Contains(v.Snapshot))
+                                {
+                                    using (FileStream vFile = new FileStream(IOPath.Combine(folder.FullName, v.Viewpoint), FileMode.Open))
+                                    {
+                                        ARUP.IssueTracker.Classes.BCF2.VisualizationInfo vi = serializerS.Deserialize(vFile) as ARUP.IssueTracker.Classes.BCF2.VisualizationInfo;
+                                        if(vi != null)
+                                        {
+                                            v.VisInfo = vi;
+                                            v.SnapshotPath = IOPath.Combine(folder.FullName, v.Snapshot);
+                                        }
+                                    }
+                                }
+                            }
                         }  
                     }
                     else
                     {
-                        i = new IssueBCF();
-                        i.guid = new Guid(folder.Name);  // need to overwrite the guid generated by default constructor
+                        ARUP.IssueTracker.Classes.BCF1.IssueBCF bcf1Issue = new ARUP.IssueTracker.Classes.BCF1.IssueBCF();
+                        bcf1Issue.guid = new Guid(folder.Name);  // need to overwrite the guid generated by default constructor
+                        bcf1Issue.snapshot = IOPath.Combine(folder.FullName, "snapshot.png");
 
-                        XmlSerializer serializerS = new XmlSerializer(typeof(VisualizationInfo));
-                        i.viewpoint = serializerS.Deserialize(viewpointFile) as VisualizationInfo;
+                        XmlSerializer serializerS = new XmlSerializer(typeof(ARUP.IssueTracker.Classes.BCF1.VisualizationInfo));
+                        bcf1Issue.viewpoint = serializerS.Deserialize(viewpointFile) as ARUP.IssueTracker.Classes.BCF1.VisualizationInfo;
 
-                        XmlSerializer serializerM = new XmlSerializer(typeof(Markup));
-                        i.markup = serializerM.Deserialize(markupFile) as Markup;
+                        XmlSerializer serializerM = new XmlSerializer(typeof(ARUP.IssueTracker.Classes.BCF1.Markup));
+                        bcf1Issue.markup = serializerM.Deserialize(markupFile) as ARUP.IssueTracker.Classes.BCF1.Markup;
+                        bcf1Issue.markup.Comment = new ObservableCollection<ARUP.IssueTracker.Classes.BCF1.CommentBCF>(bcf1Issue.markup.Comment.OrderByDescending(o => o.Date));
+
+                        i = BcfAdapter.LoadBcf2IssueFromBcf1(bcf1Issue);
                     }   
 
                     viewpointFile.Close();
-                    markupFile.Close();
-
-                    i.markup.Comment = new ObservableCollection<CommentBCF>(i.markup.Comment.OrderByDescending(o => o.Date));
-                    i.snapshot = IOPath.Combine(folder.FullName, "snapshot.png");
-
-                    jira.Bcf.Issues.Add(i);
+                    markupFile.Close();                    
+                    
+                    if(i != null)
+                        jira.Bcf.Issues.Add(i);
                 }
 
                 if (jira.Bcf.Issues.Any())
@@ -1661,39 +1698,39 @@ namespace ARUP.IssueTracker.UserControls
                 if (!CheckSaveBCF())
                     return;
 
-                if (jira.Bcf != null && Directory.Exists(jira.Bcf.path))
-                    DeleteDirectory(jira.Bcf.path);
+                if (jira.Bcf != null && Directory.Exists(jira.Bcf.TempPath))
+                    DeleteDirectory(jira.Bcf.TempPath);
 
-                jira.Bcf = new BCF();
+                jira.Bcf = new BcfFile();
             }
             catch (System.Exception ex1)
             {
                 MessageBox.Show("exception: " + ex1);
             }
         }
-        public CommentStatus getStatus(string status)
-        {
-            CommentStatus cs;
-            switch (status)
-            {
-                case "Error":
-                    cs = CommentStatus.Error;
-                    break;
-                case "Warning":
-                    cs = CommentStatus.Warning;
-                    break;
-                case "Info":
-                    cs = CommentStatus.Info;
-                    break;
-                case "Unknown":
-                    cs = CommentStatus.Unknown;
-                    break;
-                default:
-                    cs = CommentStatus.Unknown;
-                    break;
-            }
-            return cs;
-        }
+        //public CommentStatus getStatus(string status)
+        //{
+        //    CommentStatus cs;
+        //    switch (status)
+        //    {
+        //        case "Error":
+        //            cs = CommentStatus.Error;
+        //            break;
+        //        case "Warning":
+        //            cs = CommentStatus.Warning;
+        //            break;
+        //        case "Info":
+        //            cs = CommentStatus.Info;
+        //            break;
+        //        case "Unknown":
+        //            cs = CommentStatus.Unknown;
+        //            break;
+        //        default:
+        //            cs = CommentStatus.Unknown;
+        //            break;
+        //    }
+        //    return cs;
+        //}
         #endregion
         #region private common
         private VisualizationInfo deserializeView(string content)
@@ -1795,7 +1832,7 @@ namespace ARUP.IssueTracker.UserControls
                 MessageBox.Show("exception: " + ex1);
             }
         }
-        private void ComponentsShow(ARUP.IssueTracker.Classes.Component[] components)
+        private void ComponentsShow(ARUP.IssueTracker.Classes.BCF2.Component[] components)
         {
             try
             {
@@ -1894,7 +1931,7 @@ namespace ARUP.IssueTracker.UserControls
             }
             return null;
         }
-        public void doUploadIssue(List<IssueBCF> issues, string path, bool delAfter, int projIndex, List<Issue> issuesJira)
+        public void doUploadIssue(List<Markup> issues, string path, bool delAfter, int projIndex, List<Issue> issuesJira)
         {
             try
             {
@@ -1941,8 +1978,8 @@ namespace ARUP.IssueTracker.UserControls
                 if (jiraPan.projIndex != -1)
                     MySettings.Set("currentproj", jiraPan.projIndex.ToString());
 
-                if (jira.Bcf != null && Directory.Exists(jira.Bcf.path))
-                    DeleteDirectory(jira.Bcf.path);
+                if (jira.Bcf != null && Directory.Exists(jira.Bcf.TempPath))
+                    DeleteDirectory(jira.Bcf.TempPath);
             }
             catch (System.Exception ex1)
             {

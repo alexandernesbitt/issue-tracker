@@ -1,6 +1,7 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Collections.ObjectModel;
+using ARUP.IssueTracker.Classes.BCF2;
 
 namespace ARUP.IssueTracker.Classes
 {
@@ -22,8 +23,22 @@ namespace ARUP.IssueTracker.Classes
                 NotifyPropertyChanged("Total");
             }
         }
-        private BCF bcf { get; set; }
-        public BCF Bcf
+        private BCF1.BCF bcf_1 { get; set; }
+        public BCF1.BCF Bcf_1
+        {
+            get
+            {
+                return bcf_1;
+            }
+
+            set
+            {
+                bcf_1 = value;
+                NotifyPropertyChanged("Bcf");
+            }
+        }
+        private BcfFile bcf { get; set; }
+        public BcfFile Bcf
         {
             get
             {

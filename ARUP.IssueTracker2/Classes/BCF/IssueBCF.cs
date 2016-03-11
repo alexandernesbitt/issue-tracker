@@ -2,7 +2,7 @@
 using System.ComponentModel;
 using System.Collections.ObjectModel;
 
-namespace ARUP.IssueTracker.Classes
+namespace ARUP.IssueTracker.Classes.BCF1
 {
     public class IssueBCF
     {
