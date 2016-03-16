@@ -31,7 +31,7 @@ namespace ARUP.IssueTracker.Classes.BCF2
       _hasBeenSaved = true;
       Filename = "New BCF Report";
       Id = Guid.NewGuid();
-      TempPath = null;  // This should be overwritten by BCF 1.0 or Jira's path
+      TempPath = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "BCFtemp", System.IO.Path.GetRandomFileName());
       Issues = new ObservableCollection<Markup>();
     }
     public bool HasBeenSaved

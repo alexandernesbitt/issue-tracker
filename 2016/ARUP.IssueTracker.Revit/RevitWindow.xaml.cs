@@ -18,18 +18,21 @@ using Autodesk.Revit.DB;
 using Autodesk.Revit.DB.IFC;
 using Autodesk.Revit.UI;
 using ARUP.IssueTracker.Classes;
+using ARUP.IssueTracker.Classes.BCF2;
 using System.ComponentModel;
+using ARUP.IssueTracker.Windows;
 
 namespace ARUP.IssueTracker.Revit
 {
   /// <summary>
   /// Interaction logic for MainWindow.xaml
   /// </summary>
-  public partial class RevitWindow : Window
+    public partial class RevitWindow : Window
   {
     private ExternalEvent m_ExEvent;
     private ExtOpenView m_Handler;
     public UIApplication uiapp;
+    private CommentController commentController;
 
     /// <summary>
     /// Constructor
@@ -53,13 +56,18 @@ namespace ARUP.IssueTracker.Revit
 
         mainPan.bcfPan.Open3dViewBtn.Click += new RoutedEventHandler(Open3dViewBCF);
         mainPan.jiraPan.Open3dViewBtn.Click += new RoutedEventHandler(Open3dViewJira);
+
+        // for ICommentController callback
+        commentController = new CommentController(this);
+        mainPan.jiraPan.AddCommBtn.Tag = commentController;
+
+
       }
 
       catch (Exception ex1)
       {
         MessageBox.Show("exception: " + ex1);
       }
-      //  mainPan.bcfPan.AddIssueBtn.Click += new RoutedEventHandler(AddIssueBCF);
 
     }
 
@@ -73,13 +81,13 @@ namespace ARUP.IssueTracker.Revit
       try
       {
         string path = Path.Combine(Path.GetTempPath(), "BCFtemp", Path.GetRandomFileName());
-        Tuple<IssueBCF, Issue> tup = AddIssue(path, false);
+        Tuple<Markup, Issue> tup = AddIssue(path, false);
         if (tup == null)
           return;
-        IssueBCF issue = tup.Item1;
+        Markup issue = tup.Item1;
         Issue issueJira = tup.Item2;
 
-        List<IssueBCF> issues = new List<IssueBCF>();
+        List<Markup> issues = new List<Markup>();
         List<Issue> issuesJira = new List<Issue>();
 
         issues.Add(issue);
@@ -105,10 +113,10 @@ namespace ARUP.IssueTracker.Revit
     {
       try
       {
-        Tuple<IssueBCF, Issue> tup = AddIssue(mainPan.jira.Bcf.path, true);
+          Tuple<Markup, Issue> tup = AddIssue(mainPan.jira.Bcf.TempPath, true);
         if (tup == null)
           return;
-        IssueBCF issue = tup.Item1;
+        Markup issue = tup.Item1;
 
           if (issue != null)
           {
@@ -129,7 +137,7 @@ namespace ARUP.IssueTracker.Revit
     /// <param name="path"></param>
     /// <param name="isBcf"></param>
     /// <returns></returns>
-    private Tuple<IssueBCF, Issue> AddIssue(string path, bool isBcf)
+    private Tuple<Markup, Issue> AddIssue(string path, bool isBcf)
     {
       try
       {
@@ -141,9 +149,10 @@ namespace ARUP.IssueTracker.Revit
             MessageBox.Show("I'm sorry,\nonly 3D and 2D views are supported.", "Error!", MessageBoxButton.OK, MessageBoxImage.Error);
             return null;
         }
-        IssueBCF issue = new IssueBCF();
 
-        string folderIssue = Path.Combine(path, issue.guid.ToString());
+        Markup issue = new Markup(DateTime.Now);
+
+        string folderIssue = Path.Combine(path, issue.Topic.Guid);
         if (!Directory.Exists(folderIssue))
           Directory.CreateDirectory(folderIssue);
 
@@ -183,7 +192,8 @@ namespace ARUP.IssueTracker.Revit
         air.ShowDialog();
           if (air.DialogResult.HasValue && air.DialogResult.Value)
           {
-              issue.snapshot = Path.Combine(folderIssue, "snapshot.png");
+              ViewPoint vp = new ViewPoint(true);
+              vp.SnapshotPath = Path.Combine(folderIssue, "snapshot.png");
               int elemCheck = 2;
               if (air.all.IsChecked.Value)
                   elemCheck = 0;
@@ -208,36 +218,37 @@ namespace ARUP.IssueTracker.Revit
                       issueJira.fields.components = air.SelectedComponents;
                   }
               }
-              issue.viewpoint = generateViewpoint(elemCheck);
-              issue.markup.Topic.Title = air.TitleBox.Text;
-              issue.markup.Header[0].IfcProject = ExporterIFCUtils.CreateProjectLevelGUID(doc,
+              vp.VisInfo = generateViewpoint(elemCheck);
+              issue.Viewpoints.Add(vp);
+              issue.Topic.Title = air.TitleBox.Text;
+              issue.Header[0].IfcProject = ExporterIFCUtils.CreateProjectLevelGUID(doc,
                   Autodesk.Revit.DB.IFC.IFCProjectLevelGUIDType.Project);
               string projFilename = (doc.PathName != null && doc.PathName != "")
                   ? System.IO.Path.GetFileName(doc.PathName)
                   : "";
-              issue.markup.Header[0].Filename = projFilename;
-              issue.markup.Header[0].Date = DateTime.Now;
+              issue.Header[0].Filename = projFilename;
+              issue.Header[0].Date = DateTime.Now;
 
               //comment
               if (!string.IsNullOrWhiteSpace(air.CommentBox.Text))
               {
-                  CommentBCF c = new CommentBCF();
+                  ARUP.IssueTracker.Classes.BCF2.Comment c = new ARUP.IssueTracker.Classes.BCF2.Comment();
                   c.Comment1 = air.CommentBox.Text;
                   c.Topic = new CommentTopic();
-                  c.Topic.Guid = issue.guid.ToString();
+                  c.Topic.Guid = issue.Topic.Guid;
                   ;
                   c.Date = DateTime.Now;
                   c.VerbalStatus = air.VerbalStatus.Text;
                   // if (air.comboStatuses.SelectedIndex != -1)
                   // c.Status = mainPan.getStatus(air.comboStatuses.SelectedValue.ToString());
-                  c.Status = CommentStatus.Unknown;
+                  c.Status = air.VerbalStatus.Text;
                   c.Author = (string.IsNullOrWhiteSpace(mainPan.jira.Self.displayName))
                       ? MySettings.Get("BCFusername")
                       : mainPan.jira.Self.displayName;
-                  issue.markup.Comment.Add(c);
+                  issue.Comment.Add(c);
               }
 
-              return new Tuple<IssueBCF, Issue>(issue, issueJira);
+              return new Tuple<Markup, Issue>(issue, issueJira);
 
 
           }
@@ -284,7 +295,7 @@ namespace ARUP.IssueTracker.Revit
     {
       try
       {
-        VisualizationInfo v = mainPan.jira.Bcf.Issues[mainPan.bcfPan.listIndex].viewpoint;
+        VisualizationInfo v = mainPan.jira.Bcf.Issues[mainPan.bcfPan.listIndex].Viewpoints[0].VisInfo;
         doOpen3DView(v);
       }
       catch (System.Exception ex1)
@@ -342,7 +353,7 @@ namespace ARUP.IssueTracker.Revit
     /// </summary>
     /// <param name="elemCheck"></param>
     /// <returns></returns>
-    private VisualizationInfo generateViewpoint(int elemCheck)
+    public VisualizationInfo generateViewpoint(int elemCheck)
     {
 
       try
@@ -362,8 +373,8 @@ namespace ARUP.IssueTracker.Revit
               XYZ BR = uidoc.GetOpenUIViews()[0].GetZoomCorners()[1];
               v.SheetCamera = new SheetCamera();
               v.SheetCamera.SheetID = uidoc.ActiveView.Id.IntegerValue;
-              v.SheetCamera.TopLeft = new IssueTracker.Classes.Point(TL.X, TL.Y, TL.Z);
-              v.SheetCamera.BottomRight = new IssueTracker.Classes.Point(BR.X, BR.Y, BR.Z);
+              v.SheetCamera.TopLeft = new IssueTracker.Classes.BCF2.Point(TL.X, TL.Y, TL.Z);
+              v.SheetCamera.BottomRight = new IssueTracker.Classes.BCF2.Point(BR.X, BR.Y, BR.Z);
           }
           else
           {
@@ -442,15 +453,14 @@ namespace ARUP.IssueTracker.Revit
 
         if (null != collection && collection.Any())
         {
-            v.Components = new IssueTracker.Classes.Component[collection.Count];
-          for (var i = 0; i < collection.Count; i++)
-          {
-            Guid guid = ExportUtils.GetExportId(doc, collection.ElementAt(i));
-            string ifcguid = IfcGuid.ToIfcGuid(guid).ToString();
-            ;
-            v.Components[i] = new ARUP.IssueTracker.Classes.Component(doc.Application.VersionName, collection.ElementAt(i).ToString(), ifcguid);
+              v.Components = new List<IssueTracker.Classes.BCF2.Component>();
+              foreach(var eId in collection)
+              {
+                Guid guid = ExportUtils.GetExportId(doc, eId);
+                string ifcguid = IfcGuid.ToIfcGuid(guid).ToString();
+                v.Components.Add( new ARUP.IssueTracker.Classes.BCF2.Component(doc.Application.VersionName, eId.ToString(), ifcguid) );
 
-          }
+              }
         }
 
         return v;

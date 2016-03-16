@@ -248,6 +248,7 @@ namespace ARUP.IssueTracker.Classes
                 {
                     Guid = snapshotGuid,    // for Solibri
                     Snapshot = bcf1Issue.snapshot,
+                    SnapshotPath = bcf1Issue.snapshot,
                     Viewpoint = "viewpoint.bcfv",
                     VisInfo = bcf2VizInfo
                 });

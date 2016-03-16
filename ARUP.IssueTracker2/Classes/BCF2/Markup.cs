@@ -233,6 +233,25 @@ namespace ARUP.IssueTracker.Classes.BCF2
       set { this.dateFieldSpecified = value; }
     }
 
+    public string formatteddate
+    {
+        get
+        {
+            string text = "Created ";
+            RelativeDate rd = new RelativeDate();
+            return text + rd.ToRelative(Date);
+        }
+
+    }
+    public string formatteddate2
+    {
+        get
+        {
+            return Date.ToShortDateString() + " at " + Date.ToShortTimeString();
+        }
+
+    }
+
     /// <remarks/>
     [System.Xml.Serialization.XmlElementAttribute(Form = System.Xml.Schema.XmlSchemaForm.Unqualified)]
     public string Reference
@@ -393,6 +412,24 @@ namespace ARUP.IssueTracker.Classes.BCF2
     {
       get { return this.dateField; }
       set { this.dateField = value; }
+    }
+
+    public string formatteddate
+    {
+        get
+        {
+            RelativeDate rd = new RelativeDate();
+            return rd.ToRelative(Date);
+        }
+
+    }
+    public string formatteddate2
+    {
+        get
+        {
+            return Date.ToShortDateString() + " at " + Date.ToShortTimeString();
+        }
+
     }
 
     /// <remarks/>
@@ -765,6 +802,16 @@ namespace ARUP.IssueTracker.Classes.BCF2
     {
       get { return this.guidField; }
       set { this.guidField = value; }
+    }
+
+    public string formattedguid
+    {
+        get
+        {
+            return (string.IsNullOrWhiteSpace(Guid.ToString())) ? "" : "GUID: " + Guid.ToString().ToUpper();
+
+        }
+
     }
 
     /// <remarks/>

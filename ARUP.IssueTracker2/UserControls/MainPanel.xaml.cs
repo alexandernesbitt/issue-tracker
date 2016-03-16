@@ -20,12 +20,12 @@ using System.Reflection;
 using ARUP.IssueTracker.Classes.JIRA;
 using Arup.RestSharp;
 using System.Windows.Input;
+using System.Text;
 
 namespace ARUP.IssueTracker.UserControls
 {
     public partial class MainPanel : UserControl
     {
-
         public Jira jira = new Jira();
 
         public MainPanel()
@@ -251,7 +251,57 @@ namespace ARUP.IssueTracker.UserControls
 
                     foreach (var issue in response.Data.issues)
                     {
+                        // reverse time order
                         issue.fields.comment.comments = issue.fields.comment.comments.OrderByDescending(o => o.created).ToList();
+                        
+                        // handle attachment (viewpoint/snapshot)
+                        issue.fields.comment.comments.ForEach(c => {
+
+                            string[] lines = c.body.Split(new string[] { Environment.NewLine }, StringSplitOptions.None);
+                            StringBuilder commentBody = new StringBuilder();
+                            foreach(string line in lines)
+                            {
+                                if (line.Contains("<Viewpoint>") && line.Contains("</Viewpoint>"))
+                                {
+                                    // viewpoint file name
+                                    int indexOfLeftBracket = line.IndexOf("[");
+                                    int indexOfRightBracket = line.IndexOf("]");
+                                    c.viewpointFileName = line.Substring(indexOfLeftBracket + 2, indexOfRightBracket - indexOfLeftBracket -2);
+
+                                    if (issue.fields.attachment != null && issue.fields.attachment.Any() && issue.fields.attachment.Any(o => o.filename == c.viewpointFileName))
+                                    {
+                                        c.viewpointFileUrl = issue.fields.attachment.First(o => o.filename == c.viewpointFileName).content;
+                                    }
+                                }
+                                else if (line.Contains("<Snapshot>") && line.Contains("</Snapshot>"))
+                                {
+                                    // snapshot file name
+                                    int indexOfLeftBracket = line.IndexOf("[");
+                                    int indexOfRightBracket = line.IndexOf("]");
+                                    c.snapshotFileName = line.Substring(indexOfLeftBracket + 2, indexOfRightBracket - indexOfLeftBracket - 2);
+
+                                    if (issue.fields.attachment != null && issue.fields.attachment.Any() && issue.fields.attachment.Any(o => o.filename == c.snapshotFileName)) 
+                                    {
+                                        c.snapshotThumbnailUrl = issue.fields.attachment.First(o => o.filename == c.snapshotFileName).thumbnail;
+                                        c.snapshotFullUrl = issue.fields.attachment.First(o => o.filename == c.snapshotFileName).content;
+                                    }
+                                        
+                                }
+                                else if (line.Contains("|width=200!"))
+                                {
+                                    // do nothing here
+                                }
+                                else 
+                                {
+                                    // normal text body
+                                    commentBody.AppendLine(line);
+                                }
+                            }
+
+                            c.body = commentBody.ToString();                        
+                        });
+ 
+
                         jira.IssuesCollection.Add(issue);
                     }
                     jiraPan.listIndex = 0;
@@ -618,10 +668,10 @@ namespace ARUP.IssueTracker.UserControls
                     if (MessageBox.Show("Action will apply to all the " + jiraPan.issueList.SelectedItems.Count + " selected issues,\n are you sure to continue?", "Multiple Items", MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.No)
                         return;
 
-
-                AddComment ac = new AddComment();
+                var commentController = (sender as Button).Tag as ICommentController;
+                AddComment ac = new AddComment(commentController);
                 ac.commentStatusBox.Visibility = System.Windows.Visibility.Collapsed;
-                ac.WindowStartupLocation = System.Windows.WindowStartupLocation.CenterScreen;
+                ac.WindowStartupLocation = System.Windows.WindowStartupLocation.CenterScreen;                
                 ac.ShowDialog();
                 if (ac.DialogResult.HasValue && ac.DialogResult.Value)
                 {
@@ -634,11 +684,37 @@ namespace ARUP.IssueTracker.UserControls
                         //Post the comment
                         var request = new RestRequest("issue/" + jira.IssuesCollection[index].key + "/comment", Method.POST);
                         request.AddHeader("Content-Type", "application/json");
-                        request.RequestFormat = Arup.RestSharp.DataFormat.Json;
-                        var newcomment = new { body = ac.comment.Text };
+                        request.RequestFormat = Arup.RestSharp.DataFormat.Json;                        
+
+                        //Add annotations for snapshot/viewpoint
+                        StringBuilder commentBody = new StringBuilder();
+                        commentBody.AppendLine(ac.comment.Text);
+                        if (!string.IsNullOrWhiteSpace(ac.viewpointFilePath))
+                        {
+                            commentBody.AppendLine(string.Format("<Viewpoint>[^{0}]</Viewpoint>", Path.GetFileName(ac.viewpointFilePath)));
+                        }
+                        if(!string.IsNullOrWhiteSpace(ac.snapshotFilePath))
+                        {
+                            commentBody.AppendLine(string.Format("<Snapshot>[^{0}]</Snapshot>", Path.GetFileName(ac.snapshotFilePath)));
+                            commentBody.AppendLine(string.Format("!{0}|width=200!", Path.GetFileName(ac.snapshotFilePath)));
+                        }
+                        
+                        var newcomment = new { body = commentBody.ToString() };
                         request.AddBody(newcomment);
 
+                        //Add attachments of snapshot and viewpoint
+                        var request2 = new RestRequest("issue/" + jira.IssuesCollection[index].key + "/attachments", Method.POST);
+                        request2.AddHeader("X-Atlassian-Token", "nocheck");
+                        request2.RequestFormat = Arup.RestSharp.DataFormat.Json;
+                        if (!string.IsNullOrWhiteSpace(ac.snapshotFilePath))
+                            request2.AddFile("file", File.ReadAllBytes(ac.snapshotFilePath), Path.GetFileName(ac.snapshotFilePath));
+                        if (!string.IsNullOrWhiteSpace(ac.attachmentFilePath))
+                            request2.AddFile("file", File.ReadAllBytes(ac.attachmentFilePath), Path.GetFileName(ac.attachmentFilePath));
+                        if (!string.IsNullOrWhiteSpace(ac.viewpointFilePath))
+                            request2.AddFile("file", File.ReadAllBytes(ac.viewpointFilePath), Path.GetFileName(ac.viewpointFilePath));
+
                         requests.Add(request);
+                        requests.Add(request2);
                     }
                     BackgroundJira bj = new BackgroundJira();
                     bj.WorkerComplete += new EventHandler<ResponseArg>(AddJiraCommentCompleted);
@@ -1211,7 +1287,7 @@ namespace ARUP.IssueTracker.UserControls
                     if (MessageBox.Show("Action will apply to all the " + bcfPan.issueList.SelectedItems.Count + " selected issues,\n are you sure to continue?", "Multiple Items", MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.No)
                         return;
 
-                AddComment ac = new AddComment();
+                AddComment ac = new AddComment(null);
                 ac.WindowStartupLocation = System.Windows.WindowStartupLocation.CenterScreen;
                 ac.ShowDialog();
                 if (ac.DialogResult.HasValue && ac.DialogResult.Value)
@@ -1225,6 +1301,11 @@ namespace ARUP.IssueTracker.UserControls
                     c.VerbalStatus = ac.VerbalStatus.Text;
                     c.Status = ac.VerbalStatus.Text;
                     c.Author = (string.IsNullOrWhiteSpace(jira.Self.displayName)) ? MySettings.Get("BCFusername") : jira.Self.displayName;
+                    
+                    // add snapshot and viewpoint
+                    c.Viewpoint = new CommentViewpoint() { Guid = Guid.NewGuid().ToString() };
+                    /////not yet finished
+                    
                     for (int i = 0; i < bcfPan.issueList.SelectedItems.Count; i++)
                     {
                         int index = bcfPan.issueList.Items.IndexOf(bcfPan.issueList.SelectedItems[i]);
@@ -1330,8 +1411,8 @@ namespace ARUP.IssueTracker.UserControls
                 {
                     this.IsEnabled = false;
 
-                    XmlSerializer serializerV = new XmlSerializer(typeof(VisualizationInfo));
-                    XmlSerializer serializerM = new XmlSerializer(typeof(Markup));
+                    XmlSerializer serializerV = new XmlSerializer(typeof(ARUP.IssueTracker.Classes.BCF1.VisualizationInfo));
+                    XmlSerializer serializerM = new XmlSerializer(typeof(ARUP.IssueTracker.Classes.BCF1.Markup));
                     foreach (var i in jira.Bcf.Issues)
                     {
                         ARUP.IssueTracker.Classes.BCF1.IssueBCF issue = BcfAdapter.LoadBcf1IssueFromBcf2(i, i.Viewpoints[0].VisInfo);
@@ -1810,7 +1891,7 @@ namespace ARUP.IssueTracker.UserControls
             }
 
         }
-        private void OpenImage(object sender, RoutedEventArgs e)
+        public void OpenImage(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -1818,12 +1899,16 @@ namespace ARUP.IssueTracker.UserControls
 
                 if (content != "")
                 {
-                    string ext = IOPath.GetExtension(content);
+                    string ext = IOPath.GetExtension(content).ToLower();
                     if (ext == ".jpg" || ext == ".jpeg" || ext == ".png" || ext == ".gif" || ext == ".bmp")
                     {
                         SnapWin win = new SnapWin(content);
                         win.WindowStartupLocation = System.Windows.WindowStartupLocation.CenterScreen;
                         win.ShowDialog();
+                    }
+                    else 
+                    {
+                        System.Diagnostics.Process.Start(content);
                     }
                 }
             }

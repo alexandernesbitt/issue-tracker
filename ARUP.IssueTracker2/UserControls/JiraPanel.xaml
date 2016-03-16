@@ -228,158 +228,211 @@
 
             <!--SECOND COLUMN   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
             <GridSplitter Grid.Column="1" Grid.Row="2" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Grid.RowSpan="6" Width="3" />
-            <Grid Grid.Row="2" Grid.Column="2"  DataContext="{Binding ElementName=issueList, Path=SelectedItem}" >
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="auto"/>
-                    <RowDefinition Height="auto"/>
-                    <RowDefinition Height="auto"/>
-                    <RowDefinition Height="auto"/>
-                    <RowDefinition Height="auto"/>
-                    <RowDefinition Height="auto"/>
-                    <RowDefinition Height="auto"/>
-                    <RowDefinition Height="auto"/>
-                </Grid.RowDefinitions>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="auto"/>
-                    <ColumnDefinition Width="1*"/>
-                    <ColumnDefinition Width="auto"/>
-                    <ColumnDefinition Width="1*"/>
-                </Grid.ColumnDefinitions>
-                <StackPanel Orientation="Horizontal"  Grid.Row="0" Grid.ColumnSpan="4" Margin="3,5,0,0">
-                    <Button ToolTip="Open Issue in browser »" Tag="{Binding key}" Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}" Name="OpenLinkIssueBtn" Visibility="{Binding ElementName=issueList, Path=SelectedItems.Count, Converter={StaticResource intVisibConverter}}">
-                        <Path   Margin="0" Height="13" Width="13" Stretch="Uniform" Fill="Gray" 
-                          Data="M86,15L78.5,15L62.1,15L69.6,22.3L54.9,37L63.8,45.9L78.5,31.1L86,38.9M64,73L27,73L27,37L45.7,37L60.3,22L14,22L14,86L77,86L77,40.1L64,55.4" UseLayoutRounding="False"/>
-                    </Button>
-                    <TextBlock FontWeight="Bold" FontSize="14" Text="{Binding formattedsubject}" VerticalAlignment="Bottom" TextDecorations="{Binding formattedresolution}" />
+            <ScrollViewer HorizontalScrollBarVisibility="Disabled"  VerticalScrollBarVisibility="Auto"  Grid.Row="2" Grid.RowSpan="4" Grid.Column="2"  >
+                <StackPanel>
+                    <Grid DataContext="{Binding ElementName=issueList, Path=SelectedItem}">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="auto"/>
+                            <RowDefinition Height="auto"/>
+                            <RowDefinition Height="auto"/>
+                            <RowDefinition Height="auto"/>
+                            <RowDefinition Height="auto"/>
+                            <RowDefinition Height="auto"/>
+                            <RowDefinition Height="auto"/>
+                            <RowDefinition Height="auto"/>
+                        </Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="auto"/>
+                            <ColumnDefinition Width="1*"/>
+                            <ColumnDefinition Width="auto"/>
+                            <ColumnDefinition Width="1*"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Orientation="Horizontal"  Grid.Row="0" Grid.ColumnSpan="4" Margin="3,5,0,0">
+                            <Button ToolTip="Open Issue in browser »" Tag="{Binding key}" Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}" Name="OpenLinkIssueBtn" Visibility="{Binding ElementName=issueList, Path=SelectedItems.Count, Converter={StaticResource intVisibConverter}}">
+                                <Path   Margin="0" Height="13" Width="13" Stretch="Uniform" Fill="Gray" 
+                                        Data="M86,15L78.5,15L62.1,15L69.6,22.3L54.9,37L63.8,45.9L78.5,31.1L86,38.9M64,73L27,73L27,37L45.7,37L60.3,22L14,22L14,86L77,86L77,40.1L64,55.4" UseLayoutRounding="False"/>
+                            </Button>
+                            <TextBlock FontWeight="Bold" FontSize="14" Text="{Binding formattedsubject}" VerticalAlignment="Bottom" TextDecorations="{Binding formattedresolution}" />
 
 
-                </StackPanel>
-                <StackPanel Orientation="Vertical"  Grid.Row="1" Grid.ColumnSpan="4">
-                    <Label FontSize="11" VerticalAlignment="Bottom" Content="{Binding formatteddate}" ToolTip="{Binding formatteddate2}" FontStyle="Italic"/>
-                    <Label FontSize="11" VerticalAlignment="Bottom" Content="{Binding formattedguid}" Visibility="{Binding formattedguid, Converter={StaticResource stringVisibConverter}}"/>
-                    <!--<Label FontWeight="Bold" FontSize="10"  Content="{Binding formattedstatus}"   VerticalAlignment="Bottom" />-->
+                        </StackPanel>
+                        <StackPanel Orientation="Vertical"  Grid.Row="1" Grid.ColumnSpan="4">
+                            <Label FontSize="11" VerticalAlignment="Bottom" Content="{Binding formatteddate}" ToolTip="{Binding formatteddate2}" FontStyle="Italic"/>
+                            <Label FontSize="11" VerticalAlignment="Bottom" Content="{Binding formattedguid}" Visibility="{Binding formattedguid, Converter={StaticResource stringVisibConverter}}"/>
+                            <!--<Label FontWeight="Bold" FontSize="10"  Content="{Binding formattedstatus}"   VerticalAlignment="Bottom" />-->
 
-                </StackPanel>
-                <Label  Visibility="{Binding fields.reporter.displayName, Converter={StaticResource stringVisibConverter}}" 
+                        </StackPanel>
+                        <Label  Visibility="{Binding fields.reporter.displayName, Converter={StaticResource stringVisibConverter}}" 
                    FontSize="11" Grid.Row="2" Content="Created by:" VerticalAlignment="Bottom" />
-                <Label Visibility="{Binding fields.reporter.displayName, Converter={StaticResource stringVisibConverter}}"
+                        <Label Visibility="{Binding fields.reporter.displayName, Converter={StaticResource stringVisibConverter}}"
                    Grid.Row="2" Grid.Column="1" Content="{Binding fields.creator.displayName}" VerticalAlignment="Bottom" />
 
-                <Label FontSize="11"  Grid.Row="3" VerticalAlignment="Bottom" Content="Assigned to:" />
-                <Button Click="ChangeAssign_Click" Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}" x:Name="ChangeAssign" FontSize="11" FontWeight="Bold"
+                        <Label FontSize="11"  Grid.Row="3" VerticalAlignment="Bottom" Content="Assigned to:" />
+                        <Button Click="ChangeAssign_Click" Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}" x:Name="ChangeAssign" FontSize="11" FontWeight="Bold"
                    Grid.Row="3" Grid.Column="1" HorizontalAlignment="Left" Content="{Binding fields.assignee, Converter={StaticResource assigneeConverter}}" />
 
-                <Label FontSize="11" Grid.Column="2" Grid.Row="2" VerticalAlignment="Bottom" Content="Issue Type:" />
+                        <Label FontSize="11" Grid.Column="2" Grid.Row="2" VerticalAlignment="Bottom" Content="Issue Type:" />
 
 
-                <Button  Grid.Row="2" Grid.Column="3" Click="ChangeType_Click" Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}" x:Name="ChangeType" FontSize="11" FontWeight="Bold"
+                        <Button  Grid.Row="2" Grid.Column="3" Click="ChangeType_Click" Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}" x:Name="ChangeType" FontSize="11" FontWeight="Bold"
                    HorizontalAlignment="Left" >
-                    <StackPanel Orientation="Horizontal" >
-                        <Image Height="12" Width="12"  Margin="0,0,2,0" Source="{Binding ElementName=issueList, Path=SelectedItem.fields.issuetype.iconUrl, IsAsync=true}" ToolTip="{Binding fields.issuetype.name}"  />
-                        <TextBlock Text="{Binding fields.issuetype.name}"/>
-                    </StackPanel>
-                </Button>
+                            <StackPanel Orientation="Horizontal" >
+                                <Image Height="12" Width="12"  Margin="0,0,2,0" Source="{Binding ElementName=issueList, Path=SelectedItem.fields.issuetype.iconUrl, IsAsync=true}" ToolTip="{Binding fields.issuetype.name}"  />
+                                <TextBlock Text="{Binding fields.issuetype.name}"/>
+                            </StackPanel>
+                        </Button>
 
 
 
-                <Label FontSize="11" Grid.Column="2" Grid.Row="3" VerticalAlignment="Bottom" Content="Priority:" />
-                <Button Click="ChangePriority_Click" Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}" x:Name="ChangePriority"  FontSize="11" FontWeight="Bold"
+                        <Label FontSize="11" Grid.Column="2" Grid.Row="3" VerticalAlignment="Bottom" Content="Priority:" />
+                        <Button Click="ChangePriority_Click" Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}" x:Name="ChangePriority"  FontSize="11" FontWeight="Bold"
                    Grid.Row="3" Grid.Column="3"  HorizontalAlignment="Left">
-                    <StackPanel Orientation="Horizontal" >
-                        <Image Height="12" Width="12" Margin="0,0,2,0" Source="{Binding ElementName=issueList, Path=SelectedItem.fields.priority.iconUrl, IsAsync=true}" ToolTip="{Binding fields.priority.name}"  />
-                        <TextBlock Text="{Binding fields.priority.name}"/>
-                    </StackPanel>
-                </Button>
+                            <StackPanel Orientation="Horizontal" >
+                                <Image Height="12" Width="12" Margin="0,0,2,0" Source="{Binding ElementName=issueList, Path=SelectedItem.fields.priority.iconUrl, IsAsync=true}" ToolTip="{Binding fields.priority.name}"  />
+                                <TextBlock Text="{Binding fields.priority.name}"/>
+                            </StackPanel>
+                        </Button>
 
-                <Label FontSize="11" Grid.Column="0" Grid.Row="4" VerticalAlignment="Bottom" Content="Status:" />
-                <Button Click="ChangeStatus_Click" Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}" x:Name="ChangeStatus" FontSize="11" FontWeight="Bold"
+                        <Label FontSize="11" Grid.Column="0" Grid.Row="4" VerticalAlignment="Bottom" Content="Status:" />
+                        <Button Click="ChangeStatus_Click" Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}" x:Name="ChangeStatus" FontSize="11" FontWeight="Bold"
                    Grid.Row="4" Grid.Column="1" HorizontalAlignment="Left" >
-                    <StackPanel Orientation="Horizontal" >
-                        <Image Height="12" Width="12" Margin="0,0,2,0" Source="{Binding ElementName=issueList, Path=SelectedItem.fields.status.iconUrl, IsAsync=true}" ToolTip="{Binding fields.status.name}"  />
-                        <TextBlock Text="{Binding fields.status.name}"/>
-                    </StackPanel>
-                </Button>
+                            <StackPanel Orientation="Horizontal" >
+                                <Image Height="12" Width="12" Margin="0,0,2,0" Source="{Binding ElementName=issueList, Path=SelectedItem.fields.status.iconUrl, IsAsync=true}" ToolTip="{Binding fields.status.name}"  />
+                                <TextBlock Text="{Binding fields.status.name}"/>
+                            </StackPanel>
+                        </Button>
 
-                <Label FontSize="11" Grid.Column="2" Grid.Row="4" VerticalAlignment="Bottom" Name="ChangeComponentsLabel" Content="Components:" />
-                <Button Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}" x:Name="ChangeComponents"  FontSize="11" FontWeight="Bold" 
+                        <Label FontSize="11" Grid.Column="2" Grid.Row="4" VerticalAlignment="Bottom" Name="ChangeComponentsLabel" Content="Components:" />
+                        <Button Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}" x:Name="ChangeComponents"  FontSize="11" FontWeight="Bold" 
                    Grid.Row="4" Grid.Column="3" HorizontalAlignment="Left" Content="{Binding fields.components, Converter={StaticResource listConverter}}" />
 
 
+                        <StackPanel Orientation="Horizontal" Grid.Row="6" Grid.ColumnSpan="4" Visibility="{Binding ElementName=issueList, Path=SelectedItems.Count, Converter={StaticResource intVisibConverter}}" >
 
-
-
-
-
-
-
-                <StackPanel Orientation="Horizontal" Grid.Row="6" Grid.ColumnSpan="4" Visibility="{Binding ElementName=issueList, Path=SelectedItems.Count, Converter={StaticResource intVisibConverter}}" >
-
-                    <Button Margin="5" Cursor="Hand" ToolTip="Click to open Snapshot"  Visibility="{Binding snapshot, Converter={StaticResource stringVisibConverter}}"  HorizontalAlignment="Stretch"   
+                            <Button Margin="5" Cursor="Hand" ToolTip="Click to open Snapshot"  Visibility="{Binding snapshot, Converter={StaticResource stringVisibConverter}}"  HorizontalAlignment="Stretch"   
                         Grid.Row="0" VerticalAlignment="Stretch"   Height="60"  Name="OpenImageBtn"  Tag="{Binding snapshotFull}" Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}">
-                        <Grid>
-                            <Image Visibility="{Binding snapshot, Converter={StaticResource stringVisibConverter}}" Height="60" Width="100" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" 
+                                <Grid>
+                                    <Image Visibility="{Binding snapshot, Converter={StaticResource stringVisibConverter}}" Height="60" Width="100" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" 
                                Source="{Binding snapshot,  Converter={StaticResource uriToImageConv}, IsAsync=true}" />
 
 
-                        </Grid>
-                    </Button>
-                    <StackPanel Orientation="Vertical">
-                        <Button ToolTip="Click to Open 3D View »"  Name="Open3dViewBtn" Margin="5" HorizontalAlignment="Stretch" Tag="{Binding viewpoint}" x:FieldModifier="public" Visibility="{Binding viewpoint, Converter={StaticResource stringVisibConverter}}">
-                            <StackPanel Orientation="Horizontal">
-                                <Path   Margin="5,0,0,0" Height="15" Width="15" Stretch="Uniform" Fill="Gray"  Data="M86,32L59,45.5L59,32L14,32L14,68L59,68L59,54.5L86,68" UseLayoutRounding="False"/>
-                                <TextBlock Margin="5,2" Text="Open 3D View »" />
+                                </Grid>
+                            </Button>
+                            <StackPanel Orientation="Vertical">
+                                <Button ToolTip="Click to Open 3D View »"  Name="Open3dViewBtn" Margin="5" HorizontalAlignment="Stretch" Tag="{Binding viewpoint}" x:FieldModifier="public" Visibility="{Binding viewpoint, Converter={StaticResource stringVisibConverter}}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <Path   Margin="5,0,0,0" Height="15" Width="15" Stretch="Uniform" Fill="Gray"  Data="M86,32L59,45.5L59,32L14,32L14,68L59,68L59,54.5L86,68" UseLayoutRounding="False"/>
+                                        <TextBlock Margin="5,2" Text="Open 3D View »" />
+                                    </StackPanel>
+                                </Button>
+
+                                <Button ToolTip="Show information about the components in the viewpoint" Click="ComponentsShow"  Name="ComponentsShowBtn" Margin="5" HorizontalAlignment="Stretch" Tag="{Binding viewpoint}" x:FieldModifier="public" Visibility="{Binding viewpoint, Converter={StaticResource stringVisibConverter}}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <Path   Margin="5,0,0,0" Height="15" Width="15" Stretch="Uniform" Fill="Gray"  Data="M71.1,23H28.9C24,23,20,27,20,31.9v36.1c0,4.9,4,8.9,8.9,8.9h42.1c4.9,0,8.9-4,8.9-8.9V31.9C80,27,76,23,71.1,23zM74,68.1c0,1.6-1.3,2.9-2.9,2.9H28.9c-1.6,0-2.9-1.3-2.9-2.9V31.9c0-1.6,1.3-2.9,2.9-2.9h42.1c1.6,0,2.9,1.3,2.9,2.9V68.1zM35,38L42.8,38L54.4,38L65,38L65,44L35,44M35,47L50.6,47L65,47L65,53L35,53M35,56L49.8,56L65,56L65,62L35,62" UseLayoutRounding="False"/>
+                                        <TextBlock Margin="5,2" Text="Attached elements" />
+                                    </StackPanel>
+                                </Button>
+
                             </StackPanel>
-                        </Button>
-
-                        <Button ToolTip="Show information about the components in the viewpoint" Click="ComponentsShow"  Name="ComponentsShowBtn" Margin="5" HorizontalAlignment="Stretch" Tag="{Binding viewpoint}" x:FieldModifier="public" Visibility="{Binding viewpoint, Converter={StaticResource stringVisibConverter}}">
-                            <StackPanel Orientation="Horizontal">
-                                <Path   Margin="5,0,0,0" Height="15" Width="15" Stretch="Uniform" Fill="Gray"  Data="M71.1,23H28.9C24,23,20,27,20,31.9v36.1c0,4.9,4,8.9,8.9,8.9h42.1c4.9,0,8.9-4,8.9-8.9V31.9C80,27,76,23,71.1,23zM74,68.1c0,1.6-1.3,2.9-2.9,2.9H28.9c-1.6,0-2.9-1.3-2.9-2.9V31.9c0-1.6,1.3-2.9,2.9-2.9h42.1c1.6,0,2.9,1.3,2.9,2.9V68.1zM35,38L42.8,38L54.4,38L65,38L65,44L35,44M35,47L50.6,47L65,47L65,53L35,53M35,56L49.8,56L65,56L65,62L35,62" UseLayoutRounding="False"/>
-                                <TextBlock Margin="5,2" Text="Attached elements" />
-                            </StackPanel>
-                        </Button>
-
-                    </StackPanel>
 
 
-                </StackPanel>
-                <!--<Button  Cursor="Hand" ToolTip="Click to open Full Size"  VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Grid.RowSpan="3"   Grid.Column="2" Height="80"  Grid.Row="0" Click="Button_Click" >
+                        </StackPanel>
+                        <!--<Button  Cursor="Hand" ToolTip="Click to open Full Size"  VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Grid.RowSpan="3"   Grid.Column="2" Height="80"  Grid.Row="0" Click="Button_Click" >
                                         <Image  x:Name="snapimg"  HorizontalAlignment="Stretch"  VerticalAlignment="Stretch" Source="{Binding Snapshot}"  />
                                     </Button>-->
 
 
-            </Grid>
-            <GridSplitter Grid.Column="2" Grid.Row="3" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Grid.RowSpan="1" />
-            <!-- COMMENTS *********************************************************************************************************************************-->
-            <Label Content="Comments:" Grid.Row="4" Grid.Column="2" FontWeight="Bold"/>
-            <ListView  ItemsSource="{Binding ElementName=issueList, Path=SelectedItem.fields.comment.comments}" 
+                    </Grid>
+                    <!--<GridSplitter Grid.Column="2" Grid.Row="3" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Grid.RowSpan="1" />-->
+                    <!-- COMMENTS *********************************************************************************************************************************-->
+                    <Label Content="Attachments:"  Grid.Row="4" Grid.Column="2" FontWeight="Bold" Visibility="{Binding ElementName=issueList, Path=SelectedItem.fields.attachment.Count, Converter={StaticResource intVisibConverter}}"/>
+                    <!--<StackPanel Orientation="Horizontal">-->
+                        <ListView  ItemsSource="{Binding ElementName=issueList, Path=SelectedItem.fields.attachment}" 
+                                    x:Name="attachmentList" Margin="0" BorderThickness="0" 
+                                    ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                            <ListView.Template>
+                                <ControlTemplate>
+                                    <ItemsPresenter></ItemsPresenter>
+                                </ControlTemplate>
+                            </ListView.Template>
+                            <ListView.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <WrapPanel IsItemsHost="True" />
+                                </ItemsPanelTemplate>
+                            </ListView.ItemsPanel>
+                            <ListView.ItemTemplate>
+                                <DataTemplate>
+                                    <Button Margin="0" Cursor="Hand" ToolTip="{Binding filename}"  Visibility="{Binding filename, Converter={StaticResource stringVisibConverter}}"  HorizontalAlignment="Stretch"   
+                                                        VerticalAlignment="Stretch" MaxWidth="60" Height="60" x:Name="OpenImageBtn"  Tag="{Binding content}" Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}" Click="OpenImageBtn_Click">
+                                        <StackPanel Orientation="Vertical">
+                                        <Rectangle Width="35" Height="40" Fill="SteelBlue">
+                                                <Rectangle.OpacityMask>
+                                                <VisualBrush Stretch="Fill">
+                                                    <VisualBrush.Visual>
+                                                        <Canvas>
+                                                            <Path Fill="Red" Stretch="Fill" Width="35" Height="40" Data="F1 M 20,17L 44,17L 56,29L 56,59L 20,59L 20,17 Z M 24,21L 24,55L 52,55L 52,34L 39,34L 39,21L 24,21 Z M 43,21L 43,30L 52,30L 43,21 Z "/>
+                                                        </Canvas>
+                                                    </VisualBrush.Visual>
+                                                </VisualBrush>
+                                            </Rectangle.OpacityMask>
+                                            </Rectangle>
+                                            <TextBlock HorizontalAlignment="Left" Text="{Binding filename}" />
+                                        </StackPanel>
+                                    </Button>
+                                </DataTemplate>
+                            </ListView.ItemTemplate>
+                        </ListView>
+                    <!--</StackPanel>-->
+                    
+                    <Label Content="Comments:" Grid.Row="4" Grid.Column="2" FontWeight="Bold"/>                    
+                    <ListView  ItemsSource="{Binding ElementName=issueList, Path=SelectedItem.fields.comment.comments}" 
                         ItemContainerStyle="{StaticResource ListViewItemStyle2}"
                    Grid.Row="5" Grid.RowSpan="1" Grid.Column="2" x:Name="commentList" Margin="0" BorderThickness="0" 
-                  ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                   ScrollViewer.CanContentScroll="False">
-                <ListView.ItemTemplate>
-                    <DataTemplate>
-                        <Expander IsExpanded="True" >
-                            <Expander.HeaderTemplate>
-
-                                <DataTemplate >
-                                    <StackPanel VerticalAlignment="Top"   Orientation="Horizontal"  DataContext="{Binding Path=DataContext, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Expander}}}" >
-                                        <Label  FontWeight="Bold" Content="{Binding author.displayName}" VerticalAlignment="Bottom"   />
-                                        <Label Grid.Column="1"  FontSize="11" VerticalAlignment="Bottom"  Content="{Binding formatteddate}"   ToolTip="{Binding formatteddate2}" />
-                                        <Label FontSize="11"  Content="{Binding expTitle}" Visibility="{Binding Path=IsExpanded, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Expander}}, Converter={StaticResource expandedConverter}}" />
-
+                  ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                        <ListView.Template>
+                            <ControlTemplate>
+                                <ItemsPresenter></ItemsPresenter>
+                            </ControlTemplate>
+                        </ListView.Template>
+                        <ListView.ItemTemplate>
+                            <DataTemplate>
+                                <Expander IsExpanded="True" BorderBrush="White"  BorderThickness="3" Background="WhiteSmoke">
+                                    <Expander.HeaderTemplate>
+                                        <DataTemplate >
+                                            <StackPanel VerticalAlignment="Top"   Orientation="Horizontal"  DataContext="{Binding Path=DataContext, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Expander}}}" >
+                                                <Label  FontWeight="Bold" Content="{Binding author.displayName}" VerticalAlignment="Bottom"   />
+                                                <Label Grid.Column="1"  FontSize="11" VerticalAlignment="Bottom"  Content="{Binding formatteddate}"   ToolTip="{Binding formatteddate2}" />
+                                                <Label FontSize="11"  Content="{Binding expTitle}" Visibility="{Binding Path=IsExpanded, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Expander}}, Converter={StaticResource expandedConverter}}" />                                            
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </Expander.HeaderTemplate>
+                                    <StackPanel Orientation="Vertical"  >
+                                        <TextBlock Padding="5" HorizontalAlignment="Stretch" TextWrapping="Wrap">
+                                            <Run Text="{Binding body}" />
+                                            <InlineUIContainer>                                                
+                                                <Button Margin="5" Cursor="Hand" ToolTip="Click to open snapshot"  Visibility="{Binding snapshotThumbnailUrl, Converter={StaticResource stringVisibConverter}}"  HorizontalAlignment="Stretch"   
+                                                        VerticalAlignment="Stretch"   Height="60"  x:Name="OpenImageBtn"  Tag="{Binding snapshotFullUrl}" Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}" Click="OpenImageBtn_Click">
+                                                    <Grid>
+                                                        <Image Visibility="{Binding snapshotThumbnailUrl, Converter={StaticResource stringVisibConverter}}" MaxHeight="270" MaxWidth="480" Stretch="Uniform"  HorizontalAlignment="Stretch" VerticalAlignment="Stretch" 
+                                                                     Source="{Binding snapshotThumbnailUrl,  Converter={StaticResource uriToImageConv}, IsAsync=true}" />
+                                                    </Grid>
+                                                </Button>
+                                            </InlineUIContainer>
+                                            <InlineUIContainer> 
+                                                <Button ToolTip="Open this viewpoint in 3D view" Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}" Tag="{Binding viewpointFileUrl}" Visibility="{Binding viewpointFileUrl, Converter={StaticResource stringVisibConverter}}">
+                                                    <Path  Margin="0" Height="15" Width="15" Stretch="Uniform" Fill="Gray"  Data="F1 M 42.5,22C 49.4036,22 55,27.5964 55,34.5C 55,41.4036 49.4036,47 42.5,47C 40.1356,47 37.9245,46.3435 36,45.2426L 26.9749,54.2678C 25.8033,55.4393 23.9038,55.4393 22.7322,54.2678C 21.5607,53.0962 21.5607,51.1967 22.7322,50.0251L 31.7971,40.961C 30.6565,39.0755 30,36.8644 30,34.5C 30,27.5964 35.5964,22 42.5,22 Z M 42.5,26C 37.8056,26 34,29.8056 34,34.5C 34,39.1944 37.8056,43 42.5,43C 47.1944,43 51,39.1944 51,34.5C 51,29.8056 47.1944,26 42.5,26 Z M 41,29L 44,29L 44,33L 48,33L 48,36L 44,36L 44,40L 41,40L 41,36L 37,36L 37,33L 41,33L 41,29 Z " UseLayoutRounding="False"/>
+                                                </Button>
+                                            </InlineUIContainer>
+                                        </TextBlock>                                        
                                     </StackPanel>
+                                </Expander>
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
 
-                                </DataTemplate>
-                            </Expander.HeaderTemplate>
-                            <StackPanel Orientation="Vertical"  >
-                                <TextBlock Padding="5" Text="{Binding body}" HorizontalAlignment="Stretch" TextWrapping="Wrap" />
-
-                            </StackPanel>
-                        </Expander>
-                    </DataTemplate>
-                </ListView.ItemTemplate>
-
-            </ListView>
+                    </ListView>
+                </StackPanel>
+            </ScrollViewer>
+            
             <!-- DOCK PANELS ******************************************************************************************************************************-->
             <DockPanel  HorizontalAlignment="Stretch" Grid.Row="6" Grid.Column="0" Background="WhiteSmoke" Grid.ColumnSpan="1"  >
                 <Button ToolTip="Add Issue" DockPanel.Dock="Left" Name="AddIssueBtn" x:FieldModifier="public"  Margin="5" IsEnabled="{Binding  ElementName=projCombo, Path=SelectedIndex, Converter={StaticResource intEnabConverter3}}">
@@ -419,7 +472,7 @@
 
             </DockPanel>
             <DockPanel Height="auto"  HorizontalAlignment="Stretch" Grid.Row="6" Grid.Column="2" Background="WhiteSmoke" >
-                <Button ToolTip="Add Comment" DockPanel.Dock="Left" Margin="5" Name="AddCommBtn" HorizontalAlignment="Left" IsEnabled="{Binding  ElementName=issueList, Path=SelectedItems.Count, Converter={StaticResource intEnabConverter}}">
+                <Button ToolTip="Add Comment" DockPanel.Dock="Left" Margin="5" x:Name="AddCommBtn" x:FieldModifier="public" HorizontalAlignment="Left" IsEnabled="{Binding  ElementName=issueList, Path=SelectedItems.Count, Converter={StaticResource intEnabConverter}}">
                     <StackPanel Orientation="Horizontal">
                         <Path   Margin="5,0,0,0" Height="15" Width="15" Stretch="Uniform" Fill="Green"  Data="M50,100C22.4,100,0,77.6,0,50S22.4,0,50,0s50,22.4,50,50S77.6,100,50,100z M24.4,55.7h19.2V75H56V55.7h19.2
 	V43.5H56V24.2H43.6v19.2H24.4V55.7z" UseLayoutRounding="False"/>

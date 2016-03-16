@@ -205,12 +205,13 @@ namespace ARUP.IssueTracker.Classes
                         if (issue.Comment.Any())
                         {
                             issue.Comment = new System.Collections.ObjectModel.ObservableCollection<BCF2.Comment>(issue.Comment.Reverse());
+                            int unmodifiedCommentNumber = 0;
                             foreach (var c in issue.Comment)
                             {
                                 string normalized1 = Regex.Replace(c.Comment1, @"\s", "");
                                 if (oldIssue.fields.comment.comments.Any(o => Regex.Replace(o.body, @"\s", "").Equals(normalized1, StringComparison.OrdinalIgnoreCase)))
                                 {
-                                    unchangedIssueCounter++;
+                                    unmodifiedCommentNumber++;
                                     continue;
                                 }
 
@@ -225,6 +226,11 @@ namespace ARUP.IssueTracker.Classes
 
                                 if (!RestCallback.Check(response3))
                                     break;
+                            }
+
+                            if (unmodifiedCommentNumber == issue.Comment.Count)
+                            {
+                                unchangedIssueCounter++;
                             }
                         }
                         else 

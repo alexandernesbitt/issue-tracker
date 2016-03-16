@@ -44,6 +44,11 @@ namespace ARUP.IssueTracker.Classes.BCF2
 
     private VisualizationInfoBitmaps[] bitmapsField;
 
+    public VisualizationInfo()
+    {
+        Components = new List<Component>();
+    }
+
     /// <remarks/>
     [System.Xml.Serialization.XmlArrayItemAttribute(IsNullable = false)]
     public List<Component> Components
@@ -122,6 +127,12 @@ namespace ARUP.IssueTracker.Classes.BCF2
     public Component()
     {
       this.visibleField = true;
+    }
+    public Component(string os, string aid, string guid)
+    {
+        OriginatingSystem = os;
+        authoringToolIdField = aid;
+        IfcGuid = guid;
     }
 
     /// <remarks/>
@@ -240,6 +251,18 @@ namespace ARUP.IssueTracker.Classes.BCF2
     {
       get { return this.zField; }
       set { this.zField = value; }
+    }
+
+    public Point(double x, double y, double z)
+    {
+        X = x;
+        Y = y;
+        Z = z;
+    }
+
+    public Point()
+    {
+
     }
   }
 

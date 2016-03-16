@@ -271,6 +271,14 @@ namespace ARUP.IssueTracker.UserControls
             text = txt.Text;
             return true;
         }
+
+        private void OpenImageBtn_Click(object sender, RoutedEventArgs e)
+        {
+            if (mainPanel != null) 
+            {
+                mainPanel.OpenImage(sender, e);
+            }
+        }
     }
        
 }

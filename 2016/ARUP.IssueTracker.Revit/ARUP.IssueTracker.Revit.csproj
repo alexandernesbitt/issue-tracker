@@ -93,6 +93,7 @@
       <DependentUpon>AddIssueRevit.xaml</DependentUpon>
     </Compile>
     <Compile Include="Classes\Utils.cs" />
+    <Compile Include="CommentController.cs" />
     <Compile Include="Entry\AppIssueTracker.cs" />
     <Compile Include="Entry\CmdMain.cs" />
     <Compile Include="Entry\ExtOpenView.cs" />

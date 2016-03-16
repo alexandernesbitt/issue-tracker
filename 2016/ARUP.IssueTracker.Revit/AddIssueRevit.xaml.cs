@@ -49,10 +49,10 @@ namespace ARUP.IssueTracker.Revit
                 //comboStatuses.SelectedIndex = 3;
 
                 if (null != _typesCollection) { 
-                typesCollection = _typesCollection;
-                issueTypeCombo.ItemsSource = typesCollection;
-                issueTypeCombo.SelectedIndex = 0;
-            }
+                    typesCollection = _typesCollection;
+                    issueTypeCombo.ItemsSource = typesCollection;
+                    issueTypeCombo.SelectedIndex = 0;
+                }
                 if (!comp)
                 {
                     compCollection = _compCollection;

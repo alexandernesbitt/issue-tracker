@@ -376,7 +376,7 @@ namespace ARUP.IssueTracker.Classes.BCF2
         //this library cause conflicts with Solibri
         //ZipFile.CreateFromDirectory(bcffile.TempPath, filename, CompressionLevel.Fastest, false);
 
-        DeleteDirectory(bcffile.TempPath);
+        //DeleteDirectory(bcffile.TempPath);
 
         //Open browser at location
         Uri uri2 = new Uri(filename);

@@ -11,6 +11,15 @@ namespace ARUP.IssueTracker.Classes
         public UpdateAuthor updateAuthor { get; set; }
         public string created { get; set; }
         public string updated { get; set; }
+
+        //for multiple snapshots/viewpoints
+        public string viewpointFileName { get; set; }
+        public string viewpointFileUrl { get; set; }
+        public string snapshotFileName { get; set; }
+        public string snapshotThumbnailUrl { get; set; }
+        public string snapshotFullUrl { get; set; }
+
+
         public string formatteddate
         {
             get
