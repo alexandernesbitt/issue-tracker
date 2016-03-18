@@ -19,6 +19,7 @@ using Autodesk.Revit.DB.IFC;
 using Autodesk.Revit.UI;
 using ARUP.IssueTracker.Classes;
 using System.ComponentModel;
+using ARUP.IssueTracker.Classes.BCF2;
 
 namespace ARUP.IssueTracker.Revit
 {
@@ -265,7 +266,8 @@ namespace ARUP.IssueTracker.Revit
         {
             try
             {
-                VisualizationInfo v = mainPan.getVisInfo();
+                string url = (string)((Button)sender).Tag;
+                VisualizationInfo v = mainPan.getVisInfo(url);
                 if (null != v)
                     doOpen3DView(v);
             }

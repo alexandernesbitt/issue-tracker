@@ -22,6 +22,7 @@ using Autodesk.Navisworks.Api.DocumentParts;
 using Autodesk.Navisworks.Api.Data;
 using System.Data;
 using System.Xml.Serialization;
+using ARUP.IssueTracker.Classes.BCF2;
 
 namespace ARUP.IssueTracker.Navisworks
 {
@@ -539,7 +540,8 @@ namespace ARUP.IssueTracker.Navisworks
         {
             try
             {
-                VisualizationInfo v = mainPan.getVisInfo();
+                string url = (string)((Button)sender).Tag;
+                VisualizationInfo v = mainPan.getVisInfo(url);
                 if (null != v)
                     Open3DView(v);
             }

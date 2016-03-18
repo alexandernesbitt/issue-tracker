@@ -25,13 +25,29 @@ namespace ARUP.IssueTracker.Windows
             InitializeComponent();
             this.commentController = commentController;
 
+            if (commentController != null) 
+            {
+                if (commentController.client == AuthoringTool.Revit)
+                {                    
+                    captureModelViewpointButton.Visibility = System.Windows.Visibility.Visible;
+                    comboVisuals.ItemsSource = commentController.visuals;
+                }
+                else if (commentController.client == AuthoringTool.Navisworks)
+                {
+                    captureModelViewpointButton.Visibility = System.Windows.Visibility.Visible;
+                }
+                else if (commentController.client == AuthoringTool.None)
+                {
+
+                }
+            }
+            
+
+            // for Jira
             snapshotFolder = Path.Combine(Path.GetTempPath(), "BCFtemp", Path.GetRandomFileName());
             if (!Directory.Exists(snapshotFolder))
                 Directory.CreateDirectory(snapshotFolder);
-
-            // generate a viewpoint when loaded
-            captureModelViewpointButton_Click(null, null);
-            comboVisuals.ItemsSource = commentController.visuals;
+            
         }
         private void OKBtnClick(object sender, RoutedEventArgs e)
         {
@@ -72,6 +88,14 @@ namespace ARUP.IssueTracker.Windows
         //LOAD EXTERNAL IMAGE
         private void Button_LoadImage(object sender, RoutedEventArgs e)
         {
+            none.Visibility = System.Windows.Visibility.Collapsed;
+            all.Visibility = System.Windows.Visibility.Collapsed;
+            selected.Visibility = System.Windows.Visibility.Collapsed;
+            comboVisuals.Visibility = System.Windows.Visibility.Collapsed;
+            all.IsEnabled = false;
+            selected.IsEnabled = false;
+            none.IsEnabled = false;
+            comboVisuals.IsEnabled = false;
 
             Microsoft.Win32.OpenFileDialog openFileDialog1 = new Microsoft.Win32.OpenFileDialog();
             //  openFileDialog1.InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
@@ -357,6 +381,14 @@ namespace ARUP.IssueTracker.Windows
 
         public void captureModelViewpointButton_Click(object sender, RoutedEventArgs e)
         {
+            none.Visibility = System.Windows.Visibility.Visible;
+            all.Visibility = System.Windows.Visibility.Visible;
+            selected.Visibility = System.Windows.Visibility.Visible;
+            comboVisuals.Visibility = System.Windows.Visibility.Visible;
+            all.IsEnabled = true;
+            selected.IsEnabled = true;
+            none.IsEnabled = true;
+            comboVisuals.IsEnabled = true;
             if (commentController != null) 
             {
                 int elemCheck = 2;

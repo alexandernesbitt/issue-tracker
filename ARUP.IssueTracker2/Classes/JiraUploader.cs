@@ -97,18 +97,25 @@ namespace ARUP.IssueTracker.Classes
                     //DOESN'T exist already
                     if (!response4.Data.issues.Any())
                     {
-
+                        //files to be uploaded
+                        List<string> filesToBeUploaded = new List<string>();
                         string snapshot = Path.Combine(path, issue.Topic.Guid, "snapshot.png");
                         string viewpoint = Path.Combine(path, issue.Topic.Guid, "viewpoint.bcfv");
+                        filesToBeUploaded.Add(snapshot);
+                        filesToBeUploaded.Add(viewpoint);
+                        issue.Viewpoints.ToList().ForEach(vp => {
+                            if(!string.IsNullOrWhiteSpace(vp.Snapshot))
+                                filesToBeUploaded.Add( Path.Combine(path, issue.Topic.Guid, vp.Snapshot) );
+                            if(!string.IsNullOrWhiteSpace(vp.Snapshot))
+                                filesToBeUploaded.Add( Path.Combine(path, issue.Topic.Guid, vp.Viewpoint) );
+                        });
                         string key = "";
-
 
                         //update view - it might be a new issue
                         // Serialize the object, and close the TextWriter
                         Stream writerV = new FileStream(viewpoint, FileMode.Create);
                         serializerV.Serialize(writerV, issue.Viewpoints[0].VisInfo);
                         writerV.Close();
-
 
                         var request = new RestRequest("issue", Method.POST);
                         request.AddHeader("Content-Type", "application/json");
@@ -123,6 +130,7 @@ namespace ARUP.IssueTracker.Classes
     
                             };
                         newissue.fields.Add("project", new { key = projectKey });
+                        newissue.fields.Add("description", issuesJira[i].fields.description);
                         newissue.fields.Add("summary", (string.IsNullOrWhiteSpace(issue.Topic.Title)) ? "no title" : issue.Topic.Title);
                         newissue.fields.Add("issuetype", new { id = issuesJira[i].fields.issuetype.id });
                         newissue.fields.Add(MySettings.Get("guidfield"), issue.Topic.Guid);

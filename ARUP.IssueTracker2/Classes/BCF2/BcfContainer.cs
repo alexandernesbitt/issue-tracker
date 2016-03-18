@@ -333,32 +333,35 @@ namespace ARUP.IssueTracker.Classes.BCF2
             {
                 foreach (var bcfViewpoint in issue.Viewpoints)
                 {
-                    string viewpointPath = Path.Combine(issuePath, bcfViewpoint.Viewpoint);
-                    if (bcfViewpoint.VisInfo != null)
+                    if (bcfViewpoint.Viewpoint != null)
                     {
-                        Stream writerV = new FileStream(viewpointPath, FileMode.Create);
-                        serializerV.Serialize(writerV, bcfViewpoint.VisInfo);
-                        writerV.Close();
-                    }
-                    else if (File.Exists(viewpointPath))    // this code block is for Solibri
-                    {
-                        XmlDocument doc = new XmlDocument();
-                        doc.PreserveWhitespace = true;
-                        try 
+                        string viewpointPath = Path.Combine(issuePath, bcfViewpoint.Viewpoint);
+                        if (bcfViewpoint.VisInfo != null)
                         {
-                            doc.Load(viewpointPath);
-                            doc.DocumentElement.SetAttribute("noNamespaceSchemaLocation",
-                                              "http://www.w3.org/2001/XMLSchema-instance",
-                                              "visinfo.xsd"
-                                             );
-                            doc.Save(viewpointPath);
+                            Stream writerV = new FileStream(viewpointPath, FileMode.Create);
+                            serializerV.Serialize(writerV, bcfViewpoint.VisInfo);
+                            writerV.Close();
                         }
-                        catch(Exception ex)
+                        else if (File.Exists(viewpointPath))    // this code block is for Solibri
                         {
-                            MessageBox.Show("Failed to write schema info. Cannot be imported to Solibri.",
-                                               "Warning", MessageBoxButton.OK, MessageBoxImage.Warning);
-                        }                        
-                    }
+                            XmlDocument doc = new XmlDocument();
+                            doc.PreserveWhitespace = true;
+                            try
+                            {
+                                doc.Load(viewpointPath);
+                                doc.DocumentElement.SetAttribute("noNamespaceSchemaLocation",
+                                                  "http://www.w3.org/2001/XMLSchema-instance",
+                                                  "visinfo.xsd"
+                                                 );
+                                doc.Save(viewpointPath);
+                            }
+                            catch (Exception ex)
+                            {
+                                MessageBox.Show("Failed to write schema info. Cannot be imported to Solibri.",
+                                                   "Warning", MessageBoxButton.OK, MessageBoxImage.Warning);
+                            }
+                        }
+                    }                    
                 }
             }  
         }

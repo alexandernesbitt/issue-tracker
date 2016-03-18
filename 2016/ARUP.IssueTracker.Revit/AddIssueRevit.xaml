@@ -76,7 +76,7 @@
             </StackPanel>
         </StackPanel>
        
-        <GroupBox Grid.Row="5" Header="Comment (optional)" >
+        <GroupBox Grid.Row="5" Header="Description (optional)" >
             <Grid  >
                 <Grid.RowDefinitions>
                     <RowDefinition Height="auto"/>

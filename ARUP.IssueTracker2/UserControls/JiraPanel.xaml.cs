@@ -6,6 +6,7 @@ using System.Windows.Media;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Collections.Generic;
+using ARUP.IssueTracker.Classes.BCF2;
 
 namespace ARUP.IssueTracker.UserControls
 {
@@ -14,7 +15,7 @@ namespace ARUP.IssueTracker.UserControls
     /// </summary>
     public partial class JiraPanel : UserControl
     {
-        public event EventHandler<IntArg> ComponentsShowBCFEH;
+        public event RoutedEventHandler open3dViewEvent;
 
         /// <summary>
         /// For MainPanel to send auto-complete items
@@ -24,6 +25,10 @@ namespace ARUP.IssueTracker.UserControls
         public JiraPanel()
         {
             InitializeComponent();
+
+            // default invisible
+            open3dView.Visibility = System.Windows.Visibility.Collapsed;
+            showComponents.Visibility = System.Windows.Visibility.Collapsed;
         }
 
         /// <summary>
@@ -46,24 +51,6 @@ namespace ARUP.IssueTracker.UserControls
         {
             get { return issueList.SelectedIndex; }
             set { issueList.SelectedIndex = value; }
-        }
-        private void ComponentsShow(object sender, RoutedEventArgs e)
-        {
-
-            try
-            {
-                if (issueList.SelectedIndex != -1)
-                {
-                    if (ComponentsShowBCFEH != null)
-                    {
-                        ComponentsShowBCFEH(this, new IntArg(issueList.SelectedIndex));
-                    }
-                }
-            }
-            catch (System.Exception ex1)
-            {
-                MessageBox.Show("exception: " + ex1);
-            }
         }
 
         /// <summary>
@@ -278,6 +265,33 @@ namespace ARUP.IssueTracker.UserControls
             {
                 mainPanel.OpenImage(sender, e);
             }
+        }
+
+        private void showComponents_Click(object sender, RoutedEventArgs e)
+        {
+            if (mainPanel != null)
+            {
+                mainPanel.ComponentsShowJira(sender, e);
+            }
+        }
+
+        private void open3dView_Click(object sender, RoutedEventArgs e)
+        {
+            try 
+            {
+                if (mainPanel != null && open3dViewEvent != null)
+                {
+                    open3dViewEvent(sender, e);
+                }
+                else 
+                {
+                    MessageBox.Show("3D views can only be opened in Revit or Navisworks", "Warning", MessageBoxButton.OK, MessageBoxImage.Warning);
+                }
+            }
+            catch(Exception ex)
+            {
+                MessageBox.Show(ex.ToString());
+            }            
         }
     }
        

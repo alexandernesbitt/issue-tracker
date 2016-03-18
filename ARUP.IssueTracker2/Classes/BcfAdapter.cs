@@ -594,7 +594,7 @@ namespace ARUP.IssueTracker.Classes
                     if (!Directory.Exists(Path.Combine(ReportFolder, issueGuid)))
                         Directory.CreateDirectory(Path.Combine(ReportFolder, issueGuid));
 
-                    // Set up a snapshot/viewpoint guid for Solibri
+                    // Set up a default snapshot/viewpoint guid for Solibri
                     string snapshotGuid = Guid.NewGuid().ToString();
 
                     // Convert header files
@@ -609,13 +609,28 @@ namespace ARUP.IssueTracker.Classes
                         IfcProject = IfcGuid.ToIfcGuid(Guid.NewGuid())
                     });
 
-                    // Convert Comments
+                    // Convert viewpoints in description
+                    ObservableCollection<BCF2.ViewPoint> bcf2ViewPoints = new ObservableCollection<BCF2.ViewPoint>();
+                    bcf2ViewPoints.Add(new BCF2.ViewPoint(true));
+                    // Add default viewpoints to a comment
                     ObservableCollection<BCF2.Comment> bcf2Comments = new ObservableCollection<BCF2.Comment>();
+                    bcf2Comments.Add(new BCF2.Comment()
+                    {
+                        Author = issue.fields.creator.displayName,
+                        Comment1 = issue.fields.description,
+                        Date = DateTime.Parse(issue.fields.updated),
+                        Guid = Guid.NewGuid().ToString(),                        
+                        Status = "Unknown",
+                        Topic = new BCF2.CommentTopic() { Guid = issueGuid }, // all referenced to markup's topic                        
+                        Viewpoint = new BCF2.CommentViewpoint() { Guid = snapshotGuid }  // for Solibri
+                    });
+
+                    // Convert Comments                    
                     foreach (var comm in issue.fields.comment.comments)
                     {
                         if (comm != null)
-                        {
-                            bcf2Comments.Add(new BCF2.Comment()
+                        {            
+                            BCF2.Comment bcf2Comment = new BCF2.Comment()
                             {
                                 Author = comm.author == null ? null : comm.author.displayName,
                                 Comment1 = comm.body == null ? null : comm.body,
@@ -627,11 +642,62 @@ namespace ARUP.IssueTracker.Classes
                                 ReplyToComment = null, // default null
                                 Status = "Unknown",
                                 Topic = new BCF2.CommentTopic() { Guid = issueGuid }, // all referenced to markup's topic
-                                VerbalStatus = issue.fields.status == null ? null : issue.fields.status.name,
-                                Viewpoint = new BCF2.CommentViewpoint() { Guid = snapshotGuid }  // for Solibri
-                            });
+                                VerbalStatus = issue.fields.status == null ? null : issue.fields.status.name                         
+                            };
+
+                            BCF2.ViewPoint vp = new BCF2.ViewPoint(false);
+                            bool isSnapshotExist = !string.IsNullOrWhiteSpace(comm.snapshotFileName);
+                            bool isViewpointExist = !string.IsNullOrWhiteSpace(comm.viewpointFileName);
+                            if(isSnapshotExist || isViewpointExist)
+                            {
+                                Guid tempGuid = Guid.Empty;
+                                if (comm.snapshotFileName.Count() > 36)  //try to use the file name of snapshots as guid
+                                {
+                                    if(Guid.TryParse(comm.snapshotFileName.Substring(0, 36), out tempGuid))
+                                        vp.Guid = tempGuid.ToString();
+                                }                                
+
+                                if (isViewpointExist)
+                                {
+                                    vp.Viewpoint = comm.viewpointFileName;
+                                }
+                                if (isSnapshotExist)
+                                {                                
+                                    vp.Snapshot = comm.snapshotFileName;
+                                }
+
+                                bcf2Comment.Viewpoint = new BCF2.CommentViewpoint() { Guid = vp.Guid };
+                                bcf2ViewPoints.Add(vp);
+                            }                                
+                            
+                            bcf2Comments.Add(bcf2Comment);                                                            
                         }
                     }
+
+                    // Add document references
+                    List<BCF2.TopicDocumentReferences> docs = new List<BCF2.TopicDocumentReferences>();
+                    issue.fields.attachment.ForEach(file => {
+
+                        Guid tempGuid = Guid.Empty;
+                        if (!file.filename.ToLower().Contains(".png") && !file.filename.ToLower().Contains(".bcfv")) 
+                        {
+                            docs.Add(new BCF2.TopicDocumentReferences() { ReferencedDocument = file.content, Description = string.Format("{0} was uploaded to Jira by {1} at {2}", file.filename, file.author.displayName, file.created), isExternal = true, Guid = Guid.NewGuid().ToString() });
+                        }
+                        else if (file.filename.ToLower().Contains(".png"))
+                        {
+                            if (file.filename.Count() > 36)
+                            {
+                                if (!Guid.TryParse(file.filename.Substring(0, 36), out tempGuid))
+                                    docs.Add(new BCF2.TopicDocumentReferences() { ReferencedDocument = file.content, Description = string.Format("{0} was uploaded to Jira by {1} at {2}", file.filename, file.author.displayName, file.created), isExternal = true, Guid = Guid.NewGuid().ToString() });
+                            }
+                            else 
+                            {
+                                if(file.filename != "snapshot.png")
+                                    docs.Add(new BCF2.TopicDocumentReferences() { ReferencedDocument = file.content, Description = string.Format("{0} was uploaded to Jira by {1} at {2}", file.filename, file.author.displayName, file.created), isExternal = true, Guid = Guid.NewGuid().ToString() });
+                            }                            
+                        }
+                            
+                    });
                    
                     // Convert Topic
                     BCF2.Topic bcf2Topic = new BCF2.Topic()
@@ -642,7 +708,7 @@ namespace ARUP.IssueTracker.Classes
                         CreationDate = string.IsNullOrWhiteSpace(issue.fields.created) ? DateTime.Now : DateTime.Parse(issue.fields.created),
                         CreationDateSpecified = true,
                         Description = issue.fields.description == null ? null : issue.fields.description,
-                        DocumentReferences = null,
+                        DocumentReferences = docs.Count == 0 ? null : docs.ToArray(),
                         Guid = issueGuid,
                         Index = null,
                         Labels = issue.fields.labels == null ? null : issue.fields.labels.ToArray(),
@@ -655,18 +721,7 @@ namespace ARUP.IssueTracker.Classes
                         Title = issue.fields.summary == null ? null : issue.fields.summary,
                         TopicStatus = issue.fields.status == null ? null : issue.fields.status.name,
                         TopicType = issue.fields.issuetype == null ? null : issue.fields.issuetype.name
-                    };
-
-                    // Convert viewpoints
-                    // BCF 1.0 can only have one viewpoint
-                    ObservableCollection<BCF2.ViewPoint> bcf2ViewPoints = new ObservableCollection<BCF2.ViewPoint>();
-                    bcf2ViewPoints.Add(new BCF2.ViewPoint()
-                    {
-                        Guid = snapshotGuid,    // for Solibri
-                        Snapshot = "snapshot.png",
-                        Viewpoint = "viewpoint.bcfv", 
-                        //VisInfo = null    // use the one on Jira
-                    });
+                    };                    
 
                     // Add BCF 2.0 issues/markups
                     bcf2.Issues.Add(new BCF2.Markup()
@@ -677,11 +732,14 @@ namespace ARUP.IssueTracker.Classes
                         Viewpoints = bcf2ViewPoints
                     });
 
-                    // Save viewpoint and snapshot
+                    // Save all viewpoints/snapshots
                     try
                     {
-                        mainPan.saveSnapshotViewpoint(issue.viewpoint, Path.Combine(ReportFolder, issueGuid, "viewpoint.bcfv"));
-                        mainPan.saveSnapshotViewpoint(issue.snapshotFull, Path.Combine(ReportFolder, issueGuid, "snapshot.png"));
+                        foreach (var attachment in issue.fields.attachment) 
+                        {
+                            if (attachment.filename.ToLower().Contains(".png") || attachment.filename.ToLower().Contains(".bcfv"))
+                                mainPan.saveSnapshotViewpoint(attachment.content, Path.Combine(ReportFolder, issueGuid, attachment.filename));
+                        }
                     }
                     catch (Exception ex)
                     {

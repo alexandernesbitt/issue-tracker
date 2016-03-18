@@ -21,6 +21,8 @@ using ARUP.IssueTracker.Classes;
 using ARUP.IssueTracker.Classes.BCF2;
 using System.ComponentModel;
 using ARUP.IssueTracker.Windows;
+using System.Windows.Controls;
+using System.Text;
 
 namespace ARUP.IssueTracker.Revit
 {
@@ -54,14 +56,18 @@ namespace ARUP.IssueTracker.Revit
         mainPan.jiraPan.AddIssueBtn.Click += new RoutedEventHandler(AddIssueJira);
         mainPan.bcfPan.AddIssueBtn.Click += new RoutedEventHandler(AddIssueBCF);
 
-        mainPan.bcfPan.Open3dViewBtn.Click += new RoutedEventHandler(Open3dViewBCF);
-        mainPan.jiraPan.Open3dViewBtn.Click += new RoutedEventHandler(Open3dViewJira);
+        mainPan.bcfPan.open3dViewEvent += new RoutedEventHandler(Open3dViewBCF);
+        mainPan.jiraPan.open3dViewEvent += new RoutedEventHandler(Open3dViewJira);
 
         // for ICommentController callback
         commentController = new CommentController(this);
+        commentController.client = AuthoringTool.Revit;
         mainPan.jiraPan.AddCommBtn.Tag = commentController;
 
-
+        // for open 3d view and show components
+        mainPan.jiraPan.open3dView.Visibility = System.Windows.Visibility.Visible;
+        mainPan.jiraPan.showComponents.Visibility = System.Windows.Visibility.Visible;
+        mainPan.SetJiraButtonsInComment(true);
       }
 
       catch (Exception ex1)
@@ -199,11 +205,29 @@ namespace ARUP.IssueTracker.Revit
                   elemCheck = 0;
               else if (air.selected.IsChecked.Value)
                   elemCheck = 1;
+              vp.VisInfo = generateViewpoint(elemCheck);
+
+              //Add annotations for description with snapshot/viewpoint
+              StringBuilder descriptionText = new StringBuilder();
+              if (!string.IsNullOrWhiteSpace(air.CommentBox.Text))
+              {
+                  descriptionText.AppendLine(air.CommentBox.Text);
+              }
+              if (vp.VisInfo != null)
+              {
+                  descriptionText.AppendLine(string.Format("<Viewpoint>[^{0}]</Viewpoint>", "viewpoint.bcfv"));
+              }
+              if (!string.IsNullOrWhiteSpace(vp.SnapshotPath))
+              {
+                  descriptionText.AppendLine(string.Format("<Snapshot>[^{0}]</Snapshot>", "snapshot.png"));
+                  descriptionText.AppendLine(string.Format("!{0}|width=200!", "snapshot.png"));
+              }
 
               Issue issueJira = new Issue();
               if (!isBcf)
               {
                   issueJira.fields = new Fields();
+                  issueJira.fields.description = descriptionText.ToString();
                   issueJira.fields.issuetype =  (Issuetype) air.issueTypeCombo.SelectedItem;
                   issueJira.fields.priority = (Priority) air.priorityCombo.SelectedItem;
                   if (!string.IsNullOrEmpty(air.ChangeAssign.Content.ToString()) &&
@@ -218,9 +242,11 @@ namespace ARUP.IssueTracker.Revit
                       issueJira.fields.components = air.SelectedComponents;
                   }
               }
-              vp.VisInfo = generateViewpoint(elemCheck);
+              
               issue.Viewpoints.Add(vp);
               issue.Topic.Title = air.TitleBox.Text;
+              issue.Topic.Description = descriptionText.ToString();
+              
               issue.Header[0].IfcProject = ExporterIFCUtils.CreateProjectLevelGUID(doc,
                   Autodesk.Revit.DB.IFC.IFCProjectLevelGUIDType.Project);
               string projFilename = (doc.PathName != null && doc.PathName != "")
@@ -229,28 +255,7 @@ namespace ARUP.IssueTracker.Revit
               issue.Header[0].Filename = projFilename;
               issue.Header[0].Date = DateTime.Now;
 
-              //comment
-              if (!string.IsNullOrWhiteSpace(air.CommentBox.Text))
-              {
-                  ARUP.IssueTracker.Classes.BCF2.Comment c = new ARUP.IssueTracker.Classes.BCF2.Comment();
-                  c.Comment1 = air.CommentBox.Text;
-                  c.Topic = new CommentTopic();
-                  c.Topic.Guid = issue.Topic.Guid;
-                  ;
-                  c.Date = DateTime.Now;
-                  c.VerbalStatus = air.VerbalStatus.Text;
-                  // if (air.comboStatuses.SelectedIndex != -1)
-                  // c.Status = mainPan.getStatus(air.comboStatuses.SelectedValue.ToString());
-                  c.Status = air.VerbalStatus.Text;
-                  c.Author = (string.IsNullOrWhiteSpace(mainPan.jira.Self.displayName))
-                      ? MySettings.Get("BCFusername")
-                      : mainPan.jira.Self.displayName;
-                  issue.Comment.Add(c);
-              }
-
               return new Tuple<Markup, Issue>(issue, issueJira);
-
-
           }
           else
           {
@@ -268,25 +273,6 @@ namespace ARUP.IssueTracker.Revit
     }
 
     /// <summary>
-    /// Open 3D View - Jira
-    /// </summary>
-    /// <param name="sender"></param>
-    /// <param name="e"></param>
-    private void Open3dViewJira(object sender, EventArgs e)
-    {
-      try
-      {
-        VisualizationInfo v = mainPan.getVisInfo();
-        if (null != v)
-          doOpen3DView(v);
-      }
-      catch (System.Exception ex1)
-      {
-        MessageBox.Show("exception: " + ex1);
-      }
-    }
-
-    /// <summary>
     /// Open 3D View - BCF
     /// </summary>
     /// <param name="sender"></param>
@@ -295,13 +281,37 @@ namespace ARUP.IssueTracker.Revit
     {
       try
       {
-        VisualizationInfo v = mainPan.jira.Bcf.Issues[mainPan.bcfPan.listIndex].Viewpoints[0].VisInfo;
-        doOpen3DView(v);
+          VisualizationInfo VisInfo = (VisualizationInfo)((Button)sender).Tag;
+          doOpen3DView(VisInfo);
       }
       catch (System.Exception ex1)
       {
         MessageBox.Show("exception: " + ex1);
       }
+    }
+
+    /// <summary>
+    /// Open 3D View - Jira
+    /// </summary>
+    /// <param name="sender"></param>
+    /// <param name="e"></param>
+    private void Open3dViewJira(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            string url = (string)((Button)sender).Tag;
+            VisualizationInfo v = mainPan.getVisInfo(url);
+            if (v == null) 
+            {
+                MessageBox.Show("Failed to open the viewpoint", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+            doOpen3DView(v);
+        }
+        catch (System.Exception ex1)
+        {
+            MessageBox.Show("exception: " + ex1);
+        }
     }
 
     /// <summary>
