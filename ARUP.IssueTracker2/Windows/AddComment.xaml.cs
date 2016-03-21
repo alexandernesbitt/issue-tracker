@@ -12,18 +12,19 @@ namespace ARUP.IssueTracker.Windows
     /// </summary>
     public partial class AddComment : Window
     {
-        private string snapshotFolder;
+        public string snapshotFolder;
         public string snapshotFilePath;
         public string viewpointFilePath;
         public string attachmentFilePath;
-        //private string[] statuses = new string[] { "Error", "Warning", "Info", "Unknown" };
-
+        
         private ICommentController commentController;
+        private bool isBcf = false;
 
-        public AddComment(ICommentController commentController)
+        public AddComment(ICommentController commentController, bool isBcf)
         {          
             InitializeComponent();
             this.commentController = commentController;
+            this.isBcf = isBcf;
 
             if (commentController != null) 
             {
@@ -40,10 +41,8 @@ namespace ARUP.IssueTracker.Windows
                 {
 
                 }
-            }
-            
+            }            
 
-            // for Jira
             snapshotFolder = Path.Combine(Path.GetTempPath(), "BCFtemp", Path.GetRandomFileName());
             if (!Directory.Exists(snapshotFolder))
                 Directory.CreateDirectory(snapshotFolder);
@@ -122,13 +121,24 @@ namespace ARUP.IssueTracker.Windows
                     string extension = Path.GetExtension(snapshotFilePath).ToLower();
                     if (extension != ".jpg" && extension != ".jpeg" && extension != ".gif" && extension != ".bmp" && extension != ".png")
                     {
-                        // not an image actually
-                        SaveImageData(File.ReadAllBytes(openFileDialog1.FileName), snapshotFilePath);
-                        PathLabel.Content = openFileDialog1.FileName;
-                        SnapshotImg.Source = null;
-                        attachmentFilePath = snapshotFilePath;
-                        snapshotFilePath = null;
-                        return;
+                        if (!isBcf)
+                        {
+                            // not an image actually
+                            SaveImageData(File.ReadAllBytes(openFileDialog1.FileName), snapshotFilePath);
+                            PathLabel.Content = openFileDialog1.FileName;
+                            SnapshotImg.Source = null;
+                            attachmentFilePath = snapshotFilePath;
+                            snapshotFilePath = null;
+                            return;
+                        }
+                        else 
+                        {
+                            SnapshotImg.Source = null;
+                            attachmentFilePath = null;
+                            snapshotFilePath = null;
+                            MessageBox.Show("We only support image files for BCF!", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                            return;
+                        }                        
                     }
 
                     BitmapImage image = new BitmapImage();

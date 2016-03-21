@@ -14,6 +14,8 @@ using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using System.Xml.Serialization;
 
 // 
@@ -384,6 +386,25 @@ namespace ARUP.IssueTracker.Classes.BCF2
     private string modifiedAuthorField;
 
     private string guidField;
+
+    //for multiple snapshots/viewpoints
+    [System.Xml.Serialization.XmlIgnoreAttribute()]
+    public VisualizationInfo visInfo { get; set; }
+    [System.Xml.Serialization.XmlIgnoreAttribute()]
+    public string snapshotFullUrl { get; set; }
+    [System.Xml.Serialization.XmlIgnoreAttribute()]
+    public ImageSource snapshotImageSource
+    {
+        get 
+        {
+            BitmapImage bi = new BitmapImage();
+            bi.BeginInit();
+            bi.UriSource = new Uri(snapshotFullUrl);
+            bi.CacheOption = BitmapCacheOption.OnLoad;
+            bi.EndInit();
+            return bi;
+        }        
+    }
 
     public Comment()
     {

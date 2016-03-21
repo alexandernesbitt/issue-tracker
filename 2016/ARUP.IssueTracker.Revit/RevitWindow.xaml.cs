@@ -44,10 +44,9 @@ namespace ARUP.IssueTracker.Revit
     /// <param name="handler"></param>
     public RevitWindow(UIApplication _uiapp, ExternalEvent exEvent, ExtOpenView handler)
     {
-      InitializeComponent();
-
       try
       {
+        InitializeComponent();
         
         m_ExEvent = exEvent;
         m_Handler = handler;
@@ -63,11 +62,13 @@ namespace ARUP.IssueTracker.Revit
         commentController = new CommentController(this);
         commentController.client = AuthoringTool.Revit;
         mainPan.jiraPan.AddCommBtn.Tag = commentController;
+        mainPan.bcfPan.AddCommBtn.Tag = commentController;
 
         // for open 3d view and show components
         mainPan.jiraPan.open3dView.Visibility = System.Windows.Visibility.Visible;
         mainPan.jiraPan.showComponents.Visibility = System.Windows.Visibility.Visible;
-        mainPan.SetJiraButtonsInComment(true);
+        mainPan.bcfPan.isShowBcfFirstViewpointButtons = true;
+        
       }
 
       catch (Exception ex1)
@@ -128,6 +129,7 @@ namespace ARUP.IssueTracker.Revit
           {
               mainPan.jira.Bcf.Issues.Add(issue);
               mainPan.jira.Bcf.HasBeenSaved = false;
+              mainPan.bcfPan.issueList.SelectedIndex = mainPan.jira.Bcf.Issues.Count - 1;
           }
       }
 
@@ -191,9 +193,17 @@ namespace ARUP.IssueTracker.Revit
         AddIssueRevit air = new AddIssueRevit(uidoc, folderIssue, types, assignees, components, priorities, noCom, noPrior, noAssign);
         air.Title = "Add Jira Issue";
         if (!isBcf)
+        {
+            air.JiraFieldsBox.Visibility = System.Windows.Visibility.Visible;
             air.VerbalStatus.Visibility = System.Windows.Visibility.Collapsed;
-        else
+            air.BcfFieldsBox.Visibility = System.Windows.Visibility.Collapsed;
+        }
+        else 
+        {
             air.JiraFieldsBox.Visibility = System.Windows.Visibility.Collapsed;
+            air.BcfFieldsBox.Visibility = System.Windows.Visibility.Visible;
+        }
+
         air.WindowStartupLocation = System.Windows.WindowStartupLocation.CenterScreen;
         air.ShowDialog();
           if (air.DialogResult.HasValue && air.DialogResult.Value)
@@ -213,21 +223,24 @@ namespace ARUP.IssueTracker.Revit
               {
                   descriptionText.AppendLine(air.CommentBox.Text);
               }
-              if (vp.VisInfo != null)
+              if (!isBcf) 
               {
-                  descriptionText.AppendLine(string.Format("<Viewpoint>[^{0}]</Viewpoint>", "viewpoint.bcfv"));
-              }
-              if (!string.IsNullOrWhiteSpace(vp.SnapshotPath))
-              {
-                  descriptionText.AppendLine(string.Format("<Snapshot>[^{0}]</Snapshot>", "snapshot.png"));
-                  descriptionText.AppendLine(string.Format("!{0}|width=200!", "snapshot.png"));
-              }
+                  if (vp.VisInfo != null)
+                  {
+                      descriptionText.AppendLine(string.Format("<Viewpoint>[^{0}]</Viewpoint>", "viewpoint.bcfv"));
+                  }
+                  if (!string.IsNullOrWhiteSpace(vp.SnapshotPath))
+                  {
+                      descriptionText.AppendLine(string.Format("<Snapshot>[^{0}]</Snapshot>", "snapshot.png"));
+                      descriptionText.AppendLine(string.Format("!{0}|width=200!", "snapshot.png"));
+                  }
+              }              
 
               Issue issueJira = new Issue();
               if (!isBcf)
               {
                   issueJira.fields = new Fields();
-                  issueJira.fields.description = descriptionText.ToString();
+                  issueJira.fields.description = descriptionText.ToString().Trim();
                   issueJira.fields.issuetype =  (Issuetype) air.issueTypeCombo.SelectedItem;
                   issueJira.fields.priority = (Priority) air.priorityCombo.SelectedItem;
                   if (!string.IsNullOrEmpty(air.ChangeAssign.Content.ToString()) &&
@@ -245,7 +258,12 @@ namespace ARUP.IssueTracker.Revit
               
               issue.Viewpoints.Add(vp);
               issue.Topic.Title = air.TitleBox.Text;
-              issue.Topic.Description = descriptionText.ToString();
+              issue.Topic.Description = descriptionText.ToString().Trim();
+              issue.Topic.AssignedTo = air.BcfAssignee.Text;
+              issue.Topic.CreationAuthor = MySettings.Get("username");
+              issue.Topic.Priority = air.BcfPriority.Text;
+              issue.Topic.TopicStatus = air.BcfAssignee.Text;
+              issue.Topic.TopicType = air.BcfIssueType.Text;
               
               issue.Header[0].IfcProject = ExporterIFCUtils.CreateProjectLevelGUID(doc,
                   Autodesk.Revit.DB.IFC.IFCProjectLevelGUIDType.Project);

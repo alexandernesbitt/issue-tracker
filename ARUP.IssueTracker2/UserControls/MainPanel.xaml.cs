@@ -27,7 +27,6 @@ namespace ARUP.IssueTracker.UserControls
 {
     public partial class MainPanel : UserControl
     {
-        public bool isShow3dViewButton = false;
         public Jira jira = new Jira();
 
         public MainPanel()
@@ -125,7 +124,7 @@ namespace ARUP.IssueTracker.UserControls
                     bcfPan.firstSnapshot.Source = bi;
                 }
 
-                if(firstVP.Viewpoint != null)
+                if (firstVP.Viewpoint != null && bcfPan.isShowBcfFirstViewpointButtons)
                 {
                     bcfPan.open3dView.Visibility = System.Windows.Visibility.Visible;
                     bcfPan.open3dView.Tag = firstVP.VisInfo;
@@ -296,8 +295,9 @@ namespace ARUP.IssueTracker.UserControls
                                     // normal text body
                                     descriptionBody.AppendLine(line);
                                 }
-                            }
-                            issue.fields.description = descriptionBody.ToString();
+                            }                           
+                            
+                            issue.fields.description = descriptionBody.ToString().Trim();
                         }                       
 
                         // handle attachment (viewpoint/snapshot) in comments
@@ -337,15 +337,14 @@ namespace ARUP.IssueTracker.UserControls
                                 {
                                     // do nothing here
                                 }
-                                else 
+                                else
                                 {
                                     // normal text body
                                     commentBody.AppendLine(line);
                                 }
                             }
 
-                            c.body = commentBody.ToString();
-                            c.showButtonsInComment = null;
+                            c.body = commentBody.ToString().Trim();
                         });
  
 
@@ -715,7 +714,7 @@ namespace ARUP.IssueTracker.UserControls
                         return;
 
                 var commentController = (sender as Button).Tag as ICommentController;
-                AddComment ac = new AddComment(commentController);
+                AddComment ac = new AddComment(commentController, false);
                 ac.commentStatusBox.Visibility = System.Windows.Visibility.Collapsed;
                 ac.WindowStartupLocation = System.Windows.WindowStartupLocation.CenterScreen;                
                 ac.ShowDialog();
@@ -745,7 +744,7 @@ namespace ARUP.IssueTracker.UserControls
                             commentBody.AppendLine(string.Format("!{0}|width=200!", Path.GetFileName(ac.snapshotFilePath)));
                         }
                         
-                        var newcomment = new { body = commentBody.ToString() };
+                        var newcomment = new { body = commentBody.ToString().Trim() };
                         request.AddBody(newcomment);
 
                         //Add attachments of snapshot and viewpoint
@@ -783,13 +782,6 @@ namespace ARUP.IssueTracker.UserControls
             catch (System.Exception ex1)
             {
                 MessageBox.Show("exception: " + ex1);
-            }
-        }
-        public void SetJiraButtonsInComment(bool isShow) 
-        {
-            foreach (var issue in jira.IssuesCollection) 
-            {
-                issue.fields.comment.comments.ForEach(c => c.showButtonsInComment = isShow ? "true" : null);
             }
         }
         private void DelJiraIssueButt_Click(object sender, RoutedEventArgs e)
@@ -1341,7 +1333,8 @@ namespace ARUP.IssueTracker.UserControls
                     if (MessageBox.Show("Action will apply to all the " + bcfPan.issueList.SelectedItems.Count + " selected issues,\n are you sure to continue?", "Multiple Items", MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.No)
                         return;
 
-                AddComment ac = new AddComment(null);
+                var commentController = (sender as Button).Tag as ICommentController;
+                AddComment ac = new AddComment(commentController, true);
                 ac.WindowStartupLocation = System.Windows.WindowStartupLocation.CenterScreen;
                 ac.ShowDialog();
                 if (ac.DialogResult.HasValue && ac.DialogResult.Value)
@@ -1355,16 +1348,61 @@ namespace ARUP.IssueTracker.UserControls
                     c.VerbalStatus = ac.VerbalStatus.Text;
                     c.Status = ac.VerbalStatus.Text;
                     c.Author = (string.IsNullOrWhiteSpace(jira.Self.displayName)) ? MySettings.Get("BCFusername") : jira.Self.displayName;
-                    
-                    // add snapshot and viewpoint
-                    c.Viewpoint = new CommentViewpoint() { Guid = Guid.NewGuid().ToString() };
-                    /////not yet finished
-                    
+              
                     for (int i = 0; i < bcfPan.issueList.SelectedItems.Count; i++)
                     {
                         int index = bcfPan.issueList.Items.IndexOf(bcfPan.issueList.SelectedItems[i]);
+
+                        // add to issue viewpoints
+                        ViewPoint vp = new ViewPoint(false) {
+                            Snapshot = string.IsNullOrEmpty(ac.snapshotFilePath) ? null : Path.GetFileName(ac.snapshotFilePath),
+                            Viewpoint = string.IsNullOrEmpty(ac.viewpointFilePath) ? null : Path.GetFileName(ac.viewpointFilePath) 
+                        };
+                        jira.Bcf.Issues[index].Viewpoints.Add(vp);
+
+                        // add viewpoint/snapshot to a comment
+                        c.Viewpoint = new CommentViewpoint() { Guid = vp.Guid };
+                        c.snapshotFullUrl = ac.snapshotFilePath;
+                        if (!string.IsNullOrEmpty(ac.viewpointFilePath))
+                        {
+                            using (FileStream viewpointFile = new FileStream(ac.viewpointFilePath, FileMode.Open))
+                            {
+                                XmlSerializer serializerS = new XmlSerializer(typeof(ARUP.IssueTracker.Classes.BCF2.VisualizationInfo));
+                                ARUP.IssueTracker.Classes.BCF2.VisualizationInfo vi = serializerS.Deserialize(viewpointFile) as ARUP.IssueTracker.Classes.BCF2.VisualizationInfo;
+                                c.visInfo = vi;
+                            }
+                        }                                              
+                        
+                        // add to comments
                         jira.Bcf.Issues[index].Comment.Add(c);
                         jira.Bcf.Issues[index].Comment.Move(jira.Bcf.Issues[index].Comment.Count - 1, 0);
+                        
+                        // copy files to issue folders
+                        string issueFolder = Path.Combine(jira.Bcf.TempPath, jira.Bcf.Issues[index].Topic.Guid);
+                        try 
+                        {
+                            if (!string.IsNullOrEmpty(ac.snapshotFilePath))
+                                File.Copy(ac.snapshotFilePath, Path.Combine(issueFolder, Path.GetFileName(ac.snapshotFilePath)));
+                            if (!string.IsNullOrEmpty(ac.viewpointFilePath))
+                                File.Copy(ac.viewpointFilePath, Path.Combine(issueFolder, Path.GetFileName(ac.viewpointFilePath)));
+                        }
+                        catch(IOException ex)  // same file name already exists
+                        {
+                            if (!string.IsNullOrEmpty(ac.snapshotFilePath))
+                            {
+                                string newSnapshotName = string.Format("{0}_{1}", DateTime.Now.ToFileTimeUtc(), Path.GetFileName(ac.snapshotFilePath));
+                                MessageBox.Show(newSnapshotName);
+                                File.Copy(ac.snapshotFilePath, Path.Combine(issueFolder, newSnapshotName));
+                                vp.Snapshot = newSnapshotName;
+                            }
+                            if (!string.IsNullOrEmpty(ac.viewpointFilePath)) 
+                            {
+                                string newViewpointName = string.Format("{0}_{1}", DateTime.Now.ToFileTimeUtc(), Path.GetFileName(ac.viewpointFilePath));
+                                File.Copy(ac.viewpointFilePath, Path.Combine(issueFolder, newViewpointName));
+                                vp.Viewpoint = newViewpointName;
+                            }                            
+                        }
+                        
                     }
                     jira.Bcf.HasBeenSaved = false;
                 }
@@ -1797,12 +1835,12 @@ namespace ARUP.IssueTracker.UserControls
                             i = markup;
                             foreach (var v in i.Viewpoints)
                             {
+                                // handle viewpoint file
                                 if(v.Viewpoint == "viewpoint.bcfv")
                                 {
-                                    v.VisInfo = viewpoint;
-                                    v.SnapshotPath = IOPath.Combine(folder.FullName, "snapshot.png");
+                                    v.VisInfo = viewpoint;                                    
                                 }
-                                else if (otherViewpointFiles.Contains(v.Viewpoint) && otherSnapshotFiles.Contains(v.Snapshot))
+                                else if (otherViewpointFiles.Contains(v.Viewpoint))
                                 {
                                     using (FileStream vFile = new FileStream(IOPath.Combine(folder.FullName, v.Viewpoint), FileMode.Open))
                                     {
@@ -1810,8 +1848,41 @@ namespace ARUP.IssueTracker.UserControls
                                         if(vi != null)
                                         {
                                             v.VisInfo = vi;
-                                            v.SnapshotPath = IOPath.Combine(folder.FullName, v.Snapshot);
+                                            
+                                            // add reference to comment
+                                            foreach(var comm in i.Comment)
+                                            {
+                                                if (comm.Viewpoint != null)
+                                                {
+                                                    if (comm.Viewpoint.Guid == v.Guid)
+                                                    {
+                                                        comm.visInfo = vi;
+                                                    }
+                                                }                                                
+                                            }
                                         }
+                                    }
+                                }
+
+                                // handle snapshot file
+                                if(v.Snapshot == "snapshot.png")
+                                {                                    
+                                    v.SnapshotPath = IOPath.Combine(folder.FullName, "snapshot.png");
+                                }
+                                else if (otherSnapshotFiles.Contains(v.Snapshot))
+                                {
+                                    v.SnapshotPath = IOPath.Combine(folder.FullName, v.Snapshot);
+
+                                    // add reference to comment
+                                    foreach (var comm in i.Comment)
+                                    {
+                                        if (comm.Viewpoint != null)
+                                        {
+                                            if (comm.Viewpoint.Guid == v.Guid)
+                                            {
+                                                comm.snapshotFullUrl = v.SnapshotPath;
+                                            }
+                                        }                                        
                                     }
                                 }
                             }
@@ -1873,6 +1944,10 @@ namespace ARUP.IssueTracker.UserControls
                     DeleteDirectory(jira.Bcf.TempPath);
 
                 jira.Bcf = new BcfFile();
+                bcfPan.OpenImageBtn.Visibility = System.Windows.Visibility.Collapsed;
+                bcfPan.firstSnapshot.Visibility = System.Windows.Visibility.Collapsed;
+                bcfPan.open3dView.Visibility = System.Windows.Visibility.Collapsed;
+                bcfPan.showComponents.Visibility = System.Windows.Visibility.Collapsed;
             }
             catch (System.Exception ex1)
             {

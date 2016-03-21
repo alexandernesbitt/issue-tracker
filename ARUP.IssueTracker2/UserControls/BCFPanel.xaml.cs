@@ -17,6 +17,7 @@ namespace ARUP.IssueTracker.UserControls
 
         public event RoutedEventHandler open3dViewEvent;
         public MainPanel mainPanel = null;
+        public bool isShowBcfFirstViewpointButtons = false;
 
         public BCFPanel()
         {

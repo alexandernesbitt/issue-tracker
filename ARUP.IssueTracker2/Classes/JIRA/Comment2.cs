@@ -18,8 +18,6 @@ namespace ARUP.IssueTracker.Classes
         public string snapshotFileName { get; set; }
         public string snapshotThumbnailUrl { get; set; }
         public string snapshotFullUrl { get; set; }
-        public string showButtonsInComment { get; set; }
-
 
         public string formatteddate
         {
