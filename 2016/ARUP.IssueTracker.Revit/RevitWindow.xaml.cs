@@ -65,9 +65,9 @@ namespace ARUP.IssueTracker.Revit
         mainPan.bcfPan.AddCommBtn.Tag = commentController;
 
         // for open 3d view and show components
-        mainPan.jiraPan.open3dView.Visibility = System.Windows.Visibility.Visible;
-        mainPan.jiraPan.showComponents.Visibility = System.Windows.Visibility.Visible;
-        mainPan.bcfPan.isShowBcfFirstViewpointButtons = true;
+        //mainPan.jiraPan.open3dView.Visibility = System.Windows.Visibility.Visible;
+        //mainPan.jiraPan.showComponents.Visibility = System.Windows.Visibility.Visible;
+        //mainPan.bcfPan.isShowBcfFirstViewpointButtons = true;
         
       }
 
@@ -262,7 +262,7 @@ namespace ARUP.IssueTracker.Revit
               issue.Topic.AssignedTo = air.BcfAssignee.Text;
               issue.Topic.CreationAuthor = MySettings.Get("username");
               issue.Topic.Priority = air.BcfPriority.Text;
-              issue.Topic.TopicStatus = air.BcfAssignee.Text;
+              issue.Topic.TopicStatus = air.VerbalStatus.Text;
               issue.Topic.TopicType = air.BcfIssueType.Text;
               
               issue.Header[0].IfcProject = ExporterIFCUtils.CreateProjectLevelGUID(doc,

@@ -27,8 +27,8 @@ namespace ARUP.IssueTracker.UserControls
             InitializeComponent();
 
             // default invisible
-            open3dView.Visibility = System.Windows.Visibility.Collapsed;
-            showComponents.Visibility = System.Windows.Visibility.Collapsed;
+            //open3dView.Visibility = System.Windows.Visibility.Collapsed;
+            //showComponents.Visibility = System.Windows.Visibility.Collapsed;
         }
 
         /// <summary>

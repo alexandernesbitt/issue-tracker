@@ -17,7 +17,6 @@ namespace ARUP.IssueTracker.UserControls
 
         public event RoutedEventHandler open3dViewEvent;
         public MainPanel mainPanel = null;
-        public bool isShowBcfFirstViewpointButtons = false;
 
         public BCFPanel()
         {
@@ -101,7 +100,8 @@ namespace ARUP.IssueTracker.UserControls
         private void OpenLinkProjBtn_Click(object sender, RoutedEventArgs e)
         {
             string url = (string)((Button)sender).Tag;
-            System.Diagnostics.Process.Start(url);
+            if(!string.IsNullOrWhiteSpace(url))
+                System.Diagnostics.Process.Start(url);
         }
     }
 }

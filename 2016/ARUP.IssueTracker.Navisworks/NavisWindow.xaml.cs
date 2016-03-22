@@ -40,13 +40,11 @@ namespace ARUP.IssueTracker.Navisworks
         public NavisWindow()
         {
             InitializeComponent();
-            //mainPan.jiraPan.AddIssueBtn.Visibility = System.Windows.Visibility.Collapsed;
             mainPan.bcfPan.AddIssueBtn.Click += new RoutedEventHandler(AddIssueBCF);
             mainPan.jiraPan.AddIssueBtn.Click += new RoutedEventHandler(AddIssueJira);
-            // mainPan.bcfPan.AddIssueBtn.ToolTip = "Load issues as Saved Viewpoints";
 
-            mainPan.bcfPan.Open3dViewBtn.Click += new RoutedEventHandler(Open3dViewBCF);
-            mainPan.jiraPan.Open3dViewBtn.Click += new RoutedEventHandler(Open3dViewJira);
+            mainPan.bcfPan.open3dViewEvent += new RoutedEventHandler(Open3dViewBCF);
+            mainPan.jiraPan.open3dViewEvent += new RoutedEventHandler(Open3dViewJira);
 
             //enable create saved viewpoint button
             mainPan.bcfPan.CreateSavedViewpointBtn.Visibility = System.Windows.Visibility.Visible;
@@ -238,8 +236,16 @@ namespace ARUP.IssueTracker.Navisworks
                 });
 
                 AddIssueNavis ain = new AddIssueNavis(savedViewpointsAndIssueTitles, types, assignees, components, priorities, noCom, noPrior, noAssign);
-                if (isBcf)
+                if (!isBcf)
+                {
+                    ain.JiraFieldsBox.Visibility = System.Windows.Visibility.Visible;
+                    ain.BcfFieldsBox.Visibility = System.Windows.Visibility.Collapsed;
+                }
+                else
+                {
                     ain.JiraFieldsBox.Visibility = System.Windows.Visibility.Collapsed;
+                    ain.BcfFieldsBox.Visibility = System.Windows.Visibility.Visible;
+                }
                 ain.WindowStartupLocation = System.Windows.WindowStartupLocation.CenterScreen;
                 ain.ShowDialog();
                 if (ain.DialogResult.HasValue && ain.DialogResult.Value)
@@ -332,6 +338,11 @@ namespace ARUP.IssueTracker.Navisworks
                         }
                         
                         issue.Topic.Title = string.IsNullOrEmpty(originalIssueTitle) ? sv.DisplayName : originalIssueTitle;
+                        issue.Topic.AssignedTo = ain.BcfAssignee.Text;
+                        issue.Topic.CreationAuthor = MySettings.Get("username");
+                        issue.Topic.Priority = ain.BcfPriority.Text;
+                        issue.Topic.TopicStatus = ain.BcfStatus.Text;
+                        issue.Topic.TopicType = ain.BcfIssueType.Text;
                         issue.Header[0].IfcProject = "";
                         string projFilename = !string.IsNullOrEmpty(_oDoc.FileName) ? System.IO.Path.GetFileName(_oDoc.FileName) : "";
                         issue.Header[0].Filename = projFilename;
@@ -534,8 +545,8 @@ namespace ARUP.IssueTracker.Navisworks
         {
             try
             {
-                VisualizationInfo v = mainPan.jira.Bcf.Issues[mainPan.bcfPan.listIndex].Viewpoints[0].VisInfo;
-                Open3DView(v);
+                VisualizationInfo VisInfo = (VisualizationInfo)((Button)sender).Tag;
+                Open3DView(VisInfo);
             }
             catch (System.Exception ex1)
             {
@@ -546,7 +557,8 @@ namespace ARUP.IssueTracker.Navisworks
         {
             try
             {
-                VisualizationInfo v = mainPan.getVisInfo();
+                string url = (string)((Button)sender).Tag;
+                VisualizationInfo v = mainPan.getVisInfo(url);
                 if (null != v)
                     Open3DView(v);
             }

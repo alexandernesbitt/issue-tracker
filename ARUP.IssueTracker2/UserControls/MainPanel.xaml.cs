@@ -109,7 +109,6 @@ namespace ARUP.IssueTracker.UserControls
             if(markup != null)
             {
                 ViewPoint firstVP = markup.Viewpoints.ToList().Find(vp => vp.Snapshot == "snapshot.png");
-
                 if(firstVP.Snapshot != null)
                 {
                     bcfPan.OpenImageBtn.Visibility = System.Windows.Visibility.Visible;
@@ -123,8 +122,7 @@ namespace ARUP.IssueTracker.UserControls
                     bi.EndInit();
                     bcfPan.firstSnapshot.Source = bi;
                 }
-
-                if (firstVP.Viewpoint != null && bcfPan.isShowBcfFirstViewpointButtons)
+                if (firstVP.Viewpoint != null)
                 {
                     bcfPan.open3dView.Visibility = System.Windows.Visibility.Visible;
                     bcfPan.open3dView.Tag = firstVP.VisInfo;
@@ -298,7 +296,7 @@ namespace ARUP.IssueTracker.UserControls
                             }                           
                             
                             issue.fields.description = descriptionBody.ToString().Trim();
-                        }                       
+                        }
 
                         // handle attachment (viewpoint/snapshot) in comments
                         issue.fields.comment.comments.ForEach(c => {
@@ -1667,36 +1665,49 @@ namespace ARUP.IssueTracker.UserControls
                         issueJira.fields.issuetype = (Issuetype) ub.issueTypeCombo.SelectedItem;
                         issueJira.fields.creator = new User() { name = jira.Self.name };
                         
-                        if (jira.Bcf.Issues[index] != null)
+                        // manually deep copy here
+                        Markup originalBcfIssue = jira.Bcf.Issues[index];
+                        Markup copiedBcfIssue;
+                        XmlSerializer serializerM = new XmlSerializer(typeof(Markup));
+                        using(MemoryStream write = new MemoryStream())
+                        {
+                            serializerM.Serialize(write, originalBcfIssue);
+                            using (MemoryStream read = new MemoryStream(write.ToArray()))
+                            {
+                                copiedBcfIssue = serializerM.Deserialize(read) as Markup;
+                            }
+                        }   
+
+                        if (copiedBcfIssue != null)
                         {
                             // add assignee if present
-                            if (jira.Bcf.Issues[index].Topic.AssignedTo != null) 
+                            if (copiedBcfIssue.Topic.AssignedTo != null) 
                             {
-                                issueJira.fields.assignee = new User() { name = jira.Bcf.Issues[index].Topic.AssignedTo };                            
+                                issueJira.fields.assignee = new User() { name = copiedBcfIssue.Topic.AssignedTo };                            
                             }
 
                             // add labels if present
-                            if (jira.Bcf.Issues[index].Topic.Labels != null)
+                            if (copiedBcfIssue.Topic.Labels != null)
                             {
-                                issueJira.fields.labels = jira.Bcf.Issues[index].Topic.Labels.ToList();
+                                issueJira.fields.labels = copiedBcfIssue.Topic.Labels.ToList();
                             }
 
                             // handle and add description
                             //Add annotations for snapshot/viewpoint
                             StringBuilder descriptionBody = new StringBuilder();
-                            if (!string.IsNullOrWhiteSpace(jira.Bcf.Issues[index].Topic.Description))
-                                descriptionBody.AppendLine(jira.Bcf.Issues[index].Topic.Description);
+                            if (!string.IsNullOrWhiteSpace(copiedBcfIssue.Topic.Description))
+                                descriptionBody.AppendLine(copiedBcfIssue.Topic.Description);
                             descriptionBody.AppendLine(string.Format("<Viewpoint>[^{0}]</Viewpoint>", "viewpoint.bcfv"));
                             descriptionBody.AppendLine(string.Format("<Snapshot>[^{0}]</Snapshot>", "snapshot.png"));
                             descriptionBody.AppendLine(string.Format("!{0}|width=200!", "snapshot.png"));
                             issueJira.fields.description = descriptionBody.ToString();
 
                             // handle comments
-                            foreach (var bcfComment in jira.Bcf.Issues[index].Comment) 
+                            foreach (var bcfComment in copiedBcfIssue.Comment) 
                             {
                                 if (bcfComment.Viewpoint != null) 
                                 {
-                                    ViewPoint bcfViewpoint = jira.Bcf.Issues[index].Viewpoints.ToList().Find(vp => vp.Guid == bcfComment.Viewpoint.Guid);
+                                    ViewPoint bcfViewpoint = copiedBcfIssue.Viewpoints.ToList().Find(vp => vp.Guid == bcfComment.Viewpoint.Guid);
                                     //Add annotations for snapshot/viewpoint
                                     StringBuilder commentBody = new StringBuilder();
                                     commentBody.AppendLine(bcfComment.Comment1);
@@ -1718,8 +1729,8 @@ namespace ARUP.IssueTracker.UserControls
                             }
                             
                         }
-                        
-                        issues.Add(jira.Bcf.Issues[index]);
+
+                        issues.Add(copiedBcfIssue);
                         issuesJira.Add(issueJira);
                     }
 
@@ -1899,7 +1910,8 @@ namespace ARUP.IssueTracker.UserControls
 
                         XmlSerializer serializerM = new XmlSerializer(typeof(ARUP.IssueTracker.Classes.BCF1.Markup));
                         bcf1Issue.markup = serializerM.Deserialize(markupFile) as ARUP.IssueTracker.Classes.BCF1.Markup;
-                        bcf1Issue.markup.Comment = new ObservableCollection<ARUP.IssueTracker.Classes.BCF1.CommentBCF>(bcf1Issue.markup.Comment.OrderByDescending(o => o.Date));
+                        if (bcf1Issue.markup.Comment != null)
+                            bcf1Issue.markup.Comment = new ObservableCollection<ARUP.IssueTracker.Classes.BCF1.CommentBCF>(bcf1Issue.markup.Comment.OrderByDescending(o => o.Date));
 
                         i = BcfAdapter.LoadBcf2IssueFromBcf1(bcf1Issue);
                     }   

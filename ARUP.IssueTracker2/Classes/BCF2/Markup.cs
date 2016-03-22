@@ -729,6 +729,13 @@ namespace ARUP.IssueTracker.Classes.BCF2
     }
 
     /// <remarks/>
+    [System.Xml.Serialization.XmlIgnoreAttribute()]
+    public int labelCount
+    {
+        get { return this.labelsField == null ? 0 : this.labelsField.Count(); }
+    }
+
+    /// <remarks/>
     [System.Xml.Serialization.XmlElementAttribute(Form = System.Xml.Schema.XmlSchemaForm.Unqualified)]
     public System.DateTime CreationDate
     {

@@ -9,6 +9,7 @@ using ARUP.IssueTracker.Windows;
 using System.Windows;
 using Arup.RestSharp;
 using ARUP.IssueTracker.Classes.BCF2;
+using System.Text;
 
 namespace ARUP.IssueTracker.Classes
 {
@@ -130,7 +131,8 @@ namespace ARUP.IssueTracker.Classes
     
                             };
                         newissue.fields.Add("project", new { key = projectKey });
-                        newissue.fields.Add("description", issuesJira[i].fields.description);
+                        if (!string.IsNullOrWhiteSpace(issuesJira[i].fields.description))
+                            newissue.fields.Add("description", issuesJira[i].fields.description);
                         newissue.fields.Add("summary", (string.IsNullOrWhiteSpace(issue.Topic.Title)) ? "no title" : issue.Topic.Title);
                         newissue.fields.Add("issuetype", new { id = issuesJira[i].fields.issuetype.id });
                         newissue.fields.Add(MySettings.Get("guidfield"), issue.Topic.Guid);
@@ -216,8 +218,10 @@ namespace ARUP.IssueTracker.Classes
                             int unmodifiedCommentNumber = 0;
                             foreach (var c in issue.Comment)
                             {
-                                string normalized1 = Regex.Replace(c.Comment1, @"\s", "");
-                                if (oldIssue.fields.comment.comments.Any(o => Regex.Replace(o.body, @"\s", "").Equals(normalized1, StringComparison.OrdinalIgnoreCase)))
+                                //clean all metadata annotations
+                                string newComment = cleanAnnotationInComment(c.Comment1);
+                                string normalized1 = Regex.Replace(newComment, @"\s", "");
+                                if (oldIssue.fields.comment.comments.Any(o => Regex.Replace(cleanAnnotationInComment(o.body), @"\s", "").Equals(normalized1, StringComparison.OrdinalIgnoreCase)))
                                 {
                                     unmodifiedCommentNumber++;
                                     continue;
@@ -330,6 +334,20 @@ namespace ARUP.IssueTracker.Classes
             {
                 MessageBox.Show("exception: " + ex1);
             }
+        }
+
+        private string cleanAnnotationInComment(string originalComment) 
+        {
+            string[] lines = originalComment.Split(new string[] { Environment.NewLine }, StringSplitOptions.None);
+            StringBuilder commentBody = new StringBuilder();
+            foreach (string line in lines)
+            {
+                if (!line.Contains("<Viewpoint>") && !line.Contains("<Snapshot>") && !line.Contains("|width=200!"))
+                {
+                    commentBody.AppendLine(line);
+                }
+            }
+            return commentBody.ToString().Trim();
         }
 
         /// <summary>

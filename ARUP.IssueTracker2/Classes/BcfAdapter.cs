@@ -247,7 +247,7 @@ namespace ARUP.IssueTracker.Classes
                 bcf2ViewPoints.Add(new BCF2.ViewPoint()
                 {
                     Guid = snapshotGuid,    // for Solibri
-                    Snapshot = bcf1Issue.snapshot,
+                    Snapshot = Path.GetFileName(bcf1Issue.snapshot),
                     SnapshotPath = bcf1Issue.snapshot,
                     Viewpoint = "viewpoint.bcfv",
                     VisInfo = bcf2VizInfo
@@ -737,7 +737,7 @@ namespace ARUP.IssueTracker.Classes
                     {
                         foreach (var attachment in issue.fields.attachment) 
                         {
-                            if (attachment.filename.ToLower().Contains(".png") || attachment.filename.ToLower().Contains(".bcfv"))
+                            if (attachment.filename.ToLower().Contains(".png") || attachment.filename.ToLower().Contains(".bcfv") || attachment.filename.ToLower().Contains(".jpg") || attachment.filename.ToLower().Contains(".jpeg") || attachment.filename.ToLower().Contains(".bmp"))
                                 mainPan.saveSnapshotViewpoint(attachment.content, Path.Combine(ReportFolder, issueGuid, attachment.filename));
                         }
                     }

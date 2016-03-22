@@ -263,12 +263,12 @@
                     </Button>
 
                     <Label FontSize="11" Grid.Column="2" Grid.Row="3" VerticalAlignment="Bottom" Name="referenceLinkLabel" Content="Reference Link:" />
-                    <Button Grid.Column="3" Grid.Row="3" ToolTip="Open project in browser »" Tag="{Binding Topic.ReferenceLink}" HorizontalAlignment="Left"
+                    <Button Grid.Column="3" Grid.Row="3" ToolTip="{Binding Topic.ReferenceLink}" Tag="{Binding Topic.ReferenceLink}" HorizontalAlignment="Left"
                     Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}" Margin="10,0,0,0" Name="OpenLinkProjBtn" Click="OpenLinkProjBtn_Click">
                         <Path Margin="0" Height="15" Width="15" Stretch="Uniform" Fill="Gray" 
                        Data="M86,15L78.5,15L62.1,15L69.6,22.3L54.9,37L63.8,45.9L78.5,31.1L86,38.9M64,73L27,73L27,37L45.7,37L60.3,22L14,22L14,86L77,86L77,40.1L64,55.4" UseLayoutRounding="False"/>
                     </Button>
-                    <Label Content="Labels:"  Grid.Row="4" Grid.Column="0" Visibility="{Binding Topic.Labels.Count, Converter={StaticResource intVisibConverter}}"/>
+                    <Label Content="Labels:"  Grid.Row="4" Grid.Column="0" Visibility="{Binding Topic.labelCount, Converter={StaticResource intVisibConverter}}"/>
                     <ListView Grid.Row="4" Grid.Column="1" Grid.ColumnSpan="3"   ItemsSource="{Binding Topic.Labels}" 
                                     x:Name="labelList" Margin="0" BorderThickness="0" 
                                     ScrollViewer.HorizontalScrollBarVisibility="Disabled">
