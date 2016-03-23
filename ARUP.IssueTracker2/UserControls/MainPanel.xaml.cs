@@ -750,7 +750,7 @@ namespace ARUP.IssueTracker.UserControls
                         request2.AddHeader("X-Atlassian-Token", "nocheck");
                         request2.RequestFormat = Arup.RestSharp.DataFormat.Json;
                         if (!string.IsNullOrWhiteSpace(ac.snapshotFilePath))
-                            request2.AddFile("file", File.ReadAllBytes(ac.snapshotFilePath), Path.GetFileName(ac.snapshotFilePath));
+                            request2.AddFile("file", File.ReadAllBytes(ac.snapshotFilePath), Path.GetFileName(ac.snapshotFilePath));                        
                         if (!string.IsNullOrWhiteSpace(ac.attachmentFilePath))
                             request2.AddFile("file", File.ReadAllBytes(ac.attachmentFilePath), Path.GetFileName(ac.attachmentFilePath));
                         if (!string.IsNullOrWhiteSpace(ac.viewpointFilePath))
@@ -1352,14 +1352,17 @@ namespace ARUP.IssueTracker.UserControls
                         int index = bcfPan.issueList.Items.IndexOf(bcfPan.issueList.SelectedItems[i]);
 
                         // add to issue viewpoints
-                        ViewPoint vp = new ViewPoint(false) {
-                            Snapshot = string.IsNullOrEmpty(ac.snapshotFilePath) ? null : Path.GetFileName(ac.snapshotFilePath),
-                            Viewpoint = string.IsNullOrEmpty(ac.viewpointFilePath) ? null : Path.GetFileName(ac.viewpointFilePath) 
-                        };
-                        jira.Bcf.Issues[index].Viewpoints.Add(vp);
+                        ViewPoint vp = new ViewPoint(false);
+                        if (!string.IsNullOrEmpty(ac.snapshotFilePath) || !string.IsNullOrEmpty(ac.viewpointFilePath))
+                        {
 
-                        // add viewpoint/snapshot to a comment
-                        c.Viewpoint = new CommentViewpoint() { Guid = vp.Guid };
+                            vp.Snapshot = string.IsNullOrEmpty(ac.snapshotFilePath) ? vp.Snapshot : Path.GetFileName(ac.snapshotFilePath);
+                            vp.Viewpoint = string.IsNullOrEmpty(ac.viewpointFilePath) ? vp.Viewpoint : Path.GetFileName(ac.viewpointFilePath); 
+                            jira.Bcf.Issues[index].Viewpoints.Add(vp);
+                            c.Viewpoint = new CommentViewpoint() { Guid = vp.Guid };
+                        }                        
+
+                        // add viewpoint/snapshot to a comment                        
                         c.snapshotFullUrl = ac.snapshotFilePath;
                         if (!string.IsNullOrEmpty(ac.viewpointFilePath))
                         {
@@ -1644,6 +1647,11 @@ namespace ARUP.IssueTracker.UserControls
                     MessageBox.Show("Please select one or more Isses first.", "No Issue selected", MessageBoxButton.OK, MessageBoxImage.Error);
                     return;
                 }
+                else if (jira.Bcf.HasBeenSaved == false)
+                {
+                    MessageBox.Show("Please save this BCF file first!", "BCF Not Saved", MessageBoxButton.OK, MessageBoxImage.Information);
+                    return;
+                }
 
                 UploadBCF ub = new UploadBCF();
                 ub.projCombo.ItemsSource = jira.ProjectsCollection;
@@ -1669,14 +1677,15 @@ namespace ARUP.IssueTracker.UserControls
                         Markup originalBcfIssue = jira.Bcf.Issues[index];
                         Markup copiedBcfIssue;
                         XmlSerializer serializerM = new XmlSerializer(typeof(Markup));
-                        using(MemoryStream write = new MemoryStream())
+                        string markupFile = Path.Combine(jira.Bcf.TempPath, originalBcfIssue.Topic.Guid, "markup.bcf");
+                        using (StreamWriter write = new StreamWriter(markupFile))
                         {
-                            serializerM.Serialize(write, originalBcfIssue);
-                            using (MemoryStream read = new MemoryStream(write.ToArray()))
-                            {
-                                copiedBcfIssue = serializerM.Deserialize(read) as Markup;
-                            }
-                        }   
+                            serializerM.Serialize(write, originalBcfIssue);                            
+                        }
+                        using (StreamReader read = new StreamReader(markupFile))
+                        {
+                            copiedBcfIssue = serializerM.Deserialize(read) as Markup;
+                        }
 
                         if (copiedBcfIssue != null)
                         {

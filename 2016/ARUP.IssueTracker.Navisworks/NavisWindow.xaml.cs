@@ -147,7 +147,7 @@ namespace ARUP.IssueTracker.Navisworks
                         }
                         else // Create a new issue 
                         {
-                            mainPan.jira.Bcf.Issues.Add(i);
+                            mainPan.jira.Bcf.Issues.Add(i);                            
                             newIssueCounter++;
                         }                        
                     }
@@ -282,7 +282,7 @@ namespace ARUP.IssueTracker.Navisworks
                         {
                             issue.Topic.Guid = jiraIssueGuid;
                         }
-                        else if (!isBcf)  // new Jira issue
+                        if (!isBcf)  // new Jira issue
                         {
                             issueJira.fields = new Fields();
                             issueJira.fields.issuetype = (Issuetype)ain.issueTypeCombo.SelectedItem;

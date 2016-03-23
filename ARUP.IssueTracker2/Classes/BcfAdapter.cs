@@ -65,8 +65,7 @@ namespace ARUP.IssueTracker.Classes
                                 ReplyToComment = null, // mismatch attribute
                                 Status = bcf1Comment.Status.ToString(),
                                 Topic = new BCF2.CommentTopic() { Guid = bcf1Issue.markup.Topic.Guid }, // all referenced to markup's topic
-                                VerbalStatus = bcf1Comment.VerbalStatus,
-                                Viewpoint = new BCF2.CommentViewpoint() { Guid = snapshotGuid } // for Solibri
+                                VerbalStatus = bcf1Comment.VerbalStatus
                             });
                         }
                     }
@@ -612,20 +611,9 @@ namespace ARUP.IssueTracker.Classes
                     // Convert viewpoints in description
                     ObservableCollection<BCF2.ViewPoint> bcf2ViewPoints = new ObservableCollection<BCF2.ViewPoint>();
                     bcf2ViewPoints.Add(new BCF2.ViewPoint(true));
-                    // Add default viewpoints to a comment
-                    ObservableCollection<BCF2.Comment> bcf2Comments = new ObservableCollection<BCF2.Comment>();
-                    bcf2Comments.Add(new BCF2.Comment()
-                    {
-                        Author = issue.fields.creator.displayName,
-                        Comment1 = issue.fields.description,
-                        Date = DateTime.Parse(issue.fields.updated),
-                        Guid = Guid.NewGuid().ToString(),                        
-                        Status = "Unknown",
-                        Topic = new BCF2.CommentTopic() { Guid = issueGuid }, // all referenced to markup's topic                        
-                        Viewpoint = new BCF2.CommentViewpoint() { Guid = snapshotGuid }  // for Solibri
-                    });
 
-                    // Convert Comments                    
+                    // Convert Comments 
+                    ObservableCollection<BCF2.Comment> bcf2Comments = new ObservableCollection<BCF2.Comment>();
                     foreach (var comm in issue.fields.comment.comments)
                     {
                         if (comm != null)
@@ -656,7 +644,6 @@ namespace ARUP.IssueTracker.Classes
                                     if(Guid.TryParse(comm.snapshotFileName.Substring(0, 36), out tempGuid))
                                         vp.Guid = tempGuid.ToString();
                                 }                                
-
                                 if (isViewpointExist)
                                 {
                                     vp.Viewpoint = comm.viewpointFileName;

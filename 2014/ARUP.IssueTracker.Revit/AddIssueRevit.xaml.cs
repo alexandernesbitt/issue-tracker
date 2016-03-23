@@ -122,7 +122,7 @@ namespace ARUP.IssueTracker.Revit
                 source.EndInit();
                 SnapshotImg.Source = source;
 
-                PathLabel.Content = "none";
+                PathLabel.Content = "";
             }
             catch (System.Exception ex1)
             {

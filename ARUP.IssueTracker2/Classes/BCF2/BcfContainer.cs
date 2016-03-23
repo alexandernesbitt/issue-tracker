@@ -361,6 +361,13 @@ namespace ARUP.IssueTracker.Classes.BCF2
                                                    "Warning", MessageBoxButton.OK, MessageBoxImage.Warning);
                             }
                         }
+                        else // fallback logic for Solibri and BCFier
+                        {
+                            // add a blank viewpoint file
+                            Stream writerV = new FileStream(viewpointPath, FileMode.Create);
+                            serializerV.Serialize(writerV, new VisualizationInfo());
+                            writerV.Close();
+                        }
                     }                    
                 }
             }  

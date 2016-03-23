@@ -9,6 +9,7 @@ using ARUP.IssueTracker.Revit.Classes;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
 using Autodesk.Revit.UI.Selection;
+using ARUP.IssueTracker.Classes.BCF2;
 
 namespace ARUP.IssueTracker.Revit.Entry
 {
@@ -46,10 +47,10 @@ namespace ARUP.IssueTracker.Revit.Entry
                         return;
                     //type = "OrthogonalCamera";
                     var zoom = UnitUtils.ConvertToInternalUnits(v.OrthogonalCamera.ViewToWorldScale, DisplayUnitType.DUT_METERS);
-                    var CameraDirection = Utils.GetXYZ(v.OrthogonalCamera.CameraDirection.X, v.OrthogonalCamera.CameraDirection.Y, v.OrthogonalCamera.CameraDirection.Z);
-                    var CameraUpVector = Utils.GetXYZ(v.OrthogonalCamera.CameraUpVector.X, v.OrthogonalCamera.CameraUpVector.Y, v.OrthogonalCamera.CameraUpVector.Z);
-                    var CameraViewPoint = Utils.GetXYZ(v.OrthogonalCamera.CameraViewPoint.X, v.OrthogonalCamera.CameraViewPoint.Y, v.OrthogonalCamera.CameraViewPoint.Z);
-                    var orient3d = Utils.ConvertBasePoint(doc, CameraViewPoint, CameraDirection, CameraUpVector, true);
+                    var CameraDirection = ARUP.IssueTracker.Revit.Classes.Utils.GetXYZ(v.OrthogonalCamera.CameraDirection.X, v.OrthogonalCamera.CameraDirection.Y, v.OrthogonalCamera.CameraDirection.Z);
+                    var CameraUpVector = ARUP.IssueTracker.Revit.Classes.Utils.GetXYZ(v.OrthogonalCamera.CameraUpVector.X, v.OrthogonalCamera.CameraUpVector.Y, v.OrthogonalCamera.CameraUpVector.Z);
+                    var CameraViewPoint = ARUP.IssueTracker.Revit.Classes.Utils.GetXYZ(v.OrthogonalCamera.CameraViewPoint.X, v.OrthogonalCamera.CameraViewPoint.Y, v.OrthogonalCamera.CameraViewPoint.Z);
+                    var orient3d = ARUP.IssueTracker.Revit.Classes.Utils.ConvertBasePoint(doc, CameraViewPoint, CameraDirection, CameraUpVector, true);
 
 
                     View3D orthoView = null;
@@ -107,11 +108,11 @@ namespace ARUP.IssueTracker.Revit.Entry
                     double z = 18 / Math.Tan(25 / 2 * Math.PI / 180);//focale, da controllare il 18, vedi PDF
                     double factor = z1 - z;
 
-                    var CameraDirection = Utils.GetXYZ(v.PerspectiveCamera.CameraDirection.X, v.PerspectiveCamera.CameraDirection.Y, v.PerspectiveCamera.CameraDirection.Z);
-                    var CameraUpVector = Utils.GetXYZ(v.PerspectiveCamera.CameraUpVector.X, v.PerspectiveCamera.CameraUpVector.Y, v.PerspectiveCamera.CameraUpVector.Z);
-                    XYZ oldO = Utils.GetXYZ(v.PerspectiveCamera.CameraViewPoint.X, v.PerspectiveCamera.CameraViewPoint.Y, v.PerspectiveCamera.CameraViewPoint.Z);
+                    var CameraDirection = ARUP.IssueTracker.Revit.Classes.Utils.GetXYZ(v.PerspectiveCamera.CameraDirection.X, v.PerspectiveCamera.CameraDirection.Y, v.PerspectiveCamera.CameraDirection.Z);
+                    var CameraUpVector = ARUP.IssueTracker.Revit.Classes.Utils.GetXYZ(v.PerspectiveCamera.CameraUpVector.X, v.PerspectiveCamera.CameraUpVector.Y, v.PerspectiveCamera.CameraUpVector.Z);
+                    XYZ oldO = ARUP.IssueTracker.Revit.Classes.Utils.GetXYZ(v.PerspectiveCamera.CameraViewPoint.X, v.PerspectiveCamera.CameraViewPoint.Y, v.PerspectiveCamera.CameraViewPoint.Z);
                     var CameraViewPoint = (oldO.Subtract(CameraDirection.Divide(factor)));
-                    var orient3d = Utils.ConvertBasePoint(doc, CameraViewPoint, CameraDirection, CameraUpVector, true);
+                    var orient3d = ARUP.IssueTracker.Revit.Classes.Utils.ConvertBasePoint(doc, CameraViewPoint, CameraDirection, CameraUpVector, true);
 
 
 

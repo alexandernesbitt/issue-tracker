@@ -100,23 +100,27 @@ namespace ARUP.IssueTracker.Classes
                     {
                         //files to be uploaded
                         List<string> filesToBeUploaded = new List<string>();
-                        string snapshot = Path.Combine(path, issue.Topic.Guid, "snapshot.png");
-                        string viewpoint = Path.Combine(path, issue.Topic.Guid, "viewpoint.bcfv");
-                        filesToBeUploaded.Add(snapshot);
-                        filesToBeUploaded.Add(viewpoint);
+                        if (File.Exists(Path.Combine(path, issue.Topic.Guid, "markup.bcf")))
+                            filesToBeUploaded.Add(Path.Combine(path, issue.Topic.Guid, "markup.bcf"));
                         issue.Viewpoints.ToList().ForEach(vp => {
-                            if(!string.IsNullOrWhiteSpace(vp.Snapshot))
+                            if (!string.IsNullOrWhiteSpace(vp.Snapshot) && File.Exists(Path.Combine(path, issue.Topic.Guid, vp.Snapshot)))
                                 filesToBeUploaded.Add( Path.Combine(path, issue.Topic.Guid, vp.Snapshot) );
-                            if(!string.IsNullOrWhiteSpace(vp.Snapshot))
+                            if (!string.IsNullOrWhiteSpace(vp.Viewpoint) && File.Exists(Path.Combine(path, issue.Topic.Guid, vp.Viewpoint)))
                                 filesToBeUploaded.Add( Path.Combine(path, issue.Topic.Guid, vp.Viewpoint) );
                         });
                         string key = "";
 
-                        //update view - it might be a new issue
+                        //update view - it might be a new issue (for direct Jira upload)
                         // Serialize the object, and close the TextWriter
-                        Stream writerV = new FileStream(viewpoint, FileMode.Create);
-                        serializerV.Serialize(writerV, issue.Viewpoints[0].VisInfo);
-                        writerV.Close();
+                        string viewpoint = Path.Combine(path, issue.Topic.Guid, "viewpoint.bcfv");
+                        if (!File.Exists(viewpoint))
+                        {
+                            Stream writerV = new FileStream(viewpoint, FileMode.Create);
+                            serializerV.Serialize(writerV, issue.Viewpoints[0].VisInfo);
+                            writerV.Close();
+                        }
+                        if (filesToBeUploaded.Find(file => file == viewpoint) == null)
+                            filesToBeUploaded.Add(viewpoint);
 
                         var request = new RestRequest("issue", Method.POST);
                         request.AddHeader("Content-Type", "application/json");
@@ -131,8 +135,10 @@ namespace ARUP.IssueTracker.Classes
     
                             };
                         newissue.fields.Add("project", new { key = projectKey });
-                        if (!string.IsNullOrWhiteSpace(issuesJira[i].fields.description))
+                        if (!string.IsNullOrWhiteSpace(issuesJira[i].fields.description)) 
+                        { 
                             newissue.fields.Add("description", issuesJira[i].fields.description);
+                        }   
                         newissue.fields.Add("summary", (string.IsNullOrWhiteSpace(issue.Topic.Title)) ? "no title" : issue.Topic.Title);
                         newissue.fields.Add("issuetype", new { id = issuesJira[i].fields.issuetype.id });
                         newissue.fields.Add(MySettings.Get("guidfield"), issue.Topic.Guid);
@@ -163,7 +169,6 @@ namespace ARUP.IssueTracker.Classes
                         if (issuesJira[i].fields.labels != null && issuesJira[i].fields.labels.Any())
                             newissue.fields.Add("labels", issuesJira[i].fields.labels);
 
-
                         request.AddBody(newissue);
                         var response = JiraClient.Client.Execute(request);
 
@@ -178,16 +183,15 @@ namespace ARUP.IssueTracker.Classes
                             uploadErrors++;
                             break;
                         }
-
-                        //upload viewpoint and snapshot
+                        
+                        //upload all viewpoints and snapshots
                         var request2 = new RestRequest("issue/" + key + "/attachments", Method.POST);
                         request2.AddHeader("X-Atlassian-Token", "nocheck");
                         request2.RequestFormat = Arup.RestSharp.DataFormat.Json;
-                        request2.AddFile("file", File.ReadAllBytes(snapshot), "snapshot.png");
-                        request2.AddFile("file", File.ReadAllBytes(viewpoint), "viewpoint.bcfv");
+                        filesToBeUploaded.ForEach(file => request2.AddFile("file", File.ReadAllBytes(file), Path.GetFileName(file)));
                         var response2 = JiraClient.Client.Execute(request2);
                         RestCallback.Check(response2);
-
+                        
                         //ADD COMMENTS
                         if (issue.Comment.Any())
                         {
@@ -204,6 +208,7 @@ namespace ARUP.IssueTracker.Classes
                                     break;
                             }
                         }
+                        
                         if (i == issues.Count() - 1)
                         {
                             worker.ReportProgress(100, getProgressString(i + 1));

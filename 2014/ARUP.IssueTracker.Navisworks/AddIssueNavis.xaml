@@ -2,7 +2,8 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:src="clr-namespace:ARUP.IssueTracker.Converters;assembly=ARUP.IssueTracker"
-        Title="Add Issues" Height="500" Width="600" Icon="pack://application:,,,/ARUP.IssueTracker;component/Assets/icon.ico">
+        xmlns:ctr="clr-namespace:ARUP.IssueTracker.UserControls;assembly=ARUP.IssueTracker"
+        Title="Add Issues" Height="500" Width="500" Icon="pack://application:,,,/ARUP.IssueTracker;component/Assets/icon.ico">
     <Window.Resources>
 
         <ResourceDictionary>
@@ -33,7 +34,7 @@
             <ListView.View>
 
                 <GridView >
-                    <GridViewColumn Header="Viewpoint" Width="200">
+                    <GridViewColumn Header="Viewpoint" Width="150">
                         <GridViewColumn.CellTemplate>
                             <DataTemplate>
                                 <Label Content="{Binding Key.DisplayName}" />
@@ -47,7 +48,7 @@
                             </DataTemplate>
                         </GridViewColumn.CellTemplate>
                     </GridViewColumn>
-                    <GridViewColumn Header="Jira/BCF Issue Title" Width="200">
+                    <GridViewColumn Header="Jira/BCF Issue Title" Width="250">
                         <GridViewColumn.CellTemplate>
                             <DataTemplate>
                                 <Label Content="{Binding Value}" />
@@ -63,7 +64,7 @@
             <Label  DockPanel.Dock="Left" Content="{Binding ElementName=issueList, Path=SelectedItems.Count}" HorizontalAlignment="Left"  Margin="0" FontStyle="Italic" />
             <Label DockPanel.Dock="Left" Content="Selected" HorizontalAlignment="Left"  Margin="0" FontStyle="Italic" />
         </DockPanel>
-        <StackPanel Orientation="Horizontal"  Grid.Row="3" Margin="5" Name="JiraFieldsBox">
+        <StackPanel Orientation="Horizontal"  Grid.Row="3" Margin="5" Name="JiraFieldsBox" Visibility="Collapsed">
             <StackPanel Orientation="Horizontal"  Grid.Row="2"  >
                 <Label Content="Issue Type:" VerticalAlignment="Center"/>
                 <ComboBox Name="issueTypeCombo"  SelectedIndex="0" >
@@ -104,6 +105,21 @@
                 <Button Click="ChangeComponents_OnClick" Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}" Name="ChangeComponents" FontSize="11" FontWeight="Bold"
                    Grid.Row="3" Grid.Column="1" HorizontalAlignment="Left" Content="none" />
 
+            </StackPanel>
+
+        </StackPanel>
+        <StackPanel Orientation="Vertical"  Grid.Row="3" Margin="5" Name="BcfFieldsBox">
+            <StackPanel Orientation="Horizontal" Margin="2">
+                <Label Content="Issue Type:" VerticalAlignment="Center"/>
+                <ctr:Placeholder MaxLength="100" LabelText="(optional)" Name="BcfIssueType" HorizontalAlignment="Stretch" Width="150"/>
+                <Label Margin="10,0,0,0" FontSize="11"  Grid.Row="3" VerticalAlignment="Bottom" Content="Status:" />
+                <ctr:Placeholder MaxLength="100" LabelText="(optional)" Name="BcfStatus" HorizontalAlignment="Stretch" Width="150"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Margin="2">
+                <Label FontSize="11"  Grid.Row="3" VerticalAlignment="Bottom" Content="Assignee:" />
+                <ctr:Placeholder MaxLength="100" LabelText="(optional)" Name="BcfAssignee" HorizontalAlignment="Stretch" Width="150"/>
+                <Label Margin="10,0,0,0" FontSize="11"  Grid.Row="3" VerticalAlignment="Bottom" Content="Priority:" />
+                <ctr:Placeholder MaxLength="100" LabelText="(optional)" Name="BcfPriority" HorizontalAlignment="Stretch" Width="150"/>
             </StackPanel>
 
         </StackPanel>

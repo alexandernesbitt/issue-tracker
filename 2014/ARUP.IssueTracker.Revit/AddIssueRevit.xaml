@@ -31,7 +31,7 @@
 
 
         </StackPanel>
-        <StackPanel Orientation="Vertical" Grid.Row="3" Name="JiraFieldsBox">
+        <StackPanel Orientation="Vertical" Grid.Row="3" Name="JiraFieldsBox" Visibility="Collapsed">
             <StackPanel Orientation="Horizontal"  Grid.Row="2" Margin="0,2">
                 <Label Content="Issue Type:" VerticalAlignment="Center" Width="80"/>
                 <ComboBox Name="issueTypeCombo"  SelectedIndex="0" >
@@ -75,8 +75,21 @@
 
             </StackPanel>
         </StackPanel>
-
-        <GroupBox Grid.Row="5" Header="Comment (optional)" >
+        <StackPanel Orientation="Vertical" Grid.Row="3" Name="BcfFieldsBox">
+            <StackPanel Orientation="Horizontal"  Grid.Row="2" Margin="0,2">
+                <Label Content="Issue Type:" VerticalAlignment="Center" Width="80"/>
+                <ctr:Placeholder MaxLength="100" LabelText="(optional)" Name="BcfIssueType" HorizontalAlignment="Stretch" Width="180"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Grid.Row="1"  Margin="0,2">
+                <Label FontSize="11"  Grid.Row="3" VerticalAlignment="Bottom"  Content="Priority:" Width="80" />
+                <ctr:Placeholder MaxLength="100" LabelText="(optional)" Name="BcfPriority" HorizontalAlignment="Stretch" Width="180"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal">
+                <Label FontSize="11"  Grid.Row="3" VerticalAlignment="Bottom" Content="Assignee:" Width="80" />
+                <ctr:Placeholder MaxLength="100" LabelText="(optional)" Name="BcfAssignee" HorizontalAlignment="Stretch" Width="180"/>
+            </StackPanel>
+        </StackPanel>
+        <GroupBox Grid.Row="5" Header="Description (optional)" >
             <Grid  >
                 <Grid.RowDefinitions>
                     <RowDefinition Height="auto"/>
@@ -89,7 +102,7 @@
 
 
                 </DockPanel>
-                <TextBox x:Name="CommentBox" Grid.Row="1" Margin="5" Height="70" HorizontalAlignment="Stretch" TextWrapping="Wrap"  AcceptsReturn="True"/>
+                <TextBox x:Name="CommentBox" Grid.Row="1" Margin="5" Height="70" HorizontalAlignment="Stretch" TextWrapping="Wrap" AcceptsReturn="True"/>
             </Grid>
         </GroupBox>
         <Image Margin="5"  Grid.Row="6" Source="Assets/snapshot.png"  x:Name="SnapshotImg" >

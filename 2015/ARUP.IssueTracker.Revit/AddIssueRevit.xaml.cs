@@ -29,8 +29,8 @@ namespace ARUP.IssueTracker.Revit
         private ObservableCollection<Issuetype> typesCollection = new ObservableCollection<Issuetype>();
         private ObservableCollection<Component> compCollection = new ObservableCollection<Component>();
         private ObservableCollection<Priority> PrioritiesCollection = new ObservableCollection<Priority>();
-        private List<User> assignees =  new List<User>();
-        public List<Component> SelectedComponents = new List<Component>(); 
+        private List<User> assignees = new List<User>();
+        public List<Component> SelectedComponents = new List<Component>();
 
         public AddIssueRevit(UIDocument uidoc2, string folder, ObservableCollection<Issuetype> _typesCollection,
             List<User> _assignees, ObservableCollection<Component> _compCollection, ObservableCollection<Priority> _PrioritiesCollection, bool comp, bool prior, bool assign)
@@ -43,27 +43,30 @@ namespace ARUP.IssueTracker.Revit
                 snapshot = System.IO.Path.Combine(folder, "snapshot.png");
                 InitializeComponent();
                 TitleBox.Focus();
-                
+
                 comboVisuals.ItemsSource = visuals;
                 //comboStatuses.ItemsSource = statuses;
                 //comboStatuses.SelectedIndex = 3;
 
-                if (null != _typesCollection) { 
-                typesCollection = _typesCollection;
-                issueTypeCombo.ItemsSource = typesCollection;
-                issueTypeCombo.SelectedIndex = 0;
-            }
+                if (null != _typesCollection)
+                {
+                    typesCollection = _typesCollection;
+                    issueTypeCombo.ItemsSource = typesCollection;
+                    issueTypeCombo.SelectedIndex = 0;
+                }
                 if (!comp)
                 {
                     compCollection = _compCollection;
-                } else
+                }
+                else
                     ComponentsStack.Visibility = System.Windows.Visibility.Collapsed;
 
-                
+
                 if (!assign && null != _assignees)
                 {
                     assignees = _assignees;
-                } else
+                }
+                else
                     assigneeStack.Visibility = System.Windows.Visibility.Collapsed;
                 if (!prior && null != _PrioritiesCollection)
                 {
@@ -73,7 +76,7 @@ namespace ARUP.IssueTracker.Revit
                 }
                 else
                     PriorityStack.Visibility = System.Windows.Visibility.Collapsed;
-                
+
 
                 //select current visual style
                 string currentV = doc.ActiveView.DisplayStyle.ToString();
@@ -119,7 +122,7 @@ namespace ARUP.IssueTracker.Revit
                 source.EndInit();
                 SnapshotImg.Source = source;
 
-                PathLabel.Content = "none";
+                PathLabel.Content = "";
             }
             catch (System.Exception ex1)
             {
@@ -455,34 +458,34 @@ namespace ARUP.IssueTracker.Revit
 
         private void ChangeAssign_OnClick(object sender, RoutedEventArgs e)
         {
-             try
+            try
             {
 
-            // = getAssigneesIssue();
-            if (!assignees.Any())
-            {
-                MessageBox.Show("You don't have permission to Assign people to this Issue");
-                return;
-                //jira.issuesCollection[jiraPan.issueList.SelectedIndex].transitions = response2.Data.transitions;
-            }
-            ChangeAssignee cv = new ChangeAssignee(); cv.WindowStartupLocation = WindowStartupLocation.CenterScreen;
-            cv.SetList(assignees);
-            cv.valuesList.SelectedIndex = (ChangeAssign.Content.ToString() != "none") ? IndexByName.Get(ChangeAssign.Content.ToString(), "name", assignees) : -1;
+                // = getAssigneesIssue();
+                if (!assignees.Any())
+                {
+                    MessageBox.Show("You don't have permission to Assign people to this Issue");
+                    return;
+                    //jira.issuesCollection[jiraPan.issueList.SelectedIndex].transitions = response2.Data.transitions;
+                }
+                ChangeAssignee cv = new ChangeAssignee(); cv.WindowStartupLocation = WindowStartupLocation.CenterScreen;
+                cv.SetList(assignees);
+                cv.valuesList.SelectedIndex = (ChangeAssign.Content.ToString() != "none") ? IndexByName.Get(ChangeAssign.Content.ToString(), "name", assignees) : -1;
 
-           
-            cv.Title = "Assign to";
-            cv.ShowDialog();
-            if (cv.DialogResult.HasValue && cv.DialogResult.Value)
-            {
-                User assign = (cv.valuesList.SelectedIndex >= cv.valuesList.Items.Count || cv.valuesList.SelectedIndex == -1) ? null : (User)cv.valuesList.SelectedItem;
-                ChangeAssign.Content = (assign!=null) ?assign.name : "none";
 
+                cv.Title = "Assign to";
+                cv.ShowDialog();
+                if (cv.DialogResult.HasValue && cv.DialogResult.Value)
+                {
+                    User assign = (cv.valuesList.SelectedIndex >= cv.valuesList.Items.Count || cv.valuesList.SelectedIndex == -1) ? null : (User)cv.valuesList.SelectedItem;
+                    ChangeAssign.Content = (assign != null) ? assign.name : "none";
+
+                }
             }
+            catch (System.Exception ex1)
+            {
+                MessageBox.Show("exception: " + ex1);
             }
-             catch (System.Exception ex1)
-             {
-                 MessageBox.Show("exception: " + ex1);
-             }
         }
 
         private void ChangeComponents_OnClick(object sender, RoutedEventArgs e)
@@ -505,13 +508,13 @@ namespace ARUP.IssueTracker.Revit
 
                     foreach (var o in SelectedComponents)
                     {
-                        var selindex =components.IndexOf(o);
+                        var selindex = components.IndexOf(o);
                         if (selindex != -1)
                             cv.valuesList.SelectedItems.Add(cv.valuesList.Items[selindex]);
                     }
                 }
-               
-                    
+
+
                 // ChangeStatus ChangSt = new ChangeStatus(jira.issuesCollection[jiraPan.issueList.SelectedIndex].transitions);
                 cv.ShowDialog();
                 if (cv.DialogResult.HasValue && cv.DialogResult.Value)
