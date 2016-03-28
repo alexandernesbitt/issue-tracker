@@ -331,7 +331,7 @@ namespace ARUP.IssueTracker.UserControls
                                     }
                                         
                                 }
-                                else if (line.Contains("|width=200!"))
+                                else if (line.Contains("|width=200!") || line.Contains("<Attachment>"))
                                 {
                                     // do nothing here
                                 }
@@ -740,6 +740,10 @@ namespace ARUP.IssueTracker.UserControls
                         {
                             commentBody.AppendLine(string.Format("<Snapshot>[^{0}]</Snapshot>", Path.GetFileName(ac.snapshotFilePath)));
                             commentBody.AppendLine(string.Format("!{0}|width=200!", Path.GetFileName(ac.snapshotFilePath)));
+                        }
+                        if (!string.IsNullOrWhiteSpace(ac.attachmentFilePath))
+                        {
+                            commentBody.AppendLine(string.Format("<Attachment>[^{0}]</Attachment>", Path.GetFileName(ac.attachmentFilePath)));
                         }
                         
                         var newcomment = new { body = commentBody.ToString().Trim() };

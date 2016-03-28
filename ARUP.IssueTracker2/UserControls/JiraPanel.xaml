@@ -7,14 +7,15 @@
              xmlns:ctr="clr-namespace:ARUP.IssueTracker.UserControls"
              xmlns:toolkit="http://schemas.microsoft.com/wpf/2008/toolkit"
              xmlns:sys="clr-namespace:System;assembly=mscorlib"
-             mc:Ignorable="d" MinHeight="300" MinWidth="700" Background="White">
+             mc:Ignorable="d" MinHeight="300" MinWidth="700" Background="White" x:Name="jiraPan">
     <UserControl.Resources>
-
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="../Themes/IssueListView.xaml" />
                 <ResourceDictionary Source="../Themes/CommentListView.xaml" />
+                <ResourceDictionary Source="../Assets/files.xaml" />
             </ResourceDictionary.MergedDictionaries>
+            <src:ExtensionToResourceConverter x:Key="extensionToResourceConverter"/>
             <src:StringVisinConverter x:Key="stringVisibConverter"/>
             <src:UriToImageConv x:Key="uriToImageConv"/>
             <src:CommConverter x:Key="commConverter"/>
@@ -354,11 +355,11 @@
                                             </InlineUIContainer>
                         </TextBlock>
                     </StackPanel>
-                    <Label Content="Attachments:"  Grid.Row="4" Grid.Column="2" FontWeight="Bold" Visibility="{Binding ElementName=issueList, Path=SelectedItem.fields.attachment.Count, Converter={StaticResource intVisibConverter}}"/>
+                    <Label Content="Attachments:"  Grid.Row="4" Grid.Column="2" FontWeight="Bold" Visibility="{Binding ElementName=issueList, Path=SelectedItem.fields.filteredAttachments.Count, Converter={StaticResource intVisibConverter}}"/>
                     <!--<StackPanel Orientation="Horizontal">-->
-                        <ListView  ItemsSource="{Binding ElementName=issueList, Path=SelectedItem.fields.attachment}" 
+                    <ListView  ItemsSource="{Binding ElementName=issueList, Path=SelectedItem.fields.filteredAttachments}" 
                                     x:Name="attachmentList" Margin="0" BorderThickness="0" 
-                                    ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                                    ScrollViewer.HorizontalScrollBarVisibility="Disabled" VerticalContentAlignment="Top">
                             <ListView.Template>
                                 <ControlTemplate>
                                     <ItemsPresenter></ItemsPresenter>
@@ -366,26 +367,20 @@
                             </ListView.Template>
                             <ListView.ItemsPanel>
                                 <ItemsPanelTemplate>
-                                    <WrapPanel IsItemsHost="True" />
+                                    <WrapPanel Orientation="Horizontal"></WrapPanel>
                                 </ItemsPanelTemplate>
                             </ListView.ItemsPanel>
                             <ListView.ItemTemplate>
                                 <DataTemplate>
-                                    <Button Margin="0" Cursor="Hand" ToolTip="{Binding filename}"  Visibility="{Binding filename, Converter={StaticResource stringVisibConverter}}"  HorizontalAlignment="Stretch"   
-                                                        VerticalAlignment="Stretch" MaxWidth="60" Height="60" x:Name="OpenImageBtn"  Tag="{Binding content}" Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}" Click="OpenImageBtn_Click">
+                                    <Button Margin="0" Cursor="Hand" ToolTip="{Binding extension}"  Visibility="{Binding filename, Converter={StaticResource stringVisibConverter}}"   
+                                                        VerticalAlignment="Top" VerticalContentAlignment="Top" x:Name="OpenImageBtn" Tag="{Binding content}" Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}" Click="OpenImageBtn_Click">
                                         <StackPanel Orientation="Vertical">
-                                        <Rectangle Width="35" Height="40" Fill="SteelBlue">
-                                                <Rectangle.OpacityMask>
-                                                <VisualBrush Stretch="Fill">
-                                                    <VisualBrush.Visual>
-                                                        <Canvas>
-                                                            <Path Fill="Red" Stretch="Fill" Width="35" Height="40" Data="F1 M 20,17L 44,17L 56,29L 56,59L 20,59L 20,17 Z M 24,21L 24,55L 52,55L 52,34L 39,34L 39,21L 24,21 Z M 43,21L 43,30L 52,30L 43,21 Z "/>
-                                                        </Canvas>
-                                                    </VisualBrush.Visual>
-                                                </VisualBrush>
-                                            </Rectangle.OpacityMask>
+                                            <Rectangle Width="40" Height="50">
+                                                <Rectangle.Fill>
+                                                <VisualBrush Stretch="Fill" Visual="{Binding extension, Converter={StaticResource extensionToResourceConverter}, ConverterParameter={x:Reference jiraPan}}" />
+                                                </Rectangle.Fill>
                                             </Rectangle>
-                                            <TextBlock HorizontalAlignment="Left" Text="{Binding filename}" />
+                                            <TextBlock HorizontalAlignment="Left" FontSize="10.5" Text="{Binding filename}" TextWrapping="Wrap" MaxWidth="50" />
                                         </StackPanel>
                                     </Button>
                                 </DataTemplate>
@@ -454,7 +449,7 @@
                     <StackPanel Orientation="Horizontal">
                         <Path   Margin="5,0,0,0" Height="15" Width="15" Stretch="Uniform" Fill="Green"  Data="M50,100C22.4,100,0,77.6,0,50S22.4,0,50,0s50,22.4,50,50S77.6,100,50,100z M24.4,55.7h19.2V75H56V55.7h19.2
 	V43.5H56V24.2H43.6v19.2H24.4V55.7z" UseLayoutRounding="False"/>
-                        <TextBlock Margin="5,2" Text="Add Issue" />
+                        <TextBlock Name="AddIssueBtnText" x:FieldModifier="public" Margin="5,2" Text="Add Issue" />
                     </StackPanel>
                 </Button>
                 <Button ToolTip="Delete selected" DockPanel.Dock="Left" Margin="5"  Name="DelIssueBtn"

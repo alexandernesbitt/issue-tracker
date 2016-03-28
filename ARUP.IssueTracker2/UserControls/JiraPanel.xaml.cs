@@ -23,9 +23,9 @@ namespace ARUP.IssueTracker.UserControls
         private MainPanel mainPanel = null;
 
         public JiraPanel()
-        {
+        {            
             InitializeComponent();
-
+            
             // default invisible
             //open3dView.Visibility = System.Windows.Visibility.Collapsed;
             //showComponents.Visibility = System.Windows.Visibility.Collapsed;

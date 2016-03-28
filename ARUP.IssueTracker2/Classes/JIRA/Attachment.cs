@@ -1,4 +1,6 @@
-﻿namespace ARUP.IssueTracker.Classes
+﻿using System;
+using System.IO;
+namespace ARUP.IssueTracker.Classes
 {
     public class Attachment
     {
@@ -11,5 +13,14 @@
         public string mimeType { get; set; }
         public string content { get; set; }
         public string thumbnail { get; set; }
+
+        // for showing different file icons
+        public string extension 
+        {
+            get 
+            {
+                return Path.GetExtension(filename);
+            }
+        }
     }
 }

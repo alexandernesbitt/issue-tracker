@@ -46,6 +46,11 @@ namespace ARUP.IssueTracker.Navisworks
             mainPan.bcfPan.open3dViewEvent += new RoutedEventHandler(Open3dViewBCF);
             mainPan.jiraPan.open3dViewEvent += new RoutedEventHandler(Open3dViewJira);
 
+            mainPan.bcfPan.AddIssueBtn.ToolTip = "Add a new issue or update an existing one";
+            mainPan.bcfPan.AddIssueBtnText.Text = "Add/Update Issue";
+            mainPan.jiraPan.AddIssueBtn.ToolTip = "Add a new issue or update an existing one";
+            mainPan.jiraPan.AddIssueBtnText.Text = "Add/Update Issue";
+
             //enable create saved viewpoint button
             mainPan.bcfPan.CreateSavedViewpointBtn.Visibility = System.Windows.Visibility.Visible;
             mainPan.jiraPan.CreateSavedViewpointBtn.Visibility = System.Windows.Visibility.Visible;
@@ -358,9 +363,9 @@ namespace ARUP.IssueTracker.Navisworks
                                 {
                                     string commentMetadata = string.Empty;
                                     commentMetadata += comm.Body + Environment.NewLine;
-                                    commentMetadata += string.Format("<OriginalAuthor>{0}</OriginalAuthor>{1}", comm.Author, Environment.NewLine);
-                                    commentMetadata += string.Format("<CommentStatus>{0}</CommentStatus>{1}", comm.Status, Environment.NewLine);
-                                    commentMetadata += string.Format("<CreationDate>{0}</CreationDate>{1}", comm.CreationDate, Environment.NewLine);
+                                    commentMetadata += string.Format("<Navisworks:OriginalAuthor>{0}</Navisworks:OriginalAuthor>{1}", comm.Author, Environment.NewLine);
+                                    commentMetadata += string.Format("<Navisworks:CommentStatus>{0}</Navisworks:CommentStatus>{1}", comm.Status, Environment.NewLine);
+                                    commentMetadata += string.Format("<Navisworks:CreationDate>{0}</Navisworks:CreationDate>{1}", comm.CreationDate, Environment.NewLine);
                                     var c = new ARUP.IssueTracker.Classes.BCF2.Comment
                                     {
                                         Comment1 = commentMetadata,
@@ -524,11 +529,15 @@ namespace ARUP.IssueTracker.Navisworks
             try
             {
                 Autodesk.Navisworks.Api.GroupItem group = oSI as Autodesk.Navisworks.Api.GroupItem;
-                if (null != group)//is a group
+                if (null != group) // is a group
                 {
-                    foreach (SavedItem oSII in group.Children)
+                    Autodesk.Navisworks.Api.SavedViewpointAnimation animation = group as Autodesk.Navisworks.Api.SavedViewpointAnimation;
+                    if (animation == null) // and not an animation
                     {
-                        RecurseItems(oSII);
+                        foreach (SavedItem oSII in group.Children)
+                        {
+                            RecurseItems(oSII);
+                        }
                     }
                 }
                 else
@@ -892,23 +901,23 @@ namespace ARUP.IssueTracker.Navisworks
                                     // save issue metadata to a folder comment
                                     string issueMetadata = string.Empty;
                                     if (!string.IsNullOrWhiteSpace(issue.fields.summary))
-                                        issueMetadata += string.Format("<Summary>{0}</Summary>{1}", issue.fields.summary, Environment.NewLine);
+                                        issueMetadata += string.Format("<Jira:Summary>{0}</Jira:Summary>{1}", issue.fields.summary, Environment.NewLine);
                                     if (!string.IsNullOrWhiteSpace(issue.fields.description))
-                                        issueMetadata += string.Format("<Description>{0}</Description>{1}", issue.fields.description, Environment.NewLine);
+                                        issueMetadata += string.Format("<Jira:Description>{0}</Jira:Description>{1}", issue.fields.description, Environment.NewLine);
                                     if (issue.fields.issuetype != null)
-                                        issueMetadata += string.Format("<Type>{0}</Type>{1}", issue.fields.issuetype.name, Environment.NewLine);
+                                        issueMetadata += string.Format("<Jira:Type>{0}</Jira:Type>{1}", issue.fields.issuetype.name, Environment.NewLine);
                                     if (issue.fields.status != null)
-                                        issueMetadata += string.Format("<Status>{0}</Status>{1}", issue.fields.status.name, Environment.NewLine);
+                                        issueMetadata += string.Format("<Jira:Status>{0}</Jira:Status>{1}", issue.fields.status.name, Environment.NewLine);
                                     if (issue.fields.priority != null)
-                                        issueMetadata += string.Format("<Priority>{0}</Priority>{1}", issue.fields.priority.name, Environment.NewLine);
+                                        issueMetadata += string.Format("<Jira:Priority>{0}</Jira:Priority>{1}", issue.fields.priority.name, Environment.NewLine);
                                     if (issue.fields.creator != null)
-                                        issueMetadata += string.Format("<Creator>{0}</Creator>{1}", issue.fields.creator.displayName, Environment.NewLine);
+                                        issueMetadata += string.Format("<Jira:Creator>{0}</Jira:Creator>{1}", issue.fields.creator.displayName, Environment.NewLine);
                                     if (!string.IsNullOrWhiteSpace(issue.fields.created))
-                                        issueMetadata += string.Format("<Created>{0}</Created>{1}", issue.fields.created, Environment.NewLine);
+                                        issueMetadata += string.Format("<Jira:Created>{0}</Jira:Created>{1}", issue.fields.created, Environment.NewLine);
                                     if (issue.fields.assignee != null)
-                                        issueMetadata += string.Format("<Assignee>{0}</Assignee>{1}", issue.fields.assignee.displayName, Environment.NewLine);
+                                        issueMetadata += string.Format("<Jira:Assignee>{0}</Jira:Assignee>{1}", issue.fields.assignee.displayName, Environment.NewLine);
                                     if (!string.IsNullOrWhiteSpace(issue.fields.updated))
-                                        issueMetadata += string.Format("<Updated>{0}</Updated>{1}", issue.fields.updated, Environment.NewLine);
+                                        issueMetadata += string.Format("<Jira:Updated>{0}</Jira:Updated>{1}", issue.fields.updated, Environment.NewLine);
 
                                     issueFolder.Comments.Add(new Autodesk.Navisworks.Api.Comment(issueMetadata, Autodesk.Navisworks.Api.CommentStatus.New, issue.fields.creator.displayName));
 
@@ -922,8 +931,8 @@ namespace ARUP.IssueTracker.Navisworks
                                             {
                                                 string commentMetadata = string.Empty;
                                                 commentMetadata += jiraComment.body;
-                                                commentMetadata += string.Format("{0}<Updated>{1}</Updated>", Environment.NewLine, jiraComment.updated);
-                                                commentMetadata += string.Format("{0}<CachedId>{1}</CachedId>", Environment.NewLine, jiraComment.id);
+                                                commentMetadata += string.Format("{0}<Jira:Updated>{1}</Jira:Updated>", Environment.NewLine, jiraComment.updated);
+                                                commentMetadata += string.Format("{0}<Jira:CachedId>{1}</Jira:CachedId>", Environment.NewLine, jiraComment.id);
                                                 Autodesk.Navisworks.Api.Comment navisworksComment = new Autodesk.Navisworks.Api.Comment(commentMetadata, Autodesk.Navisworks.Api.CommentStatus.New, jiraComment.updateAuthor.displayName);
                                                 savedViewpoint.Comments.Add(navisworksComment);
                                             }
@@ -996,27 +1005,27 @@ namespace ARUP.IssueTracker.Navisworks
                                 // save issue metadata to the issue folder
                                 string issueMetadata = string.Empty;
                                 if (!string.IsNullOrWhiteSpace(issueBcf.Topic.Title))
-                                    issueMetadata += string.Format("<Title>{0}</Title>{1}", issueBcf.Topic.Title, Environment.NewLine);
+                                    issueMetadata += string.Format("<BCF2:Title>{0}</BCF2:Title>{1}", issueBcf.Topic.Title, Environment.NewLine);
                                 if (!string.IsNullOrWhiteSpace(issueBcf.Topic.Description))
-                                    issueMetadata += string.Format("<Description>{0}</Description>{1}", issueBcf.Topic.Description, Environment.NewLine);
+                                    issueMetadata += string.Format("<BCF2:Description>{0}</BCF2:Description>{1}", issueBcf.Topic.Description, Environment.NewLine);
                                 if (!string.IsNullOrWhiteSpace(issueBcf.Topic.TopicType))
-                                    issueMetadata += string.Format("<TopicType>{0}</TopicType>{1}", issueBcf.Topic.TopicType, Environment.NewLine);
+                                    issueMetadata += string.Format("<BCF2:TopicType>{0}</BCF2:TopicType>{1}", issueBcf.Topic.TopicType, Environment.NewLine);
                                 if (!string.IsNullOrWhiteSpace(issueBcf.Topic.TopicStatus))
-                                    issueMetadata += string.Format("<TopicStatus>{0}</TopicStatus>{1}", issueBcf.Topic.TopicStatus, Environment.NewLine);
+                                    issueMetadata += string.Format("<BCF2:TopicStatus>{0}</BCF2:TopicStatus>{1}", issueBcf.Topic.TopicStatus, Environment.NewLine);
                                 if (!string.IsNullOrWhiteSpace(issueBcf.Topic.Priority))
-                                    issueMetadata += string.Format("<Priority>{0}</Priority>{1}", issueBcf.Topic.Priority, Environment.NewLine);
+                                    issueMetadata += string.Format("<BCF2:Priority>{0}</BCF2:Priority>{1}", issueBcf.Topic.Priority, Environment.NewLine);
                                 if (!string.IsNullOrWhiteSpace(issueBcf.Topic.CreationAuthor))
-                                    issueMetadata += string.Format("<CreationAuthor>{0}</CreationAuthor>{1}", issueBcf.Topic.CreationAuthor, Environment.NewLine);
+                                    issueMetadata += string.Format("<BCF2:CreationAuthor>{0}</BCF2:CreationAuthor>{1}", issueBcf.Topic.CreationAuthor, Environment.NewLine);
                                 if (issueBcf.Topic.CreationDateSpecified)
-                                    issueMetadata += string.Format("<CreationDate>{0}</CreationDate>{1}", issueBcf.Topic.CreationDate.ToString(), Environment.NewLine);
+                                    issueMetadata += string.Format("<BCF2:CreationDate>{0}</BCF2:CreationDate>{1}", issueBcf.Topic.CreationDate.ToString(), Environment.NewLine);
                                 if (!string.IsNullOrWhiteSpace(issueBcf.Topic.AssignedTo))
-                                    issueMetadata += string.Format("<AssignedTo>{0}</AssignedTo>{1}", issueBcf.Topic.AssignedTo, Environment.NewLine);
+                                    issueMetadata += string.Format("<BCF2:AssignedTo>{0}</BCF2:AssignedTo>{1}", issueBcf.Topic.AssignedTo, Environment.NewLine);
                                 if (!string.IsNullOrWhiteSpace(issueBcf.Topic.ModifiedAuthor))
-                                    issueMetadata += string.Format("<ModifiedAuthor>{0}</ModifiedAuthor>{1}", issueBcf.Topic.ModifiedAuthor, Environment.NewLine);
+                                    issueMetadata += string.Format("<BCF2:ModifiedAuthor>{0}</BCF2:ModifiedAuthor>{1}", issueBcf.Topic.ModifiedAuthor, Environment.NewLine);
                                 if (issueBcf.Topic.ModifiedDateSpecified)
-                                    issueMetadata += string.Format("<ModifiedDate>{0}</ModifiedDate>{1}", issueBcf.Topic.ModifiedDate.ToString(), Environment.NewLine);
+                                    issueMetadata += string.Format("<BCF2:ModifiedDate>{0}</BCF2:ModifiedDate>{1}", issueBcf.Topic.ModifiedDate.ToString(), Environment.NewLine);
                                 if (!string.IsNullOrWhiteSpace(issueBcf.Topic.ReferenceLink))
-                                    issueMetadata += string.Format("<ReferenceLink>{0}</ReferenceLink>{1}", issueBcf.Topic.ReferenceLink.ToString(), Environment.NewLine);
+                                    issueMetadata += string.Format("<BCF2:ReferenceLink>{0}</BCF2:ReferenceLink>{1}", issueBcf.Topic.ReferenceLink.ToString(), Environment.NewLine);
 
                                 if (!string.IsNullOrWhiteSpace(issueMetadata))
                                     issueFolder.Comments.Add(new Autodesk.Navisworks.Api.Comment(issueMetadata, Autodesk.Navisworks.Api.CommentStatus.New, issueBcf.Topic.CreationAuthor));
@@ -1031,16 +1040,16 @@ namespace ARUP.IssueTracker.Navisworks
                                         {
                                             string commentMetadata = string.Empty;
                                             commentMetadata += bcf2Comment.Comment1;
-                                            commentMetadata += string.Format("{0}<Author>{1}</Author>", Environment.NewLine, bcf2Comment.Author);
-                                            commentMetadata += string.Format("{0}<Date>{1}</Date>", Environment.NewLine, bcf2Comment.Date);
-                                            commentMetadata += string.Format("{0}<Status>{1}</Status>", Environment.NewLine, bcf2Comment.Status);
+                                            commentMetadata += string.Format("{0}<BCF2:Author>{1}</BCF2:Author>", Environment.NewLine, bcf2Comment.Author);
+                                            commentMetadata += string.Format("{0}<BCF2:Date>{1}</BCF2:Date>", Environment.NewLine, bcf2Comment.Date);
+                                            commentMetadata += string.Format("{0}<BCF2:Status>{1}</BCF2:Status>", Environment.NewLine, bcf2Comment.Status);
                                             if (!string.IsNullOrWhiteSpace(bcf2Comment.VerbalStatus))
-                                                commentMetadata += string.Format("{0}<VerbalStatus>{1}</VerbalStatus>", Environment.NewLine, bcf2Comment.VerbalStatus);
+                                                commentMetadata += string.Format("{0}<BCF2:VerbalStatus>{1}</BCF2:VerbalStatus>", Environment.NewLine, bcf2Comment.VerbalStatus);
                                             if (!string.IsNullOrWhiteSpace(bcf2Comment.ModifiedAuthor))
-                                                commentMetadata += string.Format("{0}<ModifiedAuthor>{1}</ModifiedAuthor>", Environment.NewLine, bcf2Comment.ModifiedAuthor);
+                                                commentMetadata += string.Format("{0}<BCF2:ModifiedAuthor>{1}</BCF2:ModifiedAuthor>", Environment.NewLine, bcf2Comment.ModifiedAuthor);
                                             if (bcf2Comment.ModifiedDateSpecified)
-                                                commentMetadata += string.Format("{0}<ModifiedDate>{1}</ModifiedDate>", Environment.NewLine, bcf2Comment.ModifiedDate);
-                                            commentMetadata += string.Format("{0}<CachedId>{1}</CachedId>", Environment.NewLine, bcf2Comment.Guid);
+                                                commentMetadata += string.Format("{0}<BCF2:ModifiedDate>{1}</BCF2:ModifiedDate>", Environment.NewLine, bcf2Comment.ModifiedDate);
+                                            commentMetadata += string.Format("{0}<BCF2:CachedId>{1}</BCF2:CachedId>", Environment.NewLine, bcf2Comment.Guid);
                                             Autodesk.Navisworks.Api.Comment navisworksComment = new Autodesk.Navisworks.Api.Comment(commentMetadata, Autodesk.Navisworks.Api.CommentStatus.New, bcf2Comment.Author);
                                             savedViewpoint.Comments.Add(navisworksComment);
 

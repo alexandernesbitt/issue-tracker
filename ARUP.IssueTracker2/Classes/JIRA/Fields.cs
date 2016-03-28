@@ -22,6 +22,23 @@ namespace ARUP.IssueTracker.Classes
         public string customfield_11600 { get; set; }
         public List<string> labels { get; set; }
 
+        // for filtering attachments without viewpoints/snapshots
+        public List<Attachment> filteredAttachments 
+        {
+            get 
+            {
+                List<Attachment> filtered = new List<Attachment>();
+                attachment.ForEach(o => {
+                    if (o.filename != "viewpoint.bcfv" && o.filename != "snapshot.png" && !comment.comments.Exists(c => c.snapshotFileName == o.filename) && !comment.comments.Exists(c => c.viewpointFileName == o.filename))
+                    {
+                        filtered.Add(o);
+                    }
+                });
+
+                return filtered;
+            } 
+        }
+
         public string guid
         {
             get

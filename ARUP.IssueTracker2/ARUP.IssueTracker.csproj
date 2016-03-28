@@ -116,6 +116,8 @@
     <Compile Include="Converters\AssigneeConverter.cs" />
     <Compile Include="Converters\BoolStarConv.cs" />
     <Compile Include="Converters\CommConverter.cs" />
+    <Compile Include="Converters\ExtensionToResourceConverter.cs" />
+    <Compile Include="Converters\StringEnabConverter.cs" />
     <Compile Include="Converters\ExpanderConverter.cs" />
     <Compile Include="Converters\IntEnabConverter2.cs" />
     <Compile Include="Converters\IntEnabConverter.cs" />
@@ -194,6 +196,10 @@
     <Compile Include="Windows\UploadBCF.xaml.cs">
       <DependentUpon>UploadBCF.xaml</DependentUpon>
     </Compile>
+    <Page Include="Assets\files.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
     <Page Include="Themes\CommentListView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
