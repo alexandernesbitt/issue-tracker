@@ -1396,7 +1396,6 @@ namespace ARUP.IssueTracker.UserControls
                             if (!string.IsNullOrEmpty(ac.snapshotFilePath))
                             {
                                 string newSnapshotName = string.Format("{0}_{1}", DateTime.Now.ToFileTimeUtc(), Path.GetFileName(ac.snapshotFilePath));
-                                MessageBox.Show(newSnapshotName);
                                 File.Copy(ac.snapshotFilePath, Path.Combine(issueFolder, newSnapshotName));
                                 vp.Snapshot = newSnapshotName;
                             }
@@ -1759,14 +1758,21 @@ namespace ARUP.IssueTracker.UserControls
         }
         private void UploadBCFIssueComplete(object sender, IntArg e)
         {
-            //select the projects issues were uploaded to and refresh
-            if (jiraPan.projIndex != e.Myint)
-                jiraPan.projIndex = e.Myint;
-            else
-                getIssues(0);
+            try 
+            {            
+                //select the projects issues were uploaded to and refresh
+                if (jiraPan.projIndex != e.Myint)
+                    jiraPan.projIndex = e.Myint;
+                else
+                    getIssues(0);
 
-            this.IsEnabled = true;
-            tabControl.SelectedIndex = 0;
+                this.IsEnabled = true;
+                tabControl.SelectedIndex = 0;
+            }
+            catch(Exception ex)
+            {
+                MessageBox.Show(ex.ToString());
+            }            
 
         }
         public void ComponentsShowBCF(object sender, RoutedEventArgs e)
@@ -1840,7 +1846,7 @@ namespace ARUP.IssueTracker.UserControls
                         {
                             otherViewpointFiles.Add(file.Name);
                         }
-                        else if(file.Name != "snapshot.png" && (file.Extension == ".png" || file.Extension == ".jpg" || file.Extension == ".bmp"))
+                        else if (file.Name != "snapshot.png" && (file.Extension == ".png" || file.Extension == ".jpg" || file.Extension == ".jpeg" || file.Extension == ".bmp"))
                         {
                             otherSnapshotFiles.Add(file.Name);
                         }

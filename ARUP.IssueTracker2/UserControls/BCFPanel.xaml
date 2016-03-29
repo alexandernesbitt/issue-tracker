@@ -234,31 +234,39 @@
                    Grid.Row="1" Grid.Column="1" Content="{Binding Topic.CreationAuthor}" VerticalAlignment="Bottom" />
 
                     <Label FontSize="11"  Grid.Row="2" VerticalAlignment="Bottom" Content="Assigned to:" />
-                    <Button Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}" x:Name="ChangeAssign" FontSize="11" FontWeight="Bold"
-                   Grid.Row="2" Grid.Column="1" HorizontalAlignment="Left" Content="{Binding Topic.AssignedTo}" />
+                    <Button MinWidth="60" Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}" x:Name="ChangeAssign" FontSize="11" FontWeight="Bold"
+                   Grid.Row="2" Grid.Column="1" HorizontalAlignment="Left" Click="ChangeAssign_Click">
+                        <StackPanel Orientation="Horizontal" >
+                            <TextBlock x:Name="assignedToTextBlock" Text="{Binding Topic.AssignedTo}"/>
+                            <TextBox x:Name="assignedToTextBox" Visibility="Collapsed" KeyUp="assignedToTextBox_KeyUp"  LostFocus="assignedToTextBox_LostFocus"  Text="{Binding Topic.AssignedTo}"/>
+                        </StackPanel>
+                    </Button>
 
                     <Label FontSize="11" Grid.Column="2" Grid.Row="1" VerticalAlignment="Bottom" Content="Issue Type:" />
 
-                    <Button  Grid.Row="1" Grid.Column="3" Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}" x:Name="ChangeType" FontSize="11" FontWeight="Bold"
-                   HorizontalAlignment="Left" >
+                    <Button MinWidth="60" Grid.Row="1" Grid.Column="3" Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}" x:Name="ChangeType" FontSize="11" FontWeight="Bold"
+                   HorizontalAlignment="Left" Click="ChangeType_Click" >
                         <StackPanel Orientation="Horizontal" >
-                            <TextBlock Text="{Binding Topic.TopicType}"/>
+                            <TextBlock x:Name="typeTextBlock" Text="{Binding Topic.TopicType}"/>
+                            <TextBox x:Name="typeTextBox" Visibility="Collapsed" KeyUp="typeTextBox_KeyUp" LostFocus="typeTextBox_LostFocus" Text="{Binding Topic.TopicType}"/>
                         </StackPanel>
                     </Button>
 
                     <Label FontSize="11" Grid.Column="2" Grid.Row="2" VerticalAlignment="Bottom" Content="Priority:" />
-                    <Button Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}" x:Name="ChangePriority"  FontSize="11" FontWeight="Bold"
-                   Grid.Row="2" Grid.Column="3"  HorizontalAlignment="Left">
+                    <Button MinWidth="60" Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}" x:Name="ChangePriority"  FontSize="11" FontWeight="Bold"
+                   Grid.Row="2" Grid.Column="3"  HorizontalAlignment="Left" Click="ChangePriority_Click">
                         <StackPanel Orientation="Horizontal" >
-                            <TextBlock Text="{Binding Topic.Priority}"/>
+                            <TextBlock x:Name="priorityTextBlock" Text="{Binding Topic.Priority}"/>
+                            <TextBox x:Name="priorityTextBox" Visibility="Collapsed" KeyUp="priorityTextBox_KeyUp" LostFocus="priorityTextBox_LostFocus" Text="{Binding Topic.Priority}"/>
                         </StackPanel>
                     </Button>
                     
                     <Label FontSize="11" Grid.Column="0" Grid.Row="3" VerticalAlignment="Bottom" Content="Status:" />
-                    <Button Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}" x:Name="ChangeStatus" FontSize="11" FontWeight="Bold"
-                   Grid.Row="3" Grid.Column="1" HorizontalAlignment="Left" >
+                    <Button MinWidth="60" Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}" x:Name="ChangeStatus" FontSize="11" FontWeight="Bold"
+                   Grid.Row="3" Grid.Column="1" HorizontalAlignment="Left" Click="ChangeStatus_Click">
                         <StackPanel Orientation="Horizontal" >
-                            <TextBlock Text="{Binding Topic.TopicStatus}"/>
+                            <TextBlock x:Name="statusTextBlock" Text="{Binding Topic.TopicStatus}"/>
+                            <TextBox x:Name="statusTextBox" KeyUp="statusTextBox_KeyUp" LostFocus="statusTextBox_LostFocus" Visibility="Collapsed" Text="{Binding Topic.TopicStatus}"/>
                         </StackPanel>
                     </Button>
 
@@ -284,7 +292,9 @@
                         </ListView.ItemsPanel>
                         <ListView.ItemTemplate>
                             <DataTemplate>
-                                <Label FontWeight="Bold" BorderBrush="White" BorderThickness="2" Background="PowderBlue"  Content="{Binding}" />
+                                <Button x:Name="labelButton" Visibility="{Binding Converter={StaticResource stringVisibConverter}}" FontWeight="Bold" BorderBrush="White" BorderThickness="2" Background="PowderBlue">
+                                    <TextBlock Margin="3" Text="{Binding}"/>
+                                </Button>
                             </DataTemplate>
                         </ListView.ItemTemplate>
                     </ListView>

@@ -322,7 +322,9 @@
                             </ListView.ItemsPanel>
                             <ListView.ItemTemplate>
                                 <DataTemplate>
-                                    <Label FontWeight="Bold" BorderBrush="White" BorderThickness="2" Background="PowderBlue"  Content="{Binding}" />
+                                    <Button x:Name="labelButton" Visibility="{Binding Converter={StaticResource stringVisibConverter}}" FontWeight="Bold" BorderBrush="White" BorderThickness="2" Background="PowderBlue">
+                                        <TextBlock Margin="3" Text="{Binding}"/>
+                                    </Button>
                                 </DataTemplate>
                             </ListView.ItemTemplate>
                         </ListView>
@@ -377,7 +379,7 @@
                                         <StackPanel Orientation="Vertical">
                                             <Rectangle Width="40" Height="50">
                                                 <Rectangle.Fill>
-                                                <VisualBrush Stretch="Fill" Visual="{Binding extension, Converter={StaticResource extensionToResourceConverter}, ConverterParameter={x:Reference jiraPan}}" />
+                                                    <VisualBrush x:Name="fileTypeIcon" Stretch="Fill" Visual="{Binding extension, Converter={StaticResource extensionToResourceConverter}, ConverterParameter={x:Reference jiraPan}}" />
                                                 </Rectangle.Fill>
                                             </Rectangle>
                                             <TextBlock HorizontalAlignment="Left" FontSize="10.5" Text="{Binding filename}" TextWrapping="Wrap" MaxWidth="50" />

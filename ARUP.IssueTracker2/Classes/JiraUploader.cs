@@ -239,15 +239,36 @@ namespace ARUP.IssueTracker.Classes
                                 request3.AddBody(newcomment);
                                 var response3 = JiraClient.Client.Execute<Comment2>(request3);
 
-                                updateIssueCounter++;
+                                //upload viewpoint and snapshot
+                                var request5 = new RestRequest("issue/" + oldIssue.key + "/attachments", Method.POST);
+                                request5.AddHeader("X-Atlassian-Token", "nocheck");
+                                request5.RequestFormat = Arup.RestSharp.DataFormat.Json;
+                                issue.Viewpoints.ToList().ForEach(vp => {
+                                    if(vp.Guid == c.Viewpoint.Guid)
+                                    {
+                                        if (File.Exists(Path.Combine(path, issue.Topic.Guid, vp.Snapshot)))
+                                            request5.AddFile("file", File.ReadAllBytes(Path.Combine(path, issue.Topic.Guid, vp.Snapshot)), vp.Snapshot);
+                                        if (File.Exists(Path.Combine(path, issue.Topic.Guid, vp.Viewpoint)))
+                                            request5.AddFile("file", File.ReadAllBytes(Path.Combine(path, issue.Topic.Guid, vp.Viewpoint)), vp.Viewpoint);
+                                    }
+                                });                                
+                                var response5 = JiraClient.Client.Execute(request5);                                
 
-                                if (!RestCallback.Check(response3))
+                                if (!RestCallback.Check(response3) || !RestCallback.Check(response5)) 
+                                {
+                                    MessageBox.Show("Some files were not uploaded sucessfully!");
                                     break;
+                                }
+                                    
                             }
 
                             if (unmodifiedCommentNumber == issue.Comment.Count)
                             {
                                 unchangedIssueCounter++;
+                            }
+                            else 
+                            {
+                                updateIssueCounter++;
                             }
                         }
                         else 

@@ -29,7 +29,7 @@ namespace ARUP.IssueTracker.Classes
             {
                 List<Attachment> filtered = new List<Attachment>();
                 attachment.ForEach(o => {
-                    if (o.filename != "viewpoint.bcfv" && o.filename != "snapshot.png" && !comment.comments.Exists(c => c.snapshotFileName == o.filename) && !comment.comments.Exists(c => c.viewpointFileName == o.filename))
+                    if (o.filename != "markup.bcf" && o.filename != "viewpoint.bcfv" && o.filename != "snapshot.png" && !comment.comments.Exists(c => c.snapshotFileName == o.filename) && !comment.comments.Exists(c => c.viewpointFileName == o.filename))
                     {
                         filtered.Add(o);
                     }

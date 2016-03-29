@@ -10,7 +10,10 @@ namespace ARUP.IssueTracker.Converters
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            string c = (string)value;
+            string c = null;
+            if (value != null)
+                c = value.ToString();
+
             return (string.IsNullOrWhiteSpace(c)) ? Visibility.Collapsed : Visibility.Visible;
         }
 
