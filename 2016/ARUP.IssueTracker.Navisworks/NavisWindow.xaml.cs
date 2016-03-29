@@ -137,7 +137,7 @@ namespace ARUP.IssueTracker.Navisworks
                             {
                                 if (!newComment.Comment1.Contains("CachedId"))
                                 {
-                                    mainPan.jira.Bcf.Issues[indexOfExistingIssue].Comment.Add(newComment);
+                                    mainPan.jira.Bcf.Issues[indexOfExistingIssue].Comment.Insert(0, newComment);
                                 }
                             }
 

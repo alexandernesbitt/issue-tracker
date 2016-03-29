@@ -244,19 +244,26 @@ namespace ARUP.IssueTracker.Classes
                                 request5.AddHeader("X-Atlassian-Token", "nocheck");
                                 request5.RequestFormat = Arup.RestSharp.DataFormat.Json;
                                 issue.Viewpoints.ToList().ForEach(vp => {
-                                    if(vp.Guid == c.Viewpoint.Guid)
+                                    if (c.Viewpoint != null)
                                     {
-                                        if (File.Exists(Path.Combine(path, issue.Topic.Guid, vp.Snapshot)))
-                                            request5.AddFile("file", File.ReadAllBytes(Path.Combine(path, issue.Topic.Guid, vp.Snapshot)), vp.Snapshot);
-                                        if (File.Exists(Path.Combine(path, issue.Topic.Guid, vp.Viewpoint)))
-                                            request5.AddFile("file", File.ReadAllBytes(Path.Combine(path, issue.Topic.Guid, vp.Viewpoint)), vp.Viewpoint);
-                                    }
-                                });                                
-                                var response5 = JiraClient.Client.Execute(request5);                                
-
-                                if (!RestCallback.Check(response3) || !RestCallback.Check(response5)) 
+                                        if(vp.Guid == c.Viewpoint.Guid)
+                                        {
+                                            if (File.Exists(Path.Combine(path, issue.Topic.Guid, vp.Snapshot)))
+                                                request5.AddFile("file", File.ReadAllBytes(Path.Combine(path, issue.Topic.Guid, vp.Snapshot)), vp.Snapshot);
+                                            if (File.Exists(Path.Combine(path, issue.Topic.Guid, vp.Viewpoint)))
+                                                request5.AddFile("file", File.ReadAllBytes(Path.Combine(path, issue.Topic.Guid, vp.Viewpoint)), vp.Viewpoint);
+                                        }
+                                    }                                    
+                                });
+                                if (request5.Files.Count > 0) 
                                 {
-                                    MessageBox.Show("Some files were not uploaded sucessfully!");
+                                    var response5 = JiraClient.Client.Execute(request5);
+                                    RestCallback.Check(response5);
+                                }
+                                
+
+                                if (!RestCallback.Check(response3)) 
+                                {
                                     break;
                                 }
                                     
