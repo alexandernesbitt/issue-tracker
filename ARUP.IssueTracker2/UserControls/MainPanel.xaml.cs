@@ -1878,18 +1878,17 @@ namespace ARUP.IssueTracker.UserControls
                                         if(vi != null)
                                         {
                                             v.VisInfo = vi;
-                                            
-                                            // add reference to comment
-                                            foreach(var comm in i.Comment)
-                                            {
-                                                if (comm.Viewpoint != null)
-                                                {
-                                                    if (comm.Viewpoint.Guid == v.Guid)
-                                                    {
-                                                        comm.visInfo = vi;
-                                                    }
-                                                }                                                
-                                            }
+                                        }
+                                    }
+                                }
+                                // add reference to comment
+                                foreach (var comm in i.Comment)
+                                {
+                                    if (comm.Viewpoint != null)
+                                    {
+                                        if (comm.Viewpoint.Guid == v.Guid)
+                                        {
+                                            comm.visInfo = v.VisInfo;
                                         }
                                     }
                                 }
@@ -1901,18 +1900,17 @@ namespace ARUP.IssueTracker.UserControls
                                 }
                                 else if (otherSnapshotFiles.Contains(v.Snapshot))
                                 {
-                                    v.SnapshotPath = IOPath.Combine(folder.FullName, v.Snapshot);
-
-                                    // add reference to comment
-                                    foreach (var comm in i.Comment)
+                                    v.SnapshotPath = IOPath.Combine(folder.FullName, v.Snapshot);                                    
+                                }
+                                // add reference to comment
+                                foreach (var comm in i.Comment)
+                                {
+                                    if (comm.Viewpoint != null)
                                     {
-                                        if (comm.Viewpoint != null)
+                                        if (comm.Viewpoint.Guid == v.Guid)
                                         {
-                                            if (comm.Viewpoint.Guid == v.Guid)
-                                            {
-                                                comm.snapshotFullUrl = v.SnapshotPath;
-                                            }
-                                        }                                        
+                                            comm.snapshotFullUrl = v.SnapshotPath;
+                                        }
                                     }
                                 }
                             }
