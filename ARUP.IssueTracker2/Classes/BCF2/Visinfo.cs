@@ -133,6 +133,7 @@ namespace ARUP.IssueTracker.Classes.BCF2
         OriginatingSystem = os;
         authoringToolIdField = aid;
         IfcGuid = guid;
+        this.visibleField = true;  // for isolated afterwards
     }
 
     /// <remarks/>
