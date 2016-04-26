@@ -41,7 +41,21 @@ namespace ARUP.IssueTracker.Classes
 
                         }
                         error += (null != validationErrorResponse.errors && validationErrorResponse.errors.ToString().Replace(" ", "") != "{}") ? validationErrorResponse.errors.ToString() : "";
-                        MessageBox.Show(error, response.StatusDescription, MessageBoxButton.OK, MessageBoxImage.Error);
+
+                        if (error.Contains("customfield"))  // when there's no custom field on Jira
+                        {
+                            MessageBox.Show("The custom GUID field is missing from this Jira project. The Issue Tracker requires this field. Please ask your Jira administrators to check that the GUID field is part of the field configuration and visible on the Create/Edit screens for all issue types in this project.", 
+                                response.StatusDescription, MessageBoxButton.OK, MessageBoxImage.Warning);
+                        }
+                        else if (error.Contains("Comment body can not be empty"))
+                        {
+                            // ignore this error because Solibri generates blank BCF comments
+                        }
+                        else  // other unsuccessful reponses
+                        {
+                            MessageBox.Show(error, response.StatusDescription, MessageBoxButton.OK, MessageBoxImage.Error);
+                        }
+                        
                     }
                     else
                     {
