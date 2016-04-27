@@ -673,7 +673,9 @@ namespace ARUP.IssueTracker.Navisworks
                 oCopyVP.AlignUp(tuple.Item2);
                 oCopyVP.Projection = tuple.Item4;
 
-
+                // adjust render style and lighting to imporve speed of loading
+                oCopyVP.RenderStyle = ViewpointRenderStyle.Shaded;
+                oCopyVP.Lighting = ViewpointLighting.Headlight;
 
                 // **** CUSTOM VALUE FOR TEKLA **** //
                 // otherwise = 1
@@ -707,54 +709,156 @@ namespace ARUP.IssueTracker.Navisworks
                 //oDoc.SavedViewpoints.AddCopy(sv);
                 oDoc.CurrentViewpoint.CopyFrom(oCopyVP);
 
+                //Avoid handling too many elements
+                if (v.Components.Count > 100)
+                {
+                    oDoc.Models.ResetAllHidden();
+                    MessageBox.Show("Element visibility/selection does not change because too many components are attached!", "Warning", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
                 if (v.Components != null && v.Components.Any())
                 {
-                    // ModelItemCollection selected = new ModelItemCollection();
-                    List<ModelItem> attachedElems = new List<ModelItem>();
+                    // Use search engine
+                    Search searchForVisibility = new Search();
+                    searchForVisibility.Selection.SelectAll();
+                    searchForVisibility.Locations = SearchLocations.DescendantsAndSelf;
 
-                    List<ModelItem> elems = oDoc.Models.First.RootItem.DescendantsAndSelf.ToList<ModelItem>();
+                    Search searchForSelection = new Search();
+                    searchForSelection.Selection.SelectAll();
+                    searchForSelection.Locations = SearchLocations.DescendantsAndSelf;
 
-
-                    foreach (var item in elems.Where(o => o.InstanceGuid != Guid.Empty))
+                    // handle visibility
+                    if (v.Components.Any(ele => ele.Visible == false))
                     {
-                        string ifcguid = IfcGuid.ToIfcGuid(item.InstanceGuid).ToString();
-                        if (v.Components.Any(o => o.IfcGuid == ifcguid))
-                            attachedElems.Add(item);
-
-                    }
-                    if (attachedElems.Any())//avoid to hide everything if no elements matches
-                    {
-                        if (MySettings.Get("selattachedelems") == "0")
+                        v.Components.ForEach(o =>
                         {
-                            List<ModelItem> elemsVisible = new List<ModelItem>();
-                            foreach (var item in attachedElems)
+                            Guid instanceGuid = IfcGuid.FromIfcGUID(o.IfcGuid);
+                            // Set up the search condition:
+                            SearchCondition condition = SearchCondition.HasPropertyByDisplayName("Item", "GUID")
+                                .EqualValue(VariantData.FromDisplayString(instanceGuid.ToString()));
+
+                            if (o.Visible == false)
                             {
-                                elemsVisible.AddRange(item.AncestorsAndSelf);
+                                // it's an OR condition among groups
+                                List<SearchCondition> searchConditionGroup = new List<SearchCondition>();
+                                searchConditionGroup.Add(condition);
+                                searchForVisibility.SearchConditions.AddGroup(searchConditionGroup);
                             }
-                            foreach (var item in elemsVisible)
-                                elems.Remove(item);
+                        });
 
-                            oDoc.Models.ResetAllHidden();
-                            oDoc.Models.SetHidden(elems, true);
-                        }
+                        // Get the collection of model items that satisfy the search condition:
+                        ModelItemCollection searchResultVisibility = searchForVisibility.FindAll(_oDoc, false);
 
-                        else
+                        if (searchResultVisibility.Count > 0)
                         {
+                            oDoc.Models.ResetAllHidden();
+
+                            // hide attached
+                            oDoc.Models.SetHidden(searchResultVisibility, true);
+                        }
+                    }
+                    else
+                    {
+                        v.Components.ForEach(o =>
+                        {
+                            Guid instanceGuid = IfcGuid.FromIfcGUID(o.IfcGuid);
+                            // Set up the search condition:
+                            SearchCondition condition = SearchCondition.HasPropertyByDisplayName("Item", "GUID")
+                                .EqualValue(VariantData.FromDisplayString(instanceGuid.ToString()));
+
+                            // it's an OR condition among groups
+                            List<SearchCondition> searchConditionGroup = new List<SearchCondition>();
+                            searchConditionGroup.Add(condition);
+                            searchForVisibility.SearchConditions.AddGroup(searchConditionGroup);
+                        });
+
+                        // Get the collection of model items that satisfy the search condition:
+                        ModelItemCollection searchResultVisibility = searchForVisibility.FindAll(_oDoc, false);
+
+                        if (searchResultVisibility.Count > 0)
+                        {
+                            oDoc.Models.ResetAllHidden();
                             oDoc.CurrentSelection.Clear();
-                            oDoc.CurrentSelection.AddRange(attachedElems);
+
+                            //select attached elements
+                            oDoc.CurrentSelection.AddRange(searchResultVisibility);
+
+                            // hide unselected
+                            HideUnselected();
                         }
                     }
 
+                    // handle selection
+                    oDoc.CurrentSelection.Clear();
 
+                    if (v.Components.Any(ele => ele.Selected == true))
+                    {
+                        v.Components.ForEach(o =>
+                        {
+                            if (o.Selected)
+                            {
+                                Guid instanceGuid = IfcGuid.FromIfcGUID(o.IfcGuid);
+                                SearchCondition condition = SearchCondition.HasPropertyByDisplayName("Item", "GUID")
+                                    .EqualValue(VariantData.FromDisplayString(instanceGuid.ToString()));
+
+                                List<SearchCondition> searchConditionGroup = new List<SearchCondition>();
+                                searchConditionGroup.Add(condition);
+                                searchForSelection.SearchConditions.AddGroup(searchConditionGroup);
+                            }
+                        });
+
+                        ModelItemCollection searchResultSelection = searchForSelection.FindAll(_oDoc, false);
+                        if (searchResultSelection.Count > 0)
+                        {
+                            oDoc.CurrentSelection.AddRange(searchResultSelection);
+                        }
+                    }
                 }
+
             }
             catch (Exception ex)
             {
                 MessageBox.Show(ex.ToString());
             }
-            //setVisibility(v);
 
 
+        }
+        public void HideUnselected()
+        {
+            //Create hidden collection
+            ModelItemCollection hidden = new ModelItemCollection();
+
+            //create a store for the visible items
+            ModelItemCollection visible = new ModelItemCollection();
+
+            //Add all the items that are visible to the visible collection
+            foreach (ModelItem item in Autodesk.Navisworks.Api.Application.ActiveDocument.CurrentSelection.SelectedItems)
+            {
+                if (item.AncestorsAndSelf != null)
+                    visible.AddRange(item.AncestorsAndSelf);
+                if (item.Descendants != null)
+                    visible.AddRange(item.Descendants);
+            }
+
+            //mark as invisible all the siblings of the visible items as well as the visible items
+            foreach (ModelItem toShow in visible)
+            {
+                if (toShow.Parent != null)
+                {
+                    hidden.AddRange(toShow.Parent.Children);
+                }
+            }
+
+            //remove the visible items from the collection
+            foreach (ModelItem toShow in visible)
+            {
+                hidden.Remove(toShow);
+            }
+
+            //hide the remaining items
+            Autodesk.Navisworks.Api.Application.ActiveDocument.Models.
+               SetHidden(hidden, true);
         }
         public Tuple<Point3D, Vector3D, Vector3D, Autodesk.Navisworks.Api.ViewpointProjection, double> GetViewCoordinatesFromBcf2VisInfo(ARUP.IssueTracker.Classes.BCF2.VisualizationInfo viewport)
         {

@@ -37,7 +37,9 @@ namespace ARUP.IssueTracker.Revit.Entry
                 Document doc = uidoc.Document;
                 //Selection m_elementsToHide = uidoc.Selection; //SelElementSet.Create();
 
-                List<ElementId> elementids = new List<ElementId>();
+                List<ElementId> elementsToBeIsolated = new List<ElementId>();
+                List<ElementId> elementsToBeHidden = new List<ElementId>();
+                List<ElementId> elementsToBeSelected = new List<ElementId>();
 
 
 
@@ -189,27 +191,48 @@ namespace ARUP.IssueTracker.Revit.Entry
                         var ids = collection.Where(o => bcfguid == ExportUtils.GetExportId(doc, o));
                         if (ids.Any())
                         {
-                            //m_elementsToHide.Add(doc.GetElement(ids.First()));
-                            elementids.Add(ids.First());
+                            // handle visibility
+                            if (e.Visible)
+                                elementsToBeIsolated.Add(ids.First());
+                            else
+                                elementsToBeHidden.Add(ids.First());
+
+                            // handle selection
+                            if (e.Selected)
+                                elementsToBeSelected.Add(ids.First());
                         }
                     }
-                    if (null != elementids && elementids.Count > 0)
+
+                    if (elementsToBeHidden.Count > 0)
                     {
-                        //do transaction only if there is something to hide/select
                         using (Transaction trans = new Transaction(uidoc.Document))
                         {
-                            if (trans.Start("Apply visibility/selection") == TransactionStatus.Started)
+                            if (trans.Start("Hide Elements") == TransactionStatus.Started)
                             {
+                                uidoc.ActiveView.HideElementsTemporary(elementsToBeHidden);
+                            }
+                            trans.Commit();
+                        }
+                    }
+                    else if (elementsToBeIsolated.Count > 0)
+                    {
+                        using (Transaction trans = new Transaction(uidoc.Document))
+                        {
+                            if (trans.Start("Isolate Elements") == TransactionStatus.Started)
+                            {
+                                uidoc.ActiveView.IsolateElementsTemporary(elementsToBeIsolated);
+                            }
+                            trans.Commit();
+                        }
+                    }
 
-                                if (MySettings.Get("selattachedelems") == "0")
-                                {
-                                    uidoc.ActiveView.IsolateElementsTemporary(elementids);
-                                }
-                                else
-                                {
-                                    uidoc.Selection.SetElementIds(elementids);
-                                }
-
+                    if (elementsToBeSelected.Count > 0)
+                    {
+                        using (Transaction trans = new Transaction(uidoc.Document))
+                        {
+                            if (trans.Start("Select Elements") == TransactionStatus.Started)
+                            {
+                                uidoc.Selection.SetElementIds(elementsToBeSelected);
                             }
                             trans.Commit();
                         }
