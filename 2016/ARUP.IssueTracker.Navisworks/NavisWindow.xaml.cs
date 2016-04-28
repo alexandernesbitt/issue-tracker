@@ -703,6 +703,31 @@ namespace ARUP.IssueTracker.Navisworks
                     oCopyVP.Position = tuple.Item1;
                 }
 
+                // apply BCF clipping planes to bounding box
+                if (v.ClippingPlanes.Count() > 0)
+                {
+                    ARUP.IssueTracker.Classes.BCF2.Point maxPoint = BcfAdapter.GetBoundingBoxMaxPointFromClippingPlanes(v.ClippingPlanes);
+                    ARUP.IssueTracker.Classes.BCF2.Point minPoint = BcfAdapter.GetBoundingBoxMinPointFromClippingPlanes(v.ClippingPlanes);
+
+                    if (maxPoint != null && minPoint != null)
+                    {
+                        Point3D max = new Point3D(maxPoint.X, maxPoint.Y, maxPoint.Z);
+                        Point3D min = new Point3D(minPoint.X, minPoint.Y, minPoint.Z);
+                        BoundingBox3D bBox = new BoundingBox3D(min, max);
+
+                        // get the state of COM
+                        ComApi.InwOpState10 oState = ComBridge.State;
+
+                        MessageBox.Show(oState.CurrentSectionView.ClippingPlanes().Count.ToString());
+
+                        foreach (ComApi.InwOaClipPlane plane in oState.CurrentSectionView.ClippingPlanes()) 
+                        {
+
+                        }
+                    }
+                }
+                
+
                 //SavedViewpoint sv = new SavedViewpoint(oCopyVP);
                 //sv.DisplayName = "test view";
                 //sv.Guid = Guid.NewGuid();
