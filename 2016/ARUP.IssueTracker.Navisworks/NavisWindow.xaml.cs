@@ -16,6 +16,7 @@ using System.Windows.Controls;
 using ARUP.IssueTracker.Classes;
 using Autodesk.Navisworks.Api;
 using ComBridge = Autodesk.Navisworks.Api.ComApi.ComApiBridge;
+using ComApiBridge = Autodesk.Navisworks.Api.ComApi;
 using ComApi = Autodesk.Navisworks.Api.Interop.ComApi;
 using Com = Autodesk.Navisworks.Api.Interop.ComApi;
 using Autodesk.Navisworks.Api.DocumentParts;
@@ -703,36 +704,20 @@ namespace ARUP.IssueTracker.Navisworks
                     oCopyVP.Position = tuple.Item1;
                 }
 
-                // apply BCF clipping planes to bounding box
-                if (v.ClippingPlanes.Count() > 0)
-                {
-                    ARUP.IssueTracker.Classes.BCF2.Point maxPoint = BcfAdapter.GetBoundingBoxMaxPointFromClippingPlanes(v.ClippingPlanes);
-                    ARUP.IssueTracker.Classes.BCF2.Point minPoint = BcfAdapter.GetBoundingBoxMinPointFromClippingPlanes(v.ClippingPlanes);
-
-                    if (maxPoint != null && minPoint != null)
-                    {
-                        Point3D max = new Point3D(maxPoint.X, maxPoint.Y, maxPoint.Z);
-                        Point3D min = new Point3D(minPoint.X, minPoint.Y, minPoint.Z);
-                        BoundingBox3D bBox = new BoundingBox3D(min, max);
-
-                        // get the state of COM
-                        ComApi.InwOpState10 oState = ComBridge.State;
-
-                        MessageBox.Show(oState.CurrentSectionView.ClippingPlanes().Count.ToString());
-
-                        foreach (ComApi.InwOaClipPlane plane in oState.CurrentSectionView.ClippingPlanes()) 
-                        {
-
-                        }
-                    }
-                }
-                
-
                 //SavedViewpoint sv = new SavedViewpoint(oCopyVP);
                 //sv.DisplayName = "test view";
                 //sv.Guid = Guid.NewGuid();
                 //oDoc.SavedViewpoints.AddCopy(sv);
                 oDoc.CurrentViewpoint.CopyFrom(oCopyVP);
+
+                // apply BCF clipping planes
+                if (v.ClippingPlanes != null)
+                {
+                    for (int i = 0; i < v.ClippingPlanes.Count(); i++)
+                    {
+                        CreateSectionPlane(i, v.ClippingPlanes[i]);
+                    }
+                }
 
                 //Avoid handling too many elements
                 if (v.Components.Count > 100)
@@ -848,6 +833,52 @@ namespace ARUP.IssueTracker.Navisworks
             }
            
 
+        }
+        public void CreateSectionPlane(int index, ClippingPlane cp) 
+        {
+            ComApi.InwOpState10 state;
+            state = ComApiBridge.ComApiBridge.State;
+
+            // create a geometry vector as the normal of section plane 
+            ComApi.InwLUnitVec3f sectionPlaneNormal =
+                (ComApi.InwLUnitVec3f)state.ObjectFactory(
+                Autodesk.Navisworks.Api.Interop.ComApi.nwEObjectType.eObjectType_nwLUnitVec3f,
+                null,
+                null);
+
+            sectionPlaneNormal.SetValue(-cp.Direction.X, -cp.Direction.Y, -cp.Direction.Z);
+
+            // create a geometry plane 
+            ComApi.InwLPlane3f sectionPlane =
+                (ComApi.InwLPlane3f)state.ObjectFactory
+                (Autodesk.Navisworks.Api.Interop.ComApi.nwEObjectType.eObjectType_nwLPlane3f,
+                null,
+                null);
+
+            //get collection of sectioning planes 
+            ComApi.InwClippingPlaneColl2 clipColl =
+                (ComApi.InwClippingPlaneColl2)state.CurrentView.ClippingPlanes();
+
+            // create a new sectioning plane
+            // it forces creation of planes up to this index.
+            clipColl.CreatePlane(index+1);
+
+            // get the last sectioning plane which are what we created
+            ComApi.InwOaClipPlane cliPlane =
+                (ComApi.InwOaClipPlane)state.CurrentView.ClippingPlanes()[index+1];
+
+            //assign the geometry vector with the plane
+            double distanceToBasePlaneOrigin = -cp.Direction.X * cp.Location.X - cp.Direction.Y * cp.Location.Y - cp.Direction.Z * cp.Location.Z;
+            sectionPlane.SetValue(sectionPlaneNormal, distanceToBasePlaneOrigin);
+
+            // ask the sectioning plane uses the new geometry plane 
+            cliPlane.Plane = sectionPlane;
+            cliPlane.Alignment = ComApi.nwEClipPlaneAlignment.eAlignment_NONE;
+
+            // enable this sectioning plane 
+            cliPlane.Enabled = true;
+
+            MessageBox.Show(cliPlane.ObjectName);
         }
         public void HideUnselected()
         {

@@ -133,8 +133,22 @@ namespace ARUP.IssueTracker.Revit.Entry
                                 perspView.Name = "BCFpersp";
                             }
 
+                            perspView.DisableTemporaryViewMode(TemporaryViewMode.TemporaryHideIsolate);
                             perspView.SetOrientation(orient3d);
 
+                            // turn on the far clip plane with standard parameter API 
+                            if (perspView.get_Parameter(BuiltInParameter.VIEWER_BOUND_ACTIVE_FAR).HasValue)
+                            {
+                                Parameter m_farClip = perspView.get_Parameter(BuiltInParameter.VIEWER_BOUND_ACTIVE_FAR);
+                                m_farClip.Set(1);
+
+                            }
+                            // reset far clip offset
+                            if (perspView.get_Parameter(BuiltInParameter.VIEWER_BOUND_OFFSET_FAR).HasValue)
+                            {
+                                Parameter m_farClipOffset = perspView.get_Parameter(BuiltInParameter.VIEWER_BOUND_OFFSET_FAR);
+                                m_farClipOffset.SetValueString("35");
+                            }
                             // turn off the far clip plane with standard parameter API 
                             if (perspView.get_Parameter(BuiltInParameter.VIEWER_BOUND_ACTIVE_FAR).HasValue)
                             {
@@ -182,6 +196,16 @@ namespace ARUP.IssueTracker.Revit.Entry
                 //select/hide elements
                 if (v.Components != null && v.Components.Any())
                 {
+                    if (v.Components.Count > 100)
+                    {
+                        var result = MessageBox.Show("Too many elements attached. It may take for a while to isolate/select them. Do you want to continue?", "Warning", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+                        if (result == MessageBoxResult.No)
+                        {
+                            uidoc.RefreshActiveView();
+                            return;
+                        }
+                    }
+
                     FilteredElementCollector collector = new FilteredElementCollector(doc, doc.ActiveView.Id).WhereElementIsNotElementType();
                     System.Collections.Generic.ICollection<ElementId> collection = collector.ToElementIds();
                     foreach (var e in v.Components)

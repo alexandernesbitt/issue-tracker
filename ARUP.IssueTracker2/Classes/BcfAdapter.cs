@@ -1097,14 +1097,15 @@ namespace ARUP.IssueTracker.Classes
             BCF2.ClippingPlane yPositive = clippingPlanesList.Find(cp => (cp.Direction.X == 0 && cp.Direction.Y == 1 && cp.Direction.Z == 0));
             BCF2.ClippingPlane zPositive = clippingPlanesList.Find(cp => (cp.Direction.X == 0 && cp.Direction.Y == 0 && cp.Direction.Z == 1));
 
-            if (isThreePointsEqual(xPositive.Location, yPositive.Location, zPositive.Location))
+            if (xPositive != null && yPositive != null && zPositive != null)
             {
-                return xPositive.Location;
+                if (isThreePointsEqual(xPositive.Location, yPositive.Location, zPositive.Location))
+                {
+                    return xPositive.Location;
+                }
             }
-            else
-            {
-                return null;
-            }
+
+            return null;
         }
 
         public static BCF2.Point GetBoundingBoxMinPointFromClippingPlanes(BCF2.ClippingPlane[] clippingPlanes)
@@ -1115,14 +1116,15 @@ namespace ARUP.IssueTracker.Classes
             BCF2.ClippingPlane yNegative = clippingPlanesList.Find(cp => (cp.Direction.X == 0 && cp.Direction.Y == -1 && cp.Direction.Z == 0));
             BCF2.ClippingPlane zNegative = clippingPlanesList.Find(cp => (cp.Direction.X == 0 && cp.Direction.Y == 0 && cp.Direction.Z == -1));
 
-            if (isThreePointsEqual(xNegative.Location, yNegative.Location, zNegative.Location))
+            if (xNegative != null && yNegative != null && zNegative != null)
             {
-                return xNegative.Location;
+                if (isThreePointsEqual(xNegative.Location, yNegative.Location, zNegative.Location))
+                {
+                    return xNegative.Location;
+                }
             }
-            else
-            {
-                return null;
-            }
+
+            return null;
         }
 
         private static bool isThreePointsEqual(BCF2.Point point1, BCF2.Point point2, BCF2.Point point3) 

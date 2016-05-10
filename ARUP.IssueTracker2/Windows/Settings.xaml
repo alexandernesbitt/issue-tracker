@@ -61,7 +61,7 @@
 
             </Grid>
         </GroupBox>
-        <GroupBox Header="General Settings" Margin="5" Grid.Row="2">
+        <GroupBox Header="General Settings" Margin="5" Grid.Row="2" Visibility="Collapsed">
 
             <Grid Margin="5">
                 <Grid.RowDefinitions>
