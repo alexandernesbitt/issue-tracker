@@ -263,6 +263,42 @@ namespace ARUP.IssueTracker.Revit.Entry
                     }
                 }
 
+                //apply BCF clipping planes to Revit section box
+                View3D view3D = doc.ActiveView as View3D;
+                if (view3D != null)
+                {
+                    if (v.ClippingPlanes != null)
+                    {
+                        if (v.ClippingPlanes.Count() > 0)
+                        {
+                            ARUP.IssueTracker.Classes.BCF2.Point maxPoint = BcfAdapter.GetBoundingBoxMaxPointFromClippingPlanes(v.ClippingPlanes);
+                            ARUP.IssueTracker.Classes.BCF2.Point minPoint = BcfAdapter.GetBoundingBoxMinPointFromClippingPlanes(v.ClippingPlanes);
+
+                            if (maxPoint != null && minPoint != null)
+                            {
+                                using (Transaction trans = new Transaction(uidoc.Document))
+                                {
+                                    if (trans.Start("Apply Section Box") == TransactionStatus.Started)
+                                    {
+                                        DisplayUnitType lengthUnitType = doc.GetUnits().GetFormatOptions(UnitType.UT_Length).DisplayUnits;
+                                        XYZ max = new XYZ(UnitUtils.ConvertToInternalUnits(maxPoint.X, lengthUnitType),
+                                                          UnitUtils.ConvertToInternalUnits(maxPoint.Y, lengthUnitType),
+                                                          UnitUtils.ConvertToInternalUnits(maxPoint.Z, lengthUnitType));
+                                        XYZ min = new XYZ(UnitUtils.ConvertToInternalUnits(minPoint.X, lengthUnitType),
+                                                          UnitUtils.ConvertToInternalUnits(minPoint.Y, lengthUnitType),
+                                                          UnitUtils.ConvertToInternalUnits(minPoint.Z, lengthUnitType));
+
+                                        BoundingBoxXYZ bBox = new BoundingBoxXYZ();
+                                        bBox.Max = max;
+                                        bBox.Min = min;
+                                        view3D.SetSectionBox(bBox);
+                                    }
+                                    trans.Commit();
+                                }
+                            }
+                        }
+                    }
+                }
 
                 uidoc.RefreshActiveView();
             }

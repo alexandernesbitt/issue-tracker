@@ -35,6 +35,7 @@ namespace ARUP.IssueTracker.Revit
     private ExtOpenView m_Handler;
     public UIApplication uiapp;
     private CommentController commentController;
+    private ComponentController componentController;
 
     /// <summary>
     /// Constructor
@@ -63,6 +64,10 @@ namespace ARUP.IssueTracker.Revit
         commentController.client = AuthoringTool.Revit;
         mainPan.jiraPan.AddCommBtn.Tag = commentController;
         mainPan.bcfPan.AddCommBtn.Tag = commentController;
+
+        // for IComponentController
+        componentController = new ComponentController(this);
+        mainPan.componentController = this.componentController;
 
         // for open 3d view and show components
         //mainPan.jiraPan.open3dView.Visibility = System.Windows.Visibility.Visible;

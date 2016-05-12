@@ -68,6 +68,7 @@
       <EmbedInteropTypes>True</EmbedInteropTypes>
       <HintPath>C:\Program Files\Autodesk\Navisworks Manage 2015\Autodesk.Navisworks.Interop.ComApi.dll</HintPath>
     </Reference>
+    <Reference Include="Microsoft.CSharp" />
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Drawing" />

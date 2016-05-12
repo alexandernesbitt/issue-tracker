@@ -27,6 +27,7 @@ namespace ARUP.IssueTracker.UserControls
 {
     public partial class MainPanel : UserControl
     {
+        public IComponentController componentController;
         public Jira jira = new Jira();
 
         public MainPanel()
@@ -2117,7 +2118,7 @@ namespace ARUP.IssueTracker.UserControls
             {
                 if (null != components && components.Any())
                 {
-                    ComponentsList cl = new ComponentsList(components);
+                    ComponentsList cl = new ComponentsList(components, componentController);
                     cl.Show();
                 }
                 else

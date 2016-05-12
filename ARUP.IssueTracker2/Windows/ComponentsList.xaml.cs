@@ -1,5 +1,7 @@
 ﻿using System.Windows;
 using ARUP.IssueTracker.Classes;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace ARUP.IssueTracker.Windows
 {
@@ -8,11 +10,16 @@ namespace ARUP.IssueTracker.Windows
     /// </summary>
     public partial class ComponentsList : Window
     {
-        public ComponentsList(ARUP.IssueTracker.Classes.BCF2.Component[] components)
+        List<ARUP.IssueTracker.Classes.BCF2.Component> components;
+        IComponentController componentController;
+
+        public ComponentsList(ARUP.IssueTracker.Classes.BCF2.Component[] components, IComponentController componentController)
         {
             InitializeComponent();
 
-            componentsList.ItemsSource = components;
+            this.componentController = componentController;
+            this.components = components.ToList();
+            componentsList.ItemsSource = this.components;
 
            
             //ObservableCollection<BCFComponent> ComponentsCollection = new ObservableCollection<BCFComponent>();
@@ -41,6 +48,14 @@ namespace ARUP.IssueTracker.Windows
             //}
             //MessageBox.Show(ComponentsCollection.Count().ToString());
             
+        }
+
+        private void selectElementsButton_Click(object sender, RoutedEventArgs e)
+        {
+            if(componentController != null)
+            {
+                componentController.selectElements(components.Select(c => c.AuthoringToolId).ToList());
+            }
         }
     }
 }

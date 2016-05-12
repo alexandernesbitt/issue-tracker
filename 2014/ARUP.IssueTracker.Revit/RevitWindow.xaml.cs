@@ -35,6 +35,7 @@ namespace ARUP.IssueTracker.Revit
         private ExtOpenView m_Handler;
         public UIApplication uiapp;
         private CommentController commentController;
+        private ComponentController componentController;
 
         /// <summary>
         /// Constructor
@@ -63,6 +64,10 @@ namespace ARUP.IssueTracker.Revit
                 commentController.client = AuthoringTool.Revit;
                 mainPan.jiraPan.AddCommBtn.Tag = commentController;
                 mainPan.bcfPan.AddCommBtn.Tag = commentController;
+
+                // for IComponentController
+                componentController = new ComponentController(this);
+                mainPan.componentController = this.componentController;
 
                 // for open 3d view and show components
                 //mainPan.jiraPan.open3dView.Visibility = System.Windows.Visibility.Visible;
@@ -467,6 +472,41 @@ namespace ARUP.IssueTracker.Revit
                         v.PerspectiveCamera.CameraDirection.Z = UnitUtils.ConvertFromInternalUnits(vi.Z, DisplayUnitType.DUT_METERS) * -1;
                         v.PerspectiveCamera.FieldOfView = zoomValue;
                     }
+
+                    // handle section box if enabled
+                    if (view3D.IsSectionBoxActive)
+                    {
+                        BoundingBoxXYZ sectionBox = view3D.GetSectionBox();
+
+                        // Note that the section box can be rotated and transformed.  
+                        // So the min/max corners coordinates relative to the model must be computed via the transform.
+                        Transform trf = sectionBox.Transform;
+
+                        XYZ max = sectionBox.Max; //Maximum coordinates (upper-right-front corner of the box before transform is applied).
+                        XYZ min = sectionBox.Min; //Minimum coordinates (lower-left-rear corner of the box before transform is applied).
+
+                        // Transform the min and max to model coordinates
+                        XYZ maxInModelCoords = trf.OfPoint(max);
+                        XYZ minInModelCoords = trf.OfPoint(min);
+
+                        // Convert to project unit
+                        DisplayUnitType lengthUnitType = doc.GetUnits().GetFormatOptions(UnitType.UT_Length).DisplayUnits;
+                        maxInModelCoords = new XYZ(UnitUtils.ConvertFromInternalUnits(maxInModelCoords.X, lengthUnitType),
+                                                   UnitUtils.ConvertFromInternalUnits(maxInModelCoords.Y, lengthUnitType),
+                                                   UnitUtils.ConvertFromInternalUnits(maxInModelCoords.Z, lengthUnitType));
+                        minInModelCoords = new XYZ(UnitUtils.ConvertFromInternalUnits(minInModelCoords.X, lengthUnitType),
+                                                   UnitUtils.ConvertFromInternalUnits(minInModelCoords.Y, lengthUnitType),
+                                                   UnitUtils.ConvertFromInternalUnits(minInModelCoords.Z, lengthUnitType));
+
+                        // Add to BCF clipping planes
+                        v.ClippingPlanes = BcfAdapter.GetClippingPlanesFromBoundingBox
+                        (
+                            maxInModelCoords.X, maxInModelCoords.Y, maxInModelCoords.Z,
+                            minInModelCoords.X, minInModelCoords.Y, minInModelCoords.Z
+                        );
+
+                    }
+
                 }
 
 

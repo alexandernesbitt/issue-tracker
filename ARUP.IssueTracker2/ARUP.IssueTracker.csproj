@@ -183,6 +183,7 @@
     <Compile Include="Windows\ComponentsList.xaml.cs">
       <DependentUpon>ComponentsList.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Windows\IComponentController.cs" />
     <Compile Include="Windows\ICommentController.cs" />
     <Compile Include="Windows\ProgressWin.xaml.cs">
       <DependentUpon>ProgressWin.xaml</DependentUpon>

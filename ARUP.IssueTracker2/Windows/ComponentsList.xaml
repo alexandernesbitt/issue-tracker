@@ -12,7 +12,7 @@
             <StackPanel Orientation="Horizontal" Grid.Row="0">
                 <Label Content="{Binding  ElementName=componentsList, Path=Items.Count}"/>
                 <Label Content="Items" />
-                
+                <Button x:Name="selectElementsButton" Margin="5" Content="Select Elements" Click="selectElementsButton_Click" />
             </StackPanel>
 
 

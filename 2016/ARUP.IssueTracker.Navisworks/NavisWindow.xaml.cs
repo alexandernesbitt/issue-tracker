@@ -26,12 +26,15 @@ using System.Xml.Serialization;
 using ARUP.IssueTracker.Classes.BCF2;
 
 namespace ARUP.IssueTracker.Navisworks
-{
+{   
+
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
     public partial class NavisWindow : UserControl
     {
+        private readonly double meterToFeetFactor = 3.2808399;
+
         List<SavedViewpoint> _savedViewpoints = new List<SavedViewpoint>();
         //const double Feet = 3.2808;
         List<ModelItem> _elementList;
@@ -509,6 +512,10 @@ namespace ARUP.IssueTracker.Navisworks
 
                     }
                 }
+
+                // handling section planes
+                v.ClippingPlanes = GetCurrentSectionPlanes().ToArray();
+
             }
             catch (Exception ex)
             {
@@ -868,8 +875,8 @@ namespace ARUP.IssueTracker.Navisworks
                 (ComApi.InwOaClipPlane)state.CurrentView.ClippingPlanes()[index+1];
 
             //assign the geometry vector with the plane
-            double distanceToBasePlaneOrigin = -cp.Direction.X * cp.Location.X - cp.Direction.Y * cp.Location.Y - cp.Direction.Z * cp.Location.Z;
-            sectionPlane.SetValue(sectionPlaneNormal, distanceToBasePlaneOrigin);
+            double distance = -cp.Direction.X * cp.Location.X - cp.Direction.Y * cp.Location.Y - cp.Direction.Z * cp.Location.Z;
+            sectionPlane.SetValue(sectionPlaneNormal, distance * meterToFeetFactor); // convert meter (BCF) to feet (Navis COM)
 
             // ask the sectioning plane uses the new geometry plane 
             cliPlane.Plane = sectionPlane;
@@ -877,8 +884,67 @@ namespace ARUP.IssueTracker.Navisworks
 
             // enable this sectioning plane 
             cliPlane.Enabled = true;
+        }
+        public List<ClippingPlane> GetCurrentSectionPlanes() 
+        {
+            List<ClippingPlane> sectionPlanes = new List<ClippingPlane>();
 
-            MessageBox.Show(cliPlane.ObjectName);
+            ComApi.InwOpState10 state;
+            state = ComApiBridge.ComApiBridge.State;
+
+            //get collection of sectioning planes 
+            ComApi.InwClippingPlaneColl2 clipColl =
+                (ComApi.InwClippingPlaneColl2)state.CurrentView.ClippingPlanes();
+
+            if (clipColl.Count <= 1)
+            {
+                return sectionPlanes;
+            }
+
+            foreach (ComApi.InwOaClipPlane p in clipColl)
+            {
+                ClippingPlane sp = new ClippingPlane();
+
+                // get the normal of the section plane (and convert from feet to meter)
+                double normalX = -p.Plane.GetNormal().data1;
+                double normalY = -p.Plane.GetNormal().data2;
+                double normalZ = -p.Plane.GetNormal().data3;
+                sp.Direction = new Direction() { X = normalX, Y = normalY, Z = normalZ };
+
+                // get one point on the plane as a location for BCF
+                if (normalX != 0 && normalY != 0 && normalZ != 0) 
+                {
+                    sp.Location = new ARUP.IssueTracker.Classes.BCF2.Point() { X = 0, Y = 0, Z = -p.Plane.distance() / normalZ / meterToFeetFactor };
+                }
+                else if (normalX == 0 && normalY == 0)
+                {
+                    sp.Location = new ARUP.IssueTracker.Classes.BCF2.Point() { X = 0, Y = 0, Z = -p.Plane.distance() / normalZ / meterToFeetFactor };
+                }
+                else if (normalX == 0 && normalZ == 0)
+                {
+                    sp.Location = new ARUP.IssueTracker.Classes.BCF2.Point() { X = 0, Y = -p.Plane.distance() / normalY / meterToFeetFactor, Z = 0 };
+                }
+                else if (normalZ == 0 && normalY == 0)
+                {
+                    sp.Location = new ARUP.IssueTracker.Classes.BCF2.Point() { X = -p.Plane.distance() / normalX / meterToFeetFactor, Y = 0, Z = 0 };
+                }
+                else if (normalX == 0)
+                {
+                    sp.Location = new ARUP.IssueTracker.Classes.BCF2.Point() { X = 0, Y = 0, Z = -p.Plane.distance() / normalZ / meterToFeetFactor };
+                }
+                else if (normalY == 0)
+                {
+                    sp.Location = new ARUP.IssueTracker.Classes.BCF2.Point() { X = 0, Y = 0, Z = -p.Plane.distance() / normalZ / meterToFeetFactor };
+                }
+                else if (normalZ == 0)
+                {
+                    sp.Location = new ARUP.IssueTracker.Classes.BCF2.Point() { X = -p.Plane.distance() / normalX / meterToFeetFactor, Y = 0, Z = 0 };
+                }
+
+                sectionPlanes.Add(sp);
+            }
+
+            return sectionPlanes;
         }
         public void HideUnselected()
         {
