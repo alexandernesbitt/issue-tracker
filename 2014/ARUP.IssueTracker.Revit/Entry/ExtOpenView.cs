@@ -83,6 +83,7 @@ namespace ARUP.IssueTracker.Revit.Entry
                                 orthoView.Name = "BCFortho";
                             }
 
+                            orthoView.DisableTemporaryViewMode(TemporaryViewMode.TemporaryHideIsolate);
                             orthoView.SetOrientation(orient3d);
                             trans.Commit();
                         }
@@ -177,6 +178,7 @@ namespace ARUP.IssueTracker.Revit.Entry
                         return;
                     }
                     uidoc.ActiveView = viewcollectorSheet.First();
+                    uidoc.ActiveView.DisableTemporaryViewMode(TemporaryViewMode.TemporaryHideIsolate);
                     uidoc.RefreshActiveView();
 
                     //        trans.Commit();
