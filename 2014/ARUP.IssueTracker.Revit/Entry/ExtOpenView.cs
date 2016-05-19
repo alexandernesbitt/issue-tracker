@@ -195,6 +195,42 @@ namespace ARUP.IssueTracker.Revit.Entry
                 {
                     return;
                 }
+
+                //apply BCF clipping planes to Revit section box
+                View3D view3D = doc.ActiveView as View3D;
+                if (view3D != null)
+                {
+                    if (v.ClippingPlanes != null)
+                    {
+                        if (v.ClippingPlanes.Count() > 0)
+                        {
+                            var result = getBoundingBoxFromClippingPlanes(v.ClippingPlanes);
+                            BoundingBoxXYZ bBox = result.Item1;
+                            Transform rotate = result.Item2;
+
+                            using (Transaction trans = new Transaction(uidoc.Document))
+                            {
+                                if (trans.Start("Apply Section Box") == TransactionStatus.Started)
+                                {
+                                    view3D.SetSectionBox(bBox);
+
+                                    if (rotate != null)
+                                    {
+                                        BoundingBoxXYZ box = view3D.GetSectionBox();
+
+                                        // Transform the View3D's section box with the rotation transform
+                                        box.Transform = box.Transform.Multiply(rotate);
+
+                                        // Set the section box back to the view (requires an open transaction)
+                                        view3D.SetSectionBox(box);
+                                    }
+                                }
+                                trans.Commit();
+                            }
+                        }
+                    }
+                }
+
                 //select/hide elements
                 if (v.Components != null && v.Components.Any())
                 {
@@ -269,43 +305,6 @@ namespace ARUP.IssueTracker.Revit.Entry
                     }
                 }
 
-                //apply BCF clipping planes to Revit section box
-                View3D view3D = doc.ActiveView as View3D;
-                if (view3D != null)
-                {
-                    if (v.ClippingPlanes != null)
-                    {
-                        if (v.ClippingPlanes.Count() > 0)
-                        {
-                            ARUP.IssueTracker.Classes.BCF2.Point maxPoint = BcfAdapter.GetBoundingBoxMaxPointFromClippingPlanes(v.ClippingPlanes);
-                            ARUP.IssueTracker.Classes.BCF2.Point minPoint = BcfAdapter.GetBoundingBoxMinPointFromClippingPlanes(v.ClippingPlanes);
-
-                            if (maxPoint != null && minPoint != null)
-                            {
-                                using (Transaction trans = new Transaction(uidoc.Document))
-                                {
-                                    if (trans.Start("Apply Section Box") == TransactionStatus.Started)
-                                    {
-                                        DisplayUnitType lengthUnitType = doc.GetUnits().GetFormatOptions(UnitType.UT_Length).DisplayUnits;
-                                        XYZ max = new XYZ(UnitUtils.ConvertToInternalUnits(maxPoint.X, lengthUnitType),
-                                                          UnitUtils.ConvertToInternalUnits(maxPoint.Y, lengthUnitType),
-                                                          UnitUtils.ConvertToInternalUnits(maxPoint.Z, lengthUnitType));
-                                        XYZ min = new XYZ(UnitUtils.ConvertToInternalUnits(minPoint.X, lengthUnitType),
-                                                          UnitUtils.ConvertToInternalUnits(minPoint.Y, lengthUnitType),
-                                                          UnitUtils.ConvertToInternalUnits(minPoint.Z, lengthUnitType));
-
-                                        BoundingBoxXYZ bBox = new BoundingBoxXYZ();
-                                        bBox.Max = max;
-                                        bBox.Min = min;
-                                        view3D.SetSectionBox(bBox);
-                                    }
-                                    trans.Commit();
-                                }
-                            }
-                        }
-                    }
-                }
-
                 uidoc.RefreshActiveView();
             }
             catch (Exception ex)
@@ -313,6 +312,193 @@ namespace ARUP.IssueTracker.Revit.Entry
                 TaskDialog.Show("Error!", "exception: " + ex);
             }
         }
+
+        /// <summary>
+        /// Calculate the max point and the min point of Revit section box based on BCF clipping planes
+        /// </summary>
+        /// <param name="clippingPlanes">clipping planes from BCF viewpoint</param>
+        /// <returns>1: max, 2: min</returns>
+        private Tuple<BoundingBoxXYZ, Transform> getBoundingBoxFromClippingPlanes(ClippingPlane[] clippingPlanes)
+        {
+            const double tolerance = 0.001;
+
+            if (clippingPlanes.Count() != 6)
+            {
+                return null;
+            }
+
+            try
+            {
+                List<ClippingPlane> cPlanes = clippingPlanes.ToList();
+                double maxZ, minZ;
+
+                // checking z direction normals
+                List<XYZ> zPoints = new List<XYZ>();
+                List<ClippingPlane> xyClipppingPlanes = new List<ClippingPlane>();
+                foreach (ClippingPlane cp in cPlanes)
+                {
+                    XYZ zDirection = new XYZ(0, 0, 1);
+                    XYZ normal = new XYZ(cp.Direction.X, cp.Direction.Y, cp.Direction.Z);
+                    if (normal.IsAlmostEqualTo(zDirection, 0.001) || normal.IsAlmostEqualTo(-zDirection, tolerance))
+                    {
+                        zPoints.Add(new XYZ(cp.Location.X, cp.Location.Y, cp.Location.Z));
+                    }
+                    else
+                    {
+                        xyClipppingPlanes.Add(cp);
+                    }
+                }
+                if (zPoints.Count != 2)
+                {
+                    return null;
+                }
+                else
+                {
+                    maxZ = zPoints[0].Z > zPoints[1].Z ? zPoints[0].Z : zPoints[1].Z;
+                    minZ = zPoints[0].Z < zPoints[1].Z ? zPoints[0].Z : zPoints[1].Z;
+                }
+
+                // check if the remaining 4 points are on XY plane
+                if (!xyClipppingPlanes.TrueForAll(cp => (cp.Location.Z < tolerance && cp.Location.Z > -tolerance)))
+                {
+                    return null;
+                }
+
+                // find out lines orthorgonal to self-normal
+                List<Autodesk.Revit.DB.Line> linesToBeIntersected = new List<Autodesk.Revit.DB.Line>();
+                foreach (ClippingPlane cp in xyClipppingPlanes)
+                {
+                    XYZ planeNormal = new XYZ(cp.Direction.X, cp.Direction.Y, cp.Direction.Z);
+                    ClippingPlane othorgonalPlane = xyClipppingPlanes.Find(c => !(
+                        new XYZ(c.Direction.X, c.Direction.Y, c.Direction.Z).IsAlmostEqualTo(planeNormal, tolerance)
+                        ||
+                        new XYZ(c.Direction.X, c.Direction.Y, c.Direction.Z).IsAlmostEqualTo(-planeNormal, tolerance)
+                    ));
+                    XYZ othorgonalNormal = new XYZ(othorgonalPlane.Direction.X, othorgonalPlane.Direction.Y, othorgonalPlane.Direction.Z);
+                    XYZ planeOrigin = new XYZ(cp.Location.X, cp.Location.Y, cp.Location.Z);
+
+                    linesToBeIntersected.Add(Autodesk.Revit.DB.Line.CreateUnbound(planeOrigin, othorgonalNormal));
+                }
+
+                // get intersection results
+                List<XYZ> intersectedPoints = new List<XYZ>();
+                IntersectionResultArray intersections;
+                foreach (Autodesk.Revit.DB.Line line1 in linesToBeIntersected)
+                {
+                    foreach (Autodesk.Revit.DB.Line line2 in linesToBeIntersected)
+                    {
+                        if (line1 != null && line2 != null && line1 != line2)
+                        {
+                            line1.Intersect(line2, out intersections);
+                            if (intersections != null && intersections.Size == 1)
+                            {
+                                if (intersections.get_Item(0) != null)
+                                {
+                                    intersectedPoints.Add(intersections.get_Item(0).XYZPoint);
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // find rightmost, leftmost, topmost, and bottommost points
+                XYZ rightmost = intersectedPoints[0];
+                XYZ leftmost = intersectedPoints[0];
+                XYZ topmost = intersectedPoints[0];
+                XYZ bottommost = intersectedPoints[0]; // for non-rotated section box only
+                if (intersectedPoints.Count < 4)
+                {
+                    return null;
+                }
+                else
+                {
+                    foreach (XYZ p in intersectedPoints)
+                    {
+                        if (p.X > rightmost.X)
+                            rightmost = p;
+                        if (p.X < leftmost.X)
+                            leftmost = p;
+                        if (p.Y > topmost.Y)
+                            topmost = p;
+                        if (p.Y < bottommost.Y)
+                            bottommost = p;
+                    }
+                }
+
+                // create diagonal and rotation vector
+                Autodesk.Revit.DB.Line diagonal = Autodesk.Revit.DB.Line.CreateBound(rightmost, leftmost);
+                Autodesk.Revit.DB.Line rotationBase = Autodesk.Revit.DB.Line.CreateBound(rightmost, topmost);
+                XYZ horizontalBase = new XYZ(-1, 0, 0);
+
+
+                // return these two guys
+                BoundingBoxXYZ bBox = new BoundingBoxXYZ();
+                Transform originalTransform = null;
+
+                // compute a correct section box depending on two conditions
+                DisplayUnitType lengthUnitType = DisplayUnitType.DUT_METERS;
+                if (rightmost.IsAlmostEqualTo(topmost, tolerance) ||
+                    horizontalBase.IsAlmostEqualTo(rotationBase.Direction, tolerance) ||
+                    horizontalBase.IsAlmostEqualTo(-rotationBase.Direction, tolerance) ||
+                    horizontalBase.IsAlmostEqualTo(diagonal.Direction, tolerance) ||
+                    horizontalBase.IsAlmostEqualTo(-diagonal.Direction, tolerance))
+                {  //non-rotated section box
+
+                    XYZ max = new XYZ(
+                        UnitUtils.ConvertToInternalUnits(rightmost.X, lengthUnitType),
+                        UnitUtils.ConvertToInternalUnits(topmost.Y, lengthUnitType),
+                        UnitUtils.ConvertToInternalUnits(maxZ, lengthUnitType)
+                    );
+                    XYZ min = new XYZ(
+                        UnitUtils.ConvertToInternalUnits(leftmost.X, lengthUnitType),
+                        UnitUtils.ConvertToInternalUnits(bottommost.Y, lengthUnitType),
+                        UnitUtils.ConvertToInternalUnits(minZ, lengthUnitType)
+                    );
+
+                    bBox.Max = max;
+                    bBox.Min = min;
+                }
+                else //rotated section box
+                {
+                    // calculate rotation angle
+                    double angle = horizontalBase.AngleTo(rotationBase.Direction);
+
+                    // create transform
+                    Transform transform = Transform.CreateRotationAtPoint(new XYZ(0, 0, 1), angle, rightmost);
+
+                    // rotate it then get the rotated bounding box projection point (i.e., min. of rorated section box)
+                    XYZ rotatedMin = diagonal.CreateTransformed(transform).GetEndPoint(1);
+
+                    // create rotated section box with max and min 
+                    XYZ max = new XYZ(
+                        UnitUtils.ConvertToInternalUnits(rightmost.X, lengthUnitType),
+                        UnitUtils.ConvertToInternalUnits(rightmost.Y, lengthUnitType),
+                        UnitUtils.ConvertToInternalUnits(maxZ, lengthUnitType)
+                    );
+                    XYZ min = new XYZ(
+                        UnitUtils.ConvertToInternalUnits(rotatedMin.X, lengthUnitType),
+                        UnitUtils.ConvertToInternalUnits(rotatedMin.Y, lengthUnitType),
+                        UnitUtils.ConvertToInternalUnits(minZ, lengthUnitType)
+                    );
+
+                    bBox.Max = max;
+                    bBox.Min = min;
+
+                    // rotate back to the original position
+                    originalTransform = Transform.CreateRotationAtPoint(new XYZ(0, 0, 1), -angle, max);
+                }
+
+                return new Tuple<BoundingBoxXYZ, Transform>(bBox, originalTransform);
+
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString());
+                return null;
+            }
+
+        }
+
         private System.Collections.Generic.IEnumerable<ViewFamilyType> getFamilyViews(Document doc)
         {
 

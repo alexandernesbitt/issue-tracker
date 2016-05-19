@@ -321,7 +321,6 @@ namespace ARUP.IssueTracker.Revit.Entry
 
             if (clippingPlanes.Count() != 6)
             {
-                MessageBox.Show("1");
                 return null;
             }
             
@@ -348,7 +347,6 @@ namespace ARUP.IssueTracker.Revit.Entry
                 }
                 if (zPoints.Count != 2)
                 {
-                    MessageBox.Show("2");
                     return null;
                 }
                 else 
@@ -360,11 +358,10 @@ namespace ARUP.IssueTracker.Revit.Entry
                 // check if the remaining 4 points are on XY plane
                 if (!xyClipppingPlanes.TrueForAll(cp => (cp.Location.Z < tolerance && cp.Location.Z > -tolerance)))
                 {
-                    MessageBox.Show("3");
                     return null;
                 }
 
-                // find out lines othorgonal to self-normal
+                // find out lines orthorgonal to self-normal
                 List<Autodesk.Revit.DB.Line> linesToBeIntersected = new List<Autodesk.Revit.DB.Line>();
                 foreach (ClippingPlane cp in xyClipppingPlanes)
                 {
@@ -408,7 +405,6 @@ namespace ARUP.IssueTracker.Revit.Entry
                 XYZ bottommost = intersectedPoints[0]; // for non-rotated section box only
                 if (intersectedPoints.Count < 4)
                 {
-                    MessageBox.Show("4");
                     return null;
                 }
                 else 
@@ -438,8 +434,13 @@ namespace ARUP.IssueTracker.Revit.Entry
 
                 // compute a correct section box depending on two conditions
                 DisplayUnitType lengthUnitType = DisplayUnitType.DUT_METERS;
-                if (horizontalBase.IsAlmostEqualTo(rotationBase.Direction, tolerance) || horizontalBase.IsAlmostEqualTo(-rotationBase.Direction, tolerance))
+                if (rightmost.IsAlmostEqualTo(topmost, tolerance) || 
+                    horizontalBase.IsAlmostEqualTo(rotationBase.Direction, tolerance) ||
+                    horizontalBase.IsAlmostEqualTo(-rotationBase.Direction, tolerance) ||
+                    horizontalBase.IsAlmostEqualTo(diagonal.Direction, tolerance) ||
+                    horizontalBase.IsAlmostEqualTo(-diagonal.Direction, tolerance))
                 {  //non-rotated section box
+
                     XYZ max = new XYZ(
                         UnitUtils.ConvertToInternalUnits(rightmost.X, lengthUnitType),
                         UnitUtils.ConvertToInternalUnits(topmost.Y, lengthUnitType),
