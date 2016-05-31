@@ -250,7 +250,8 @@ namespace ARUP.IssueTracker.Revit.Entry
                     foreach (var e in v.Components)
                     {
                         var bcfguid = IfcGuid.FromIfcGUID(e.IfcGuid);
-                        var ids = collection.Where(o => bcfguid == ExportUtils.GetExportId(doc, o));
+                        int authoringToolId = string.IsNullOrWhiteSpace(e.AuthoringToolId) ? -1 : int.Parse(e.AuthoringToolId);
+                        var ids = collection.Where(o => bcfguid == ExportUtils.GetExportId(doc, o) | authoringToolId == Convert.ToInt32(doc.GetElement(o).UniqueId.Substring(37), 16));
                         if (ids.Any())
                         {
                             // handle visibility
@@ -378,20 +379,31 @@ namespace ARUP.IssueTracker.Revit.Entry
 
                 // get intersection results
                 List<XYZ> intersectedPoints = new List<XYZ>();
-                IntersectionResultArray intersections;
                 foreach (Autodesk.Revit.DB.Line line1 in linesToBeIntersected)
                 {
                     foreach (Autodesk.Revit.DB.Line line2 in linesToBeIntersected)
                     {
-                        if (line1 != null && line2 != null && line1 != line2)
+                        if (line1 != line2)
                         {
-                            line1.Intersect(line2, out intersections);
-                            if (intersections != null && intersections.Size == 1)
+                            // calculate intersection points
+                            double a1 = line1.Direction.Y;
+                            double b1 = line1.Direction.X;
+                            double a2 = line2.Direction.Y;
+                            double b2 = line2.Direction.X;
+
+                            // if not parallel
+                            double delta = b1 * a2 - a1 * b2;
+                            if (delta > tolerance || delta < -tolerance)
                             {
-                                if (intersections.get_Item(0) != null)
-                                {
-                                    intersectedPoints.Add(intersections.get_Item(0).XYZPoint);
-                                }
+                                double c1 = a1 * line1.Origin.X - b1 * line1.Origin.Y;
+                                double c2 = a2 * line2.Origin.X - b2 * line2.Origin.Y;
+
+                                double deltaX = b1 * c2 - b2 * c1;
+                                double deltaY = a1 * c2 - a2 * c1;
+
+                                double intersectionX = deltaX / delta;
+                                double intersectionY = deltaY / delta;
+                                intersectedPoints.Add(new XYZ(intersectionX, intersectionY, 0));
                             }
                         }
                     }
