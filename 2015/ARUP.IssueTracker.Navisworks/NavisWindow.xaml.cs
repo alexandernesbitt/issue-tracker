@@ -32,8 +32,6 @@ namespace ARUP.IssueTracker.Navisworks
     /// </summary>
     public partial class NavisWindow : UserControl
     {
-        private readonly double meterToFeetFactor = 3.2808399;
-
         List<SavedViewpoint> _savedViewpoints = new List<SavedViewpoint>();
         //const double Feet = 3.2808;
         List<ModelItem> _elementList;
@@ -716,12 +714,24 @@ namespace ARUP.IssueTracker.Navisworks
                 //oDoc.SavedViewpoints.AddCopy(sv);
                 oDoc.CurrentViewpoint.CopyFrom(oCopyVP);
 
+                // apply BCF clipping planes
+                if (v.ClippingPlanes != null)
+                {
+                    for (int i = 0; i < v.ClippingPlanes.Count(); i++)
+                    {
+                        CreateSectionPlane(i, v.ClippingPlanes[i]);
+                    }
+                }
+
                 //Avoid handling too many elements
                 if (v.Components.Count > 100)
                 {
-                    oDoc.Models.ResetAllHidden();
-                    MessageBox.Show("Element visibility/selection does not change because too many components are attached!", "Warning", MessageBoxButton.OK, MessageBoxImage.Warning);
-                    return;
+                    var result = MessageBox.Show("Too many elements attached. It may take for a while to isolate/select them. Do you want to continue?", "Warning", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+                    if (result == MessageBoxResult.No)
+                    {
+                        oDoc.Models.ResetAllHidden();
+                        return;
+                    }
                 }
 
                 if (v.Components != null && v.Components.Any())
@@ -866,7 +876,7 @@ namespace ARUP.IssueTracker.Navisworks
 
             //assign the geometry vector with the plane
             double distance = -cp.Direction.X * cp.Location.X - cp.Direction.Y * cp.Location.Y - cp.Direction.Z * cp.Location.Z;
-            sectionPlane.SetValue(sectionPlaneNormal, distance * meterToFeetFactor); // convert meter (BCF) to feet (Navis COM)
+            sectionPlane.SetValue(sectionPlaneNormal, distance * GetGunits());
 
             // ask the sectioning plane uses the new geometry plane 
             cliPlane.Plane = sectionPlane;
@@ -904,31 +914,31 @@ namespace ARUP.IssueTracker.Navisworks
                 // get one point on the plane as a location for BCF
                 if (normalX != 0 && normalY != 0 && normalZ != 0)
                 {
-                    sp.Location = new ARUP.IssueTracker.Classes.BCF2.Point() { X = 0, Y = 0, Z = -p.Plane.distance() / normalZ / meterToFeetFactor };
+                    sp.Location = new ARUP.IssueTracker.Classes.BCF2.Point() { X = 0, Y = 0, Z = -p.Plane.distance() / normalZ / GetGunits() };
                 }
                 else if (normalX == 0 && normalY == 0)
                 {
-                    sp.Location = new ARUP.IssueTracker.Classes.BCF2.Point() { X = 0, Y = 0, Z = -p.Plane.distance() / normalZ / meterToFeetFactor };
+                    sp.Location = new ARUP.IssueTracker.Classes.BCF2.Point() { X = 0, Y = 0, Z = -p.Plane.distance() / normalZ / GetGunits() };
                 }
                 else if (normalX == 0 && normalZ == 0)
                 {
-                    sp.Location = new ARUP.IssueTracker.Classes.BCF2.Point() { X = 0, Y = -p.Plane.distance() / normalY / meterToFeetFactor, Z = 0 };
+                    sp.Location = new ARUP.IssueTracker.Classes.BCF2.Point() { X = 0, Y = -p.Plane.distance() / normalY / GetGunits(), Z = 0 };
                 }
                 else if (normalZ == 0 && normalY == 0)
                 {
-                    sp.Location = new ARUP.IssueTracker.Classes.BCF2.Point() { X = -p.Plane.distance() / normalX / meterToFeetFactor, Y = 0, Z = 0 };
+                    sp.Location = new ARUP.IssueTracker.Classes.BCF2.Point() { X = -p.Plane.distance() / normalX / GetGunits(), Y = 0, Z = 0 };
                 }
                 else if (normalX == 0)
                 {
-                    sp.Location = new ARUP.IssueTracker.Classes.BCF2.Point() { X = 0, Y = 0, Z = -p.Plane.distance() / normalZ / meterToFeetFactor };
+                    sp.Location = new ARUP.IssueTracker.Classes.BCF2.Point() { X = 0, Y = 0, Z = -p.Plane.distance() / normalZ / GetGunits() };
                 }
                 else if (normalY == 0)
                 {
-                    sp.Location = new ARUP.IssueTracker.Classes.BCF2.Point() { X = 0, Y = 0, Z = -p.Plane.distance() / normalZ / meterToFeetFactor };
+                    sp.Location = new ARUP.IssueTracker.Classes.BCF2.Point() { X = 0, Y = 0, Z = -p.Plane.distance() / normalZ / GetGunits() };
                 }
                 else if (normalZ == 0)
                 {
-                    sp.Location = new ARUP.IssueTracker.Classes.BCF2.Point() { X = -p.Plane.distance() / normalX / meterToFeetFactor, Y = 0, Z = 0 };
+                    sp.Location = new ARUP.IssueTracker.Classes.BCF2.Point() { X = -p.Plane.distance() / normalX / GetGunits(), Y = 0, Z = 0 };
                 }
 
                 sectionPlanes.Add(sp);

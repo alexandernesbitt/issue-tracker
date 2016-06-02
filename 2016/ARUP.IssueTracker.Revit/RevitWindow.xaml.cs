@@ -499,6 +499,10 @@ namespace ARUP.IssueTracker.Revit
                                              UnitUtils.ConvertFromInternalUnits(minInModelCoords.Y, lengthUnitType),
                                              UnitUtils.ConvertFromInternalUnits(minInModelCoords.Z, lengthUnitType));
 
+                  // Convert to shared coordinates
+                  maxInModelCoords = ARUP.IssueTracker.Revit.Classes.Utils.ConvertToFromSharedCoordinate(doc, maxInModelCoords, false);
+                  minInModelCoords = ARUP.IssueTracker.Revit.Classes.Utils.ConvertToFromSharedCoordinate(doc, minInModelCoords, false);
+
                   // Add to BCF clipping planes
                   v.ClippingPlanes = BcfAdapter.GetClippingPlanesFromBoundingBox
                   (

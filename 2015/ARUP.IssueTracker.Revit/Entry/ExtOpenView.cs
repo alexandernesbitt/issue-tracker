@@ -205,28 +205,31 @@ namespace ARUP.IssueTracker.Revit.Entry
                     {
                         if (v.ClippingPlanes.Count() > 0)
                         {
-                            var result = getBoundingBoxFromClippingPlanes(v.ClippingPlanes);
-                            BoundingBoxXYZ bBox = result.Item1;
-                            Transform rotate = result.Item2;
+                            var result = getBoundingBoxFromClippingPlanes(doc, v.ClippingPlanes);
 
-                            using (Transaction trans = new Transaction(uidoc.Document))
+                            if (result != null)
                             {
-                                if (trans.Start("Apply Section Box") == TransactionStatus.Started)
+                                BoundingBoxXYZ computedBox = result.Item1;
+                                Transform rotate = result.Item2;
+
+                                using (Transaction trans = new Transaction(uidoc.Document))
                                 {
-                                    view3D.SetSectionBox(bBox);
-
-                                    if (rotate != null)
+                                    if (trans.Start("Apply Section Box") == TransactionStatus.Started)
                                     {
-                                        BoundingBoxXYZ box = view3D.GetSectionBox();
+                                        view3D.IsSectionBoxActive = true;
+                                        view3D.SetSectionBox(computedBox);
 
-                                        // Transform the View3D's section box with the rotation transform
-                                        box.Transform = box.Transform.Multiply(rotate);
+                                        if (rotate != null)
+                                        {
+                                            // Transform the View3D's section box with the rotation transform
+                                            computedBox.Transform = computedBox.Transform.Multiply(rotate);
 
-                                        // Set the section box back to the view (requires an open transaction)
-                                        view3D.SetSectionBox(box);
+                                            // Set the section box back to the view (requires an open transaction)
+                                            view3D.SetSectionBox(computedBox);
+                                        }
                                     }
+                                    trans.Commit();
                                 }
-                                trans.Commit();
                             }
                         }
                     }
@@ -315,9 +318,9 @@ namespace ARUP.IssueTracker.Revit.Entry
         /// </summary>
         /// <param name="clippingPlanes">clipping planes from BCF viewpoint</param>
         /// <returns>1: max, 2: min</returns>
-        private Tuple<BoundingBoxXYZ, Transform> getBoundingBoxFromClippingPlanes(ClippingPlane[] clippingPlanes)
+        private Tuple<BoundingBoxXYZ, Transform> getBoundingBoxFromClippingPlanes(Document doc, ClippingPlane[] clippingPlanes)
         {
-            const double tolerance = 0.001;
+            const double tolerance = 0.0000001;
 
             if (clippingPlanes.Count() != 6)
             {
@@ -336,7 +339,7 @@ namespace ARUP.IssueTracker.Revit.Entry
                 {
                     XYZ zDirection = new XYZ(0, 0, 1);
                     XYZ normal = new XYZ(cp.Direction.X, cp.Direction.Y, cp.Direction.Z);
-                    if (normal.IsAlmostEqualTo(zDirection, 0.001) || normal.IsAlmostEqualTo(-zDirection, tolerance))
+                    if (normal.IsAlmostEqualTo(zDirection, tolerance) || normal.IsAlmostEqualTo(-zDirection, tolerance))
                     {
                         zPoints.Add(new XYZ(cp.Location.X, cp.Location.Y, cp.Location.Z));
                     }
@@ -353,13 +356,15 @@ namespace ARUP.IssueTracker.Revit.Entry
                 {
                     maxZ = zPoints[0].Z > zPoints[1].Z ? zPoints[0].Z : zPoints[1].Z;
                     minZ = zPoints[0].Z < zPoints[1].Z ? zPoints[0].Z : zPoints[1].Z;
+                    maxZ = UnitUtils.ConvertToInternalUnits(maxZ, DisplayUnitType.DUT_METERS);
+                    minZ = UnitUtils.ConvertToInternalUnits(minZ, DisplayUnitType.DUT_METERS);
                 }
 
                 // check if the remaining 4 points are on XY plane
-                if (!xyClipppingPlanes.TrueForAll(cp => (cp.Location.Z < tolerance && cp.Location.Z > -tolerance)))
-                {
-                    return null;
-                }
+                //if (!xyClipppingPlanes.TrueForAll(cp => (cp.Location.Z < tolerance && cp.Location.Z > -tolerance)))
+                //{
+                //    return null;
+                //}
 
                 // find out lines orthorgonal to self-normal
                 List<Autodesk.Revit.DB.Line> linesToBeIntersected = new List<Autodesk.Revit.DB.Line>();
@@ -372,7 +377,7 @@ namespace ARUP.IssueTracker.Revit.Entry
                         new XYZ(c.Direction.X, c.Direction.Y, c.Direction.Z).IsAlmostEqualTo(-planeNormal, tolerance)
                     ));
                     XYZ othorgonalNormal = new XYZ(othorgonalPlane.Direction.X, othorgonalPlane.Direction.Y, othorgonalPlane.Direction.Z);
-                    XYZ planeOrigin = new XYZ(cp.Location.X, cp.Location.Y, cp.Location.Z);
+                    XYZ planeOrigin = new XYZ(cp.Location.X, cp.Location.Y, 0);
 
                     linesToBeIntersected.Add(Autodesk.Revit.DB.Line.CreateUnbound(planeOrigin, othorgonalNormal));
                 }
@@ -433,34 +438,39 @@ namespace ARUP.IssueTracker.Revit.Entry
                     }
                 }
 
-                // create diagonal and rotation vector
-                Autodesk.Revit.DB.Line diagonal = Autodesk.Revit.DB.Line.CreateBound(rightmost, leftmost);
-                Autodesk.Revit.DB.Line rotationBase = Autodesk.Revit.DB.Line.CreateBound(rightmost, topmost);
-                XYZ horizontalBase = new XYZ(-1, 0, 0);
+                // change the coordinate system from Project to Shared
+                rightmost = ConvertToInteranlAndSharedCoordinate(doc, rightmost);
+                leftmost = ConvertToInteranlAndSharedCoordinate(doc, leftmost);
+                topmost = ConvertToInteranlAndSharedCoordinate(doc, topmost);
+                bottommost = ConvertToInteranlAndSharedCoordinate(doc, bottommost);
 
+                // create diagonal and rotation vector
+                XYZ horizontalBase = new XYZ(-1, 0, 0);
+                Autodesk.Revit.DB.Line diagonal = Autodesk.Revit.DB.Line.CreateBound(rightmost, leftmost);
+                Autodesk.Revit.DB.Line rotationBase = !rightmost.IsAlmostEqualTo(topmost, tolerance) ?
+                                                        Autodesk.Revit.DB.Line.CreateBound(rightmost, topmost) :
+                                                        Autodesk.Revit.DB.Line.CreateUnbound(new XYZ(0, 0, 0), horizontalBase);
 
                 // return these two guys
                 BoundingBoxXYZ bBox = new BoundingBoxXYZ();
                 Transform originalTransform = null;
 
-                // compute a correct section box depending on two conditions
-                DisplayUnitType lengthUnitType = DisplayUnitType.DUT_METERS;
+                // compute a correct section box depending on two conditions                
                 if (rightmost.IsAlmostEqualTo(topmost, tolerance) ||
+                    leftmost.IsAlmostEqualTo(bottommost, tolerance) ||
                     horizontalBase.IsAlmostEqualTo(rotationBase.Direction, tolerance) ||
-                    horizontalBase.IsAlmostEqualTo(-rotationBase.Direction, tolerance) ||
-                    horizontalBase.IsAlmostEqualTo(diagonal.Direction, tolerance) ||
-                    horizontalBase.IsAlmostEqualTo(-diagonal.Direction, tolerance))
+                    horizontalBase.IsAlmostEqualTo(-rotationBase.Direction, tolerance))
                 {  //non-rotated section box
 
                     XYZ max = new XYZ(
-                        UnitUtils.ConvertToInternalUnits(rightmost.X, lengthUnitType),
-                        UnitUtils.ConvertToInternalUnits(topmost.Y, lengthUnitType),
-                        UnitUtils.ConvertToInternalUnits(maxZ, lengthUnitType)
+                        rightmost.X,
+                        topmost.Y,
+                        maxZ
                     );
                     XYZ min = new XYZ(
-                        UnitUtils.ConvertToInternalUnits(leftmost.X, lengthUnitType),
-                        UnitUtils.ConvertToInternalUnits(bottommost.Y, lengthUnitType),
-                        UnitUtils.ConvertToInternalUnits(minZ, lengthUnitType)
+                        leftmost.X,
+                        bottommost.Y,
+                        minZ
                     );
 
                     bBox.Max = max;
@@ -479,14 +489,14 @@ namespace ARUP.IssueTracker.Revit.Entry
 
                     // create rotated section box with max and min 
                     XYZ max = new XYZ(
-                        UnitUtils.ConvertToInternalUnits(rightmost.X, lengthUnitType),
-                        UnitUtils.ConvertToInternalUnits(rightmost.Y, lengthUnitType),
-                        UnitUtils.ConvertToInternalUnits(maxZ, lengthUnitType)
+                        rightmost.X,
+                        rightmost.Y,
+                        maxZ
                     );
                     XYZ min = new XYZ(
-                        UnitUtils.ConvertToInternalUnits(rotatedMin.X, lengthUnitType),
-                        UnitUtils.ConvertToInternalUnits(rotatedMin.Y, lengthUnitType),
-                        UnitUtils.ConvertToInternalUnits(minZ, lengthUnitType)
+                        rotatedMin.X,
+                        rotatedMin.Y,
+                        minZ
                     );
 
                     bBox.Max = max;
@@ -505,6 +515,19 @@ namespace ARUP.IssueTracker.Revit.Entry
                 return null;
             }
 
+        }
+
+        private XYZ ConvertToInteranlAndSharedCoordinate(Document doc, XYZ p)
+        {
+            DisplayUnitType lengthUnitType = DisplayUnitType.DUT_METERS;
+            p = new XYZ(
+                        UnitUtils.ConvertToInternalUnits(p.X, lengthUnitType),
+                        UnitUtils.ConvertToInternalUnits(p.Y, lengthUnitType),
+                        UnitUtils.ConvertToInternalUnits(p.Z, lengthUnitType)
+                    );
+            p = ARUP.IssueTracker.Revit.Classes.Utils.ConvertToFromSharedCoordinate(doc, p, true);
+
+            return p;
         }
 
         private System.Collections.Generic.IEnumerable<ViewFamilyType> getFamilyViews(Document doc)
