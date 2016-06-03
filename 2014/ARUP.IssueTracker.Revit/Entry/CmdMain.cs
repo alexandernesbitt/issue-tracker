@@ -56,6 +56,10 @@ namespace ARUP.IssueTracker.Revit.Entry
         ThisCmd = this;
         _appIssueTracker = new AppIssueTracker();
         _appIssueTracker.ShowForm(commandData.Application);
+
+        // register a document closed event
+        commandData.Application.Application.DocumentClosed += Application_DocumentClosed;
+
         return Result.Succeeded;
 
       }
@@ -65,6 +69,11 @@ namespace ARUP.IssueTracker.Revit.Entry
         return Result.Failed;
       }
 
+    }
+
+    void Application_DocumentClosed(object sender, Autodesk.Revit.DB.Events.DocumentClosedEventArgs e)
+    {
+        _appIssueTracker.CloseForm();
     }
 
   }

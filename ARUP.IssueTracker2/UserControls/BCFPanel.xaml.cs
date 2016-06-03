@@ -138,6 +138,11 @@ namespace ARUP.IssueTracker.UserControls
             switchTextBlockTextBoxVisibility(statusTextBlock, statusTextBox);
         }
 
+        private void ChangeTitle_Click(object sender, RoutedEventArgs e)
+        {
+            switchTextBlockTextBoxVisibility(titleTextBlock, titleTextBox);
+        }
+
         private void ChangePriority_Click(object sender, RoutedEventArgs e)
         {
             switchTextBlockTextBoxVisibility(priorityTextBlock, priorityTextBox);
@@ -190,7 +195,22 @@ namespace ARUP.IssueTracker.UserControls
         private void assignedToTextBox_LostFocus(object sender, RoutedEventArgs e)
         {
             switchTextBlockTextBoxVisibility(assignedToTextBlock, assignedToTextBox);
+        }       
+
+        private void titleTextBox_KeyUp(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Enter)
+            {
+                ChangeTitle.Focus();
+            }
         }
+
+        private void titleTextBox_LostFocus(object sender, RoutedEventArgs e)
+        {
+            switchTextBlockTextBoxVisibility(titleTextBlock, titleTextBox);
+        }
+
+        
 
         // Disable this function for now
         /*private void labelButton_Click(object sender, RoutedEventArgs e)

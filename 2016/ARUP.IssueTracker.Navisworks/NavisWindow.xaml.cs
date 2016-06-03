@@ -177,25 +177,32 @@ namespace ARUP.IssueTracker.Navisworks
         {
             try
             {
-                // set image export settings
-                ComApi.InwOaPropertyVec options = ComBridge.State.GetIOPluginOptions("lcodpimage");
-                // configure the option "export.image.format" to export png and image size
-                foreach (ComApi.InwOaProperty opt in options.Properties())
-                {
-                    if (opt.name == "export.image.format")
-                        opt.value = "lcodpexpng";
-                    if (opt.name == "export.image.width")
-                        opt.value = 1600;
-                    if (opt.name == "export.image.height")
-                        opt.value = 900;
-
-                }
-
+                // create a new container for saved viewpoints
                 _savedViewpoints = new List<SavedViewpoint>();
+
+                // add current viewpoint
+                SavedViewpoint currentSavedViewpoint = null;
+                foreach (SavedItem oSI in _oDoc.SavedViewpoints.ToSavedItemCollection())
+                {
+                    if (oSI.DisplayName == "Current Viewpoint")
+                    {
+                        currentSavedViewpoint = oSI as SavedViewpoint;
+                    }
+                }
+                if (currentSavedViewpoint != null)
+                {
+                    _oDoc.SavedViewpoints.ReplaceFromCurrentView(currentSavedViewpoint);
+                }
+                else 
+                {
+                    Viewpoint currentViewpoint = _oDoc.ActiveView.CreateViewpointCopy();
+                    currentSavedViewpoint = new SavedViewpoint(currentViewpoint);
+                    currentSavedViewpoint.DisplayName = "Current Viewpoint";
+                    _oDoc.SavedViewpoints.AddCopy(currentSavedViewpoint);
+                }                
 
                 foreach (SavedItem oSI in _oDoc.SavedViewpoints.ToSavedItemCollection())
                 {
-
                     RecurseItems(oSI);
                 }
 
@@ -399,20 +406,12 @@ namespace ARUP.IssueTracker.Navisworks
             try
             {
                 string snapshot = Path.Combine(folderIssue, "snapshot.png");
-
-                // get the state of COM
-                ComApi.InwOpState10 oState = ComBridge.State;
-                // get the IO plugin for image
-                ComApi.InwOaPropertyVec options = oState.GetIOPluginOptions("lcodpimage");
-
-                //export the viewpoint to the image
-                oState.DriveIOPlugin("lcodpimage", snapshot, options);
-                System.Drawing.Bitmap oBitmap = new System.Drawing.Bitmap(snapshot);
-                System.IO.MemoryStream ImageStream = new System.IO.MemoryStream();
-                oBitmap.Save(ImageStream, System.Drawing.Imaging.ImageFormat.Jpeg);
+                int height = _oDoc.ActiveView.Height;
+                int width = _oDoc.ActiveView.Width;
+                System.Drawing.Bitmap oBitmap = _oDoc.ActiveView.GenerateThumbnail(width, height);
+                oBitmap.Save(snapshot, System.Drawing.Imaging.ImageFormat.Png);
                 oBitmap.Dispose();
-                //IM.postAttach(issueKey, File.ReadAllBytes(snapshot), IM.ConvertToBytes(v), g);
-                //   postAttach2(issueKey, ConvertToBytes(v), "viewpoint.bcfv");
+
             }
             catch (System.Exception ex1)
             {

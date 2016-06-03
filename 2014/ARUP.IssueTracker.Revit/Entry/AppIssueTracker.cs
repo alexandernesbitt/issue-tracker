@@ -76,6 +76,23 @@ namespace ARUP.IssueTracker.Revit.Entry
     }
 
     /// <summary>
+    /// Close form when document closed
+    /// </summary>
+    public void CloseForm()
+    {
+        try
+        {
+            if (RvtWindow == null) return;
+            RvtWindow.Close();
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show(ex.ToString());
+        }
+
+    }
+
+    /// <summary>
     /// Set Focus
     /// </summary>
     public void Focus()

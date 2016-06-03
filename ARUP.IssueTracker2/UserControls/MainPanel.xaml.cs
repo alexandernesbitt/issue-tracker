@@ -84,6 +84,7 @@ namespace ARUP.IssueTracker.UserControls
                 jiraPan.NextIssues.Click += new RoutedEventHandler(GetNextIssues);
                 jiraPan.PrevIssues.Click += new RoutedEventHandler(GetPrevIssues);
                 jiraPan.ApplyFilters.Click += new RoutedEventHandler(ApplyFiltersClick);
+                jiraPan.ChangeTitle.Click += new RoutedEventHandler(ChangeTitle_Click);
                 jiraPan.ChangeType.Click += new RoutedEventHandler(ChangeType_Click);
                 jiraPan.ChangeAssign.Click += new RoutedEventHandler(ChangeAssign_Click);
                 jiraPan.ChangePriority.Click += new RoutedEventHandler(ChangePriority_Click);
@@ -1141,6 +1142,44 @@ namespace ARUP.IssueTracker.UserControls
                     }
                     JiraUtils.SetPriorities(keys, jira.PrioritiesCollection[cv.valuesList.SelectedIndex].id, ChangeValue_Completed);
                 }
+            }
+            catch (System.Exception ex1)
+            {
+                MessageBox.Show("exception: " + ex1);
+            }
+
+        }
+        public void ChangeTitle_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                int selectedIssueIndex = jiraPan.issueList.SelectedIndex;
+                string currentTitle = jira.IssuesCollection[selectedIssueIndex].fields.summary;
+                EditIssueTitle editIssueTitleDialog = new EditIssueTitle(currentTitle);
+                editIssueTitleDialog.WindowStartupLocation = WindowStartupLocation.CenterScreen;
+                editIssueTitleDialog.ShowDialog();
+                if (!editIssueTitleDialog.DialogResult.HasValue || !editIssueTitleDialog.DialogResult.Value)
+                    return;
+
+                List<RestRequest> requests = new List<RestRequest>();
+                var request = new RestRequest("issue/" + jira.IssuesCollection[selectedIssueIndex].key, Method.PUT);
+                request.AddHeader("Content-Type", "application/json");
+                request.RequestFormat = Arup.RestSharp.DataFormat.Json;
+
+                var newissue =
+                        new
+                        {
+                            fields = new
+                            {
+                                summary = editIssueTitleDialog.issueTitleTextBox.Text
+                            }
+                        };
+                request.AddBody(newissue);
+                requests.Add(request);
+                BackgroundJira bj = new BackgroundJira();
+                bj.WorkerComplete += new EventHandler<ResponseArg>(ChangeValue_Completed);
+                bj.Start<Issue>(requests);
+
             }
             catch (System.Exception ex1)
             {

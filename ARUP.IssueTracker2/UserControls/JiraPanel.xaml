@@ -253,7 +253,13 @@
                                 <Path   Margin="0" Height="13" Width="13" Stretch="Uniform" Fill="Gray" 
                                         Data="M86,15L78.5,15L62.1,15L69.6,22.3L54.9,37L63.8,45.9L78.5,31.1L86,38.9M64,73L27,73L27,37L45.7,37L60.3,22L14,22L14,86L77,86L77,40.1L64,55.4" UseLayoutRounding="False"/>
                             </Button>
-                            <TextBlock FontWeight="Bold" FontSize="14" Text="{Binding formattedsubject}" VerticalAlignment="Bottom" TextDecorations="{Binding formattedresolution}" />
+                            
+                            <Button MinWidth="60" Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}" x:Name="ChangeTitle" FontSize="14" FontWeight="Bold"
+                                HorizontalAlignment="Left">
+                                <StackPanel Orientation="Horizontal" >
+                                    <TextBlock x:Name="titleTextBlock" FontWeight="Bold" FontSize="14" Text="{Binding formattedsubject}" VerticalAlignment="Bottom" TextDecorations="{Binding formattedresolution}" />
+                                </StackPanel>
+                            </Button>
 
 
                         </StackPanel>

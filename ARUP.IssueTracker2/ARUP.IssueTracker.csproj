@@ -183,6 +183,9 @@
     <Compile Include="Windows\ComponentsList.xaml.cs">
       <DependentUpon>ComponentsList.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Windows\EditIssueTitle.xaml.cs">
+      <DependentUpon>EditIssueTitle.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Windows\IComponentController.cs" />
     <Compile Include="Windows\ICommentController.cs" />
     <Compile Include="Windows\ProgressWin.xaml.cs">
@@ -254,6 +257,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Windows\ComponentsList.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Windows\EditIssueTitle.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
