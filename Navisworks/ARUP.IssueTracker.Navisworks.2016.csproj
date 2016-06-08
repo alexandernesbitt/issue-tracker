@@ -4,11 +4,11 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{C8DABF50-AE26-4A2E-B1C7-6BE6AFC6B0B1}</ProjectGuid>
+    <ProjectGuid>{0A8ABFCD-E357-45F6-B6BD-3348637FA5F1}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>ARUP.IssueTracker.Navisworks</RootNamespace>
-    <AssemblyName>ARUP.IssueTracker.Navisworks</AssemblyName>
+    <AssemblyName>ARUP.IssueTracker.Navisworks.2016</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{60dc8134-eba5-43b8-bcc9-bb4bc16c2548};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
@@ -34,7 +34,7 @@
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
+    <DefineConstants>TRACE;NAVIS2016</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <Prefer32Bit>false</Prefer32Bit>
@@ -53,31 +53,38 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Autodesk.Navisworks.Api, Version=13.0.1253.9, Culture=neutral, PublicKeyToken=d85e58fa5af9b484, processorArchitecture=AMD64">
+    <Reference Include="Accessibility" />
+    <Reference Include="Autodesk.Navisworks.Api, Version=12.0.1109.12, Culture=neutral, PublicKeyToken=d85e58fa5af9b484, processorArchitecture=AMD64">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>C:\Program Files\Autodesk\Navisworks Manage 2015\Autodesk.Navisworks.Api.dll</HintPath>
+      <HintPath>C:\Program Files\Autodesk\Navisworks Manage 2016\Autodesk.Navisworks.Api.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="Autodesk.Navisworks.ComApi, Version=13.0.1253.9, Culture=neutral, PublicKeyToken=d85e58fa5af9b484, processorArchitecture=AMD64">
+    <Reference Include="Autodesk.Navisworks.ComApi, Version=12.0.1109.12, Culture=neutral, PublicKeyToken=d85e58fa5af9b484, processorArchitecture=AMD64">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>C:\Program Files\Autodesk\Navisworks Manage 2015\Autodesk.Navisworks.ComApi.dll</HintPath>
+      <HintPath>C:\Program Files\Autodesk\Navisworks Manage 2016\Autodesk.Navisworks.ComApi.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="Autodesk.Navisworks.Interop.ComApi, Version=13.0.1253.9, Culture=neutral, PublicKeyToken=d85e58fa5af9b484, processorArchitecture=AMD64">
+    <Reference Include="Autodesk.Navisworks.Interop.ComApi, Version=10.0.840.82, Culture=neutral, PublicKeyToken=d85e58fa5af9b484, processorArchitecture=AMD64">
       <SpecificVersion>False</SpecificVersion>
       <EmbedInteropTypes>True</EmbedInteropTypes>
-      <HintPath>C:\Program Files\Autodesk\Navisworks Manage 2015\Autodesk.Navisworks.Interop.ComApi.dll</HintPath>
+      <HintPath>C:\Program Files\Autodesk\Navisworks Manage 2016\Autodesk.Navisworks.Interop.ComApi.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.CSharp" />
+    <Reference Include="PresentationUI, Version=4.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL" />
+    <Reference Include="ReachFramework" />
     <Reference Include="System" />
     <Reference Include="System.Data" />
+    <Reference Include="System.Deployment" />
     <Reference Include="System.Drawing" />
+    <Reference Include="System.Printing" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xaml">
       <RequiredTargetFramework>4.0</RequiredTargetFramework>
     </Reference>
+    <Reference Include="UIAutomationProvider" />
+    <Reference Include="UIAutomationTypes" />
     <Reference Include="WindowsBase" />
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
@@ -138,7 +145,7 @@
     <WCFMetadata Include="Service References\" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\ARUP.IssueTracker2\ARUP.IssueTracker.csproj">
+    <ProjectReference Include="..\ARUP.IssueTracker2\ARUP.IssueTracker.csproj">
       <Project>{1b969ad1-c7e6-40fb-b3b0-20e7eb735876}</Project>
       <Name>ARUP.IssueTracker</Name>
       <Private>False</Private>
@@ -146,7 +153,7 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>copy /Y "$(TargetDir)ARUP.IssueTracker.Navisworks.dll" "C:\Program Files\Autodesk\Navisworks Manage 2015\Plugins\ARUP.IssueTracker.Navisworks\ARUP.IssueTracker.Navisworks.dll"</PostBuildEvent>
+    <PostBuildEvent>copy /Y "$(TargetDir)ARUP.IssueTracker.Navisworks.2016.dll" "C:\Program Files\Autodesk\Navisworks Manage 2016\Plugins\ARUP.IssueTracker.Navisworks.2016\ARUP.IssueTracker.Navisworks.2016.dll"</PostBuildEvent>
   </PropertyGroup>
   <!--<Import Project="$(SolutionDir)\.nuget\nuget.targets" />-->
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it.
