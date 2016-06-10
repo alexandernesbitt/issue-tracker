@@ -10,7 +10,7 @@ namespace ARUP.IssueTracker.Classes
         //https://casedesigninc.atlassian.net
 
         private const string _jiraservercase = "https://casedesigninc.atlassian.net";
-        private const string _jiraserverarup = "http://jira.arup.com";
+        private const string _jiraserverarup = "https://htctest.atlassian.net";
         public  static string Get(string key)
         {
             try
