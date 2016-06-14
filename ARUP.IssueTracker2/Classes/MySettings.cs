@@ -1,30 +1,40 @@
 ﻿using System;
 using System.Configuration;
 using System.Windows;
+using System.Collections.Generic;
+using Arup.RestSharp;
 
 namespace ARUP.IssueTracker.Classes
 {
+    public class JiraAccount
+    {
+        public string jiraserver {get; set;}
+        public string username {get; set;}
+        public string password {get; set;}
+        public bool active { get; set; } // is current active account
+    }
+
     public static class MySettings
     {
         //http://jira.arup.com
         //https://casedesigninc.atlassian.net
 
         private const string _jiraservercase = "https://casedesigninc.atlassian.net";
-        private const string _jiraserverarup = "https://htctest.atlassian.net";
+        private const string _jiraserverarup = "http://jira.arup.com";
         public  static string Get(string key)
         {
             try
             {
                 //used to switch the hardcoded server to CASE's or ARUP based on the existence of a file on disk or not
-                if (key == "jiraserver")
-                {
-                    string serverfile = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "CASE", "ARUP Issue Tracker", "usecaseserver");
-                    if (System.IO.File.Exists(serverfile))
-                        return System.IO.File.ReadAllText(serverfile).Replace(" ","");
-                    else
-                        return _jiraserverarup;
+                //if (key == "jiraserver")
+                //{
+                //    string serverfile = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "CASE", "ARUP Issue Tracker", "usecaseserver");
+                //    if (System.IO.File.Exists(serverfile))
+                //        return System.IO.File.ReadAllText(serverfile).Replace(" ","");
+                //    else
+                //        return _jiraserverarup;
 
-                }
+                //}
                 if (key == "guidfield")
                 {
                    string guidfile = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "CASE", "ARUP Issue Tracker", "guidfieldid");
@@ -50,7 +60,15 @@ namespace ARUP.IssueTracker.Classes
                 }
                 else
                 {
-                    config.AppSettings.Settings.Add(key, "");
+                    string value = string.Empty;
+
+                    // inject default Jira server address
+                    if (key == "jiraserver") 
+                    {
+                        value = _jiraserverarup;
+                    }
+
+                    config.AppSettings.Settings.Add(key, value);
                     config.Save(ConfigurationSaveMode.Modified);
                 }
             }
@@ -82,6 +100,99 @@ namespace ARUP.IssueTracker.Classes
                 MessageBox.Show("exception: " + ex1);
             }
         }
+
+        // For using in the Settings window only
+        public static List<JiraAccount> GetAllJiraAccounts() 
+        {
+            try 
+            {
+                Configuration config = GetConfig();
+
+                if (config == null)
+                    return null;
+
+                List<JiraAccount> allAccounts = new List<JiraAccount>();
+                foreach (string key in config.AppSettings.Settings.AllKeys)
+                {
+                    if (key.StartsWith("jiraaccount_"))
+                    {
+                        try
+                        {
+                            JiraAccount ac = SimpleJson.DeserializeObject<JiraAccount>(config.AppSettings.Settings[key].Value);
+                            allAccounts.Add(ac);
+                        }
+                        catch (Exception ex)
+                        {
+                            allAccounts.Add(new JiraAccount() { active = false, jiraserver = string.Empty, username = string.Empty, password = string.Empty });
+                        }
+                    }
+                }
+
+                // Compatibility for old version
+                if (allAccounts.Count == 0)
+                {
+                    JiraAccount ac = new JiraAccount() { active = true, jiraserver = Get("jiraserver"), username = Get("username"), password = Get("password") };
+                    allAccounts.Add(ac);
+                    string key = "jiraaccount_" + Convert.ToInt32(DateTime.UtcNow.AddHours(8).Subtract(new DateTime(1970, 1, 1)).TotalSeconds);
+                    string value = SimpleJson.SerializeObject(ac);
+                    config.AppSettings.Settings.Add(key, value);
+                    config.Save(ConfigurationSaveMode.Modified);
+                }
+
+                // Decrypt passwords
+                allAccounts.ForEach(ac => ac.password = DataProtector.DecryptData(ac.password));
+
+                return allAccounts;
+            }
+            catch(Exception ex)
+            {
+                MessageBox.Show("exception: " + ex);
+                return null;
+            }            
+        }
+
+        // For using in the Settings window only
+        public static void SetAllJiraAccounts(List<JiraAccount> accounts)
+        {
+            try 
+            {
+                Configuration config = GetConfig();
+                if (config == null)
+                    return;
+
+                // Clear all exisiting accounts
+                foreach (string key in config.AppSettings.Settings.AllKeys)
+                {
+                    if (key.StartsWith("jiraaccount_"))
+                    {
+                        config.AppSettings.Settings.Remove(key);
+                    }
+                }
+
+                // Store all new account data
+                foreach (JiraAccount ac in accounts)
+                {
+                    string key = "jiraaccount_" + Convert.ToInt32(DateTime.UtcNow.AddHours(8).Subtract(new DateTime(1970, 1, 1)).TotalSeconds);
+                    string value = SimpleJson.SerializeObject(ac);
+                    config.AppSettings.Settings.Add(key, value);
+                }
+                config.Save(ConfigurationSaveMode.Modified);
+
+                // Set active account
+                JiraAccount activeAccount = accounts.Find(ac => ac.active);
+                if (activeAccount != null)
+                {
+                    Set("jiraserver", activeAccount.jiraserver);
+                    Set("username", activeAccount.username);
+                    Set("password", DataProtector.EncryptData(activeAccount.password));
+                }                
+            }
+            catch(Exception ex)
+            {
+                MessageBox.Show("exception: " + ex);
+            }            
+        }
+
         private static Configuration GetConfig()
         {
 

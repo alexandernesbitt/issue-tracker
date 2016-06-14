@@ -1,7 +1,7 @@
 ﻿<Window x:Class="ARUP.IssueTracker.Windows.Settings"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Settings" SizeToContent="Height" Width="450" Icon="/ARUP.IssueTracker;component/Assets/icon.ico">
+        Title="Settings" SizeToContent="Height" Width="530" Icon="/ARUP.IssueTracker;component/Assets/icon.ico">
     <Grid Margin="5">
         <Grid.RowDefinitions>
             <RowDefinition Height="auto"/>
@@ -15,28 +15,27 @@
             <Grid Margin="5">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="auto"/>
-                    <RowDefinition Height="auto"/>
-                    <RowDefinition Height="auto"/>
-                    <RowDefinition Height="auto"/>
-
                 </Grid.RowDefinitions>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="80" />
                     <ColumnDefinition Width="1*" />
                 </Grid.ColumnDefinitions>
-                <Label Content="Jira address:" HorizontalAlignment="Right" Grid.Column="0" Grid.Row="0"/>
-                <Label x:Name="jiraserver" Foreground="Gray"  Grid.Column="1" Grid.Row="0"/>
-                <!--<StackPanel Orientation="Horizontal"  Grid.Column="1" Grid.Row="0" >
-                    <Label Content="https://" Foreground="Gray"/>
-                    <TextBox x:Name="jiraserver"  Width="100" Height="25"/>
-                    <Label Foreground="Gray" Content=".atlassian.net/rest/api/2/"/>
-                </StackPanel>-->
 
-                <Label Content="Username:" HorizontalAlignment="Right" Grid.Column="0" Grid.Row="1"/>
-                <TextBox x:Name="username" Text="" Width="150"  Grid.Column="1" Grid.Row="1" HorizontalAlignment="Left" Height="25" />
+                <DataGrid x:Name="jiraAccounts" Grid.Row="0" Grid.ColumnSpan="2"
+                      CanUserReorderColumns="False" CanUserResizeColumns="False" 
+                      CanUserResizeRows="False" CanUserSortColumns="False" IsReadOnly="False">
+                    <!--<Style TargetType="DataGridCell">
+                        <EventSetter Event="PreviewMouseLeftButtonDown" Handler="DataGridCell_PreviewMouseLeftButtonDown" />
+                    </Style>-->
+                    <DataGrid.Columns>
+                        <DataGridCheckBoxColumn Header="Active" Binding="{Binding active}" Width="45" IsReadOnly="False"/>
+                        <DataGridTextColumn Header="Jira Address" Binding="{Binding jiraserver}" Width="180" IsReadOnly="False"/>
+                        <DataGridTextColumn Header="Username" Binding="{Binding username}" Width="120" IsReadOnly="False"/>
+                        <DataGridTextColumn Header="Password" Binding="{Binding password}" Width="120" IsReadOnly="False"/>
+                    </DataGrid.Columns>
+                </DataGrid>
 
-                <Label Content="Password:" HorizontalAlignment="Right" Grid.Column="0" Grid.Row="2"/>
-                <PasswordBox x:Name="psw" Password=""   Width="150"  HorizontalAlignment="Left" Height="25" Grid.Column="1" Grid.Row="2"/>
+                
             </Grid>
         </GroupBox>
         <GroupBox Header="BCF Settings" Margin="5" Grid.Row="1">

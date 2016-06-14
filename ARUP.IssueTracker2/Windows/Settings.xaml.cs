@@ -1,4 +1,7 @@
-﻿using System.Windows;
+﻿using System.Collections.Generic;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Input;
 
 namespace ARUP.IssueTracker.Windows
 {
@@ -9,7 +12,7 @@ namespace ARUP.IssueTracker.Windows
     {
 
         public Settings()
-        {
+        {            
             InitializeComponent();
         }
 
@@ -22,7 +25,25 @@ namespace ARUP.IssueTracker.Windows
             DialogResult = false;
         }
 
-        
+        private void DataGridCell_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+
+            DataGridCell cell = sender as DataGridCell;
+
+            if (!cell.IsEditing)
+            {
+                // enables editing on single click
+
+                if (!cell.IsFocused)
+
+                    cell.Focus();
+
+                if (!cell.IsSelected)
+
+                    cell.IsSelected = true;
+            }
+
+        }
 
 
     }

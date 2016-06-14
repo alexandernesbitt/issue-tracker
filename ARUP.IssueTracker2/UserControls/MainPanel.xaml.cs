@@ -2094,29 +2094,28 @@ namespace ARUP.IssueTracker.UserControls
         }
         private void SettingsClick(object sender, RoutedEventArgs e)
         {
+            List<JiraAccount> jiraAccounts = MySettings.GetAllJiraAccounts();
             Settings s = new Settings();
             try
             {
-                string oldUsername = s.username.Text = MySettings.Get("username");
-                string oldPsw = s.psw.Password = DataProtector.DecryptData(MySettings.Get("password"));
-                string jiraserver = MySettings.Get("jiraserver");
-                s.jiraserver.Content = jiraserver;
+                s.jiraAccounts.Items.Clear();
+                jiraAccounts.ForEach(ac => s.jiraAccounts.Items.Add(ac));                
                 string oldBCFUsername = s.BCFusername.Text = MySettings.Get("BCFusername");
-                string oldselattachedelems = MySettings.Get("selattachedelems");
-                if (oldselattachedelems == "0")
-                    s.IsolateAttachElems.IsChecked = true;
-
-
-
 
                 s.WindowStartupLocation = System.Windows.WindowStartupLocation.CenterScreen;
                 s.ShowDialog();
                 if (s.DialogResult.HasValue && s.DialogResult.Value)
                 {
-                    MySettings.Set("username", s.username.Text);
-                    MySettings.Set("password", DataProtector.EncryptData(s.psw.Password));
+                    jiraAccounts.Clear();
+                    foreach (JiraAccount ac in s.jiraAccounts.Items)
+                    {
+                        if(ac != null)
+                        {
+                            jiraAccounts.Add(ac);
+                        }
+                    }
+                    MySettings.SetAllJiraAccounts(jiraAccounts);
                     MySettings.Set("BCFusername", s.BCFusername.Text);
-                    MySettings.Set("selattachedelems", (s.IsolateAttachElems.IsChecked.Value) ? "0" : "1");
                 }
             }
             catch (Exception ex1)
