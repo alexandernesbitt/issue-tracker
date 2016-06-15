@@ -172,11 +172,15 @@ namespace ARUP.IssueTracker.Classes
                 // Store all new account data
                 foreach (JiraAccount ac in accounts)
                 {
-                    string key = "jiraaccount_" + Convert.ToInt32(DateTime.UtcNow.AddHours(8).Subtract(new DateTime(1970, 1, 1)).TotalSeconds);
-                    string value = SimpleJson.SerializeObject(ac);
-                    config.AppSettings.Settings.Add(key, value);
-                }
-                config.Save(ConfigurationSaveMode.Modified);
+                    if (!string.IsNullOrWhiteSpace(ac.jiraserver) || !string.IsNullOrWhiteSpace(ac.username) || !string.IsNullOrWhiteSpace(ac.password))
+                    {
+                        ac.password = DataProtector.EncryptData(ac.password);
+                        string key = "jiraaccount_" + Guid.NewGuid().ToString();
+                        string value = SimpleJson.SerializeObject(ac);
+                        config.AppSettings.Settings.Add(key, value);
+                        config.Save(ConfigurationSaveMode.Modified);         
+                    }                               
+                }                
 
                 // Set active account
                 JiraAccount activeAccount = accounts.Find(ac => ac.active);
@@ -184,7 +188,7 @@ namespace ARUP.IssueTracker.Classes
                 {
                     Set("jiraserver", activeAccount.jiraserver);
                     Set("username", activeAccount.username);
-                    Set("password", DataProtector.EncryptData(activeAccount.password));
+                    Set("password", activeAccount.password);  // no need to encrypt here, already did
                 }                
             }
             catch(Exception ex)

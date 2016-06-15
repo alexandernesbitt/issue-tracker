@@ -2098,22 +2098,15 @@ namespace ARUP.IssueTracker.UserControls
             Settings s = new Settings();
             try
             {
+                // Inject account data
                 s.jiraAccounts.Items.Clear();
-                jiraAccounts.ForEach(ac => s.jiraAccounts.Items.Add(ac));                
+                s.jiraAccounts.ItemsSource = jiraAccounts;
                 string oldBCFUsername = s.BCFusername.Text = MySettings.Get("BCFusername");
 
                 s.WindowStartupLocation = System.Windows.WindowStartupLocation.CenterScreen;
                 s.ShowDialog();
                 if (s.DialogResult.HasValue && s.DialogResult.Value)
                 {
-                    jiraAccounts.Clear();
-                    foreach (JiraAccount ac in s.jiraAccounts.Items)
-                    {
-                        if(ac != null)
-                        {
-                            jiraAccounts.Add(ac);
-                        }
-                    }
                     MySettings.SetAllJiraAccounts(jiraAccounts);
                     MySettings.Set("BCFusername", s.BCFusername.Text);
                 }

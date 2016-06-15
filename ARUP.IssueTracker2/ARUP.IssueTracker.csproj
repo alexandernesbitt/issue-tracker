@@ -189,6 +189,7 @@
     </Compile>
     <Compile Include="Windows\IComponentController.cs" />
     <Compile Include="Windows\ICommentController.cs" />
+    <Compile Include="Windows\PasswordHelper.cs" />
     <Compile Include="Windows\ProgressWin.xaml.cs">
       <DependentUpon>ProgressWin.xaml</DependentUpon>
     </Compile>

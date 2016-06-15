@@ -1,4 +1,5 @@
 ﻿<Window x:Class="ARUP.IssueTracker.Windows.Settings"
+        xmlns:w="clr-namespace:ARUP.IssueTracker.Windows"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Settings" SizeToContent="Height" Width="530" Icon="/ARUP.IssueTracker;component/Assets/icon.ico">
@@ -23,15 +24,25 @@
 
                 <DataGrid x:Name="jiraAccounts" Grid.Row="0" Grid.ColumnSpan="2"
                       CanUserReorderColumns="False" CanUserResizeColumns="False" 
-                      CanUserResizeRows="False" CanUserSortColumns="False" IsReadOnly="False">
-                    <!--<Style TargetType="DataGridCell">
-                        <EventSetter Event="PreviewMouseLeftButtonDown" Handler="DataGridCell_PreviewMouseLeftButtonDown" />
-                    </Style>-->
+                      CanUserResizeRows="False" CanUserSortColumns="False" IsReadOnly="False" AutoGenerateColumns="False">
+                    <DataGrid.Resources>
+                        <Style TargetType="{x:Type DataGridCell}">
+                            <EventSetter Event="PreviewMouseLeftButtonDown" Handler="DataGridCell_PreviewMouseLeftButtonDown"></EventSetter>
+                        </Style>
+                    </DataGrid.Resources>
                     <DataGrid.Columns>
-                        <DataGridCheckBoxColumn Header="Active" Binding="{Binding active}" Width="45" IsReadOnly="False"/>
+                        <DataGridCheckBoxColumn Header="Active" Binding="{Binding active, Mode=TwoWay}" Width="45" IsReadOnly="False"/>
                         <DataGridTextColumn Header="Jira Address" Binding="{Binding jiraserver}" Width="180" IsReadOnly="False"/>
                         <DataGridTextColumn Header="Username" Binding="{Binding username}" Width="120" IsReadOnly="False"/>
-                        <DataGridTextColumn Header="Password" Binding="{Binding password}" Width="120" IsReadOnly="False"/>
+                        <DataGridTemplateColumn Header="Password" Width="120" IsReadOnly="False">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <PasswordBox w:PasswordHelper.Attach="True" 
+                                            w:PasswordHelper.Password="{Binding password, Mode=TwoWay}"
+                                                    Width="120" LostFocus="PasswordBox_LostFocus_1"/>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
                     </DataGrid.Columns>
                 </DataGrid>
 
