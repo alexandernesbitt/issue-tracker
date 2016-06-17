@@ -18,9 +18,10 @@ namespace ARUP.IssueTracker.Classes
         public List<Attachment> attachment { get; set; }
         public Comment comment { get; set; }
         public List<Component> components { get; set; }
-        public string customfield_10900 { get; set; }
-        public string customfield_11600 { get; set; }
+        //public string customfield_10900 { get; set; }
+        //public string customfield_11600 { get; set; }
         public List<string> labels { get; set; }
+        public string guid { get; set; }
 
         // for filtering attachments without viewpoints/snapshots
         public List<Attachment> filteredAttachments 
@@ -39,17 +40,17 @@ namespace ARUP.IssueTracker.Classes
             } 
         }
 
-        public string guid
-        {
-            get
-            {
-                if (!string.IsNullOrWhiteSpace(customfield_10900))
-                    return customfield_10900;
-                if (!string.IsNullOrWhiteSpace(customfield_11600))
-                    return customfield_11600;
-                return string.Empty;
-            }
-        }
+        //public string guid
+        //{
+        //    get
+        //    {
+        //        if (!string.IsNullOrWhiteSpace(customfield_10900))
+        //            return customfield_10900;
+        //        if (!string.IsNullOrWhiteSpace(customfield_11600))
+        //            return customfield_11600;
+        //        return string.Empty;
+        //    }
+        //}
         //public List<User> customfield_11400 { get; set; }
         //public List<Component> components { get; set; }
         

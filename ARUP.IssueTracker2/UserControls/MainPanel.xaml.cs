@@ -274,6 +274,10 @@ namespace ARUP.IssueTracker.UserControls
                 IRestResponse<Issues> response = e.Responses.Last() as IRestResponse<Issues>;
                 if (RestCallback.Check(response) && response.Data.issues != null && response.Data.issues.Any())
                 {
+                    // parse here again to handle custom guid field
+                    string newResposeContent = response.Content.Replace(MySettings.Get("guidfield"), "guid");
+                    response.Data = SimpleJson.DeserializeObject<Issues>(newResposeContent);
+
                     jira.maxResults = response.Data.maxResults;
                     jira.Total = response.Data.total;
                     jira.startAt = response.Data.startAt;
