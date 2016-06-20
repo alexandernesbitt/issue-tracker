@@ -11,6 +11,7 @@ namespace ARUP.IssueTracker.Classes
         public string jiraserver {get; set;}
         public string username {get; set;}
         public string password {get; set;}
+        public string guidfield { get; set; }
         public bool active { get; set; } // is current active account
     }
 
@@ -21,6 +22,7 @@ namespace ARUP.IssueTracker.Classes
 
         private const string _jiraservercase = "https://casedesigninc.atlassian.net";
         private const string _jiraserverarup = "http://jira.arup.com";
+        private const string defaultguidfield = "customfield_10900";
         public  static string Get(string key)
         {
             try
@@ -35,15 +37,15 @@ namespace ARUP.IssueTracker.Classes
                 //        return _jiraserverarup;
 
                 //}
-                if (key == "guidfield")
-                {
-                   string guidfile = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "CASE", "ARUP Issue Tracker", "guidfieldid");
-                   if (System.IO.File.Exists(guidfile))
-                      return System.IO.File.ReadAllText(guidfile).Replace(" ", "");
-                    else
-                        return "customfield_10900";
+                //if (key == "guidfield")
+                //{
+                //   string guidfile = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "CASE", "ARUP Issue Tracker", "guidfieldid");
+                //   if (System.IO.File.Exists(guidfile))
+                //      return System.IO.File.ReadAllText(guidfile).Replace(" ", "");
+                //    else
+                //        return "customfield_10900";
 
-                }
+                //}
 
                 Configuration config = GetConfig();
 
@@ -55,8 +57,15 @@ namespace ARUP.IssueTracker.Classes
                 if (element != null)
                 {
                     string value = element.Value;
-                    if (!string.IsNullOrEmpty(value))
+                    if (!string.IsNullOrEmpty(value)) 
+                    {
                         return value;
+                    }
+                    else if (key == "guidfield") // fallback if an empty string
+                    {
+                        return defaultguidfield;
+                    }
+                        
                 }
                 else
                 {
@@ -67,9 +76,15 @@ namespace ARUP.IssueTracker.Classes
                     {
                         value = _jiraserverarup;
                     }
+                    // inject default guid field id
+                    if (key == "guidfield")
+                    {
+                        value = defaultguidfield;
+                    }
 
                     config.AppSettings.Settings.Add(key, value);
                     config.Save(ConfigurationSaveMode.Modified);
+                    return value;
                 }
             }
             catch (System.Exception ex1)
@@ -123,7 +138,7 @@ namespace ARUP.IssueTracker.Classes
                         }
                         catch (Exception ex)
                         {
-                            allAccounts.Add(new JiraAccount() { active = false, jiraserver = string.Empty, username = string.Empty, password = string.Empty });
+                            allAccounts.Add(new JiraAccount() { active = false, jiraserver = string.Empty, username = string.Empty, password = string.Empty, guidfield = string.Empty });
                         }
                     }
                 }
@@ -131,7 +146,7 @@ namespace ARUP.IssueTracker.Classes
                 // Compatibility for old version
                 if (allAccounts.Count == 0)
                 {
-                    JiraAccount ac = new JiraAccount() { active = true, jiraserver = Get("jiraserver"), username = Get("username"), password = Get("password") };
+                    JiraAccount ac = new JiraAccount() { active = true, jiraserver = Get("jiraserver"), username = Get("username"), password = Get("password"), guidfield = Get("guidfield") };
                     allAccounts.Add(ac);
                     string key = "jiraaccount_" + Convert.ToInt32(DateTime.UtcNow.AddHours(8).Subtract(new DateTime(1970, 1, 1)).TotalSeconds);
                     string value = SimpleJson.SerializeObject(ac);
@@ -172,7 +187,7 @@ namespace ARUP.IssueTracker.Classes
                 // Store all new account data
                 foreach (JiraAccount ac in accounts)
                 {
-                    if (!string.IsNullOrWhiteSpace(ac.jiraserver) || !string.IsNullOrWhiteSpace(ac.username) || !string.IsNullOrWhiteSpace(ac.password))
+                    if (!string.IsNullOrWhiteSpace(ac.jiraserver) || !string.IsNullOrWhiteSpace(ac.username) || !string.IsNullOrWhiteSpace(ac.password) || !string.IsNullOrWhiteSpace(ac.guidfield))
                     {
                         ac.password = DataProtector.EncryptData(ac.password);
                         string key = "jiraaccount_" + Guid.NewGuid().ToString();
@@ -189,6 +204,7 @@ namespace ARUP.IssueTracker.Classes
                     Set("jiraserver", activeAccount.jiraserver);
                     Set("username", activeAccount.username);
                     Set("password", activeAccount.password);  // no need to encrypt here, already did
+                    Set("guidfield", activeAccount.guidfield);
                 }                
             }
             catch(Exception ex)
