@@ -2113,6 +2113,9 @@ namespace ARUP.IssueTracker.UserControls
                 {
                     MySettings.SetAllJiraAccounts(jiraAccounts);
                     MySettings.Set("BCFusername", s.BCFusername.Text);
+
+                    // re-connect to Jira
+                    connectToJira();
                 }
             }
             catch (Exception ex1)
