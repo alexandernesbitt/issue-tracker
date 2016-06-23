@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ARUP.IssueTracker.Classes.BCF2;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -11,8 +12,6 @@ namespace ARUP.IssueTracker.Windows
     public abstract class IComponentController
     {
         public AuthoringTool client;
-
-        // Revit stuff
-        public abstract void selectElements(List<string> elementIds);
+        public abstract void selectElements(List<Component> components);
     }
 }

@@ -28,14 +28,14 @@ namespace ARUP.IssueTracker.Revit
             this.doc = window.uiapp.ActiveUIDocument.Document;
         }
 
-        public override void selectElements(List<string> elementIds)
+        public override void selectElements(List<Component> components)
         {
 #if REVIT2014
             SelElementSet elementsToBeSelected = SelElementSet.Create();
-            elementIds.ForEach(eId =>
+            components.ForEach(component =>
             {
 
-                Element e = doc.GetElement(new ElementId(int.Parse(eId)));
+                Element e = doc.GetElement(new ElementId(int.Parse(component.AuthoringToolId)));
                 if (e != null)
                     elementsToBeSelected.Add(e);
 
@@ -44,10 +44,10 @@ namespace ARUP.IssueTracker.Revit
             uidoc.RefreshActiveView();
 #else
             List<ElementId> elementsToBeSelected = new List<ElementId>();
-            elementIds.ForEach(eId => elementsToBeSelected.Add(new ElementId(int.Parse(eId))));
+            components.ForEach(component => elementsToBeSelected.Add(new ElementId(int.Parse(component.AuthoringToolId))));
             uidoc.Selection.SetElementIds(elementsToBeSelected);
 #endif
         }
-    
+
     }
 }

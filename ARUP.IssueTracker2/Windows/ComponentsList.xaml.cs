@@ -54,7 +54,7 @@ namespace ARUP.IssueTracker.Windows
         {
             if(componentController != null)
             {
-                componentController.selectElements(components.Select(c => c.AuthoringToolId).ToList());
+                componentController.selectElements(components);
             }
         }
     }

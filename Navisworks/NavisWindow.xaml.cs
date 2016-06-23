@@ -37,6 +37,7 @@ namespace ARUP.IssueTracker.Navisworks
         List<ModelItem> _elementList;
         readonly Document _oDoc = Autodesk.Navisworks.Api.Application.ActiveDocument;
         FolderItem topFolder;
+        ComponentController componentController;
 
         public NavisWindow()
         {
@@ -57,6 +58,10 @@ namespace ARUP.IssueTracker.Navisworks
             mainPan.jiraPan.CreateSavedViewpointBtn.Visibility = System.Windows.Visibility.Visible;
             mainPan.jiraPan.CreateSavedViewpointBtn.Click += new RoutedEventHandler(CreateSavedViewpointJira);
             mainPan.bcfPan.CreateSavedViewpointBtn.Click += new RoutedEventHandler(CreateSavedViewpointBCF);
+
+            // for IComponentController
+            componentController = new ComponentController(this);
+            mainPan.componentController = this.componentController;
 
             CheckSavedViewpointTopFolder();
    
@@ -836,9 +841,34 @@ namespace ARUP.IssueTracker.Navisworks
             catch (Exception ex)
             {
                 MessageBox.Show(ex.ToString());
-            }
-           
+            }           
 
+        }
+        public void SelectElements(List<ARUP.IssueTracker.Classes.BCF2.Component> components) 
+        {
+            Document oDoc = Autodesk.Navisworks.Api.Application.ActiveDocument;
+            oDoc.CurrentSelection.Clear();
+
+            Search searchForSelection = new Search();
+            searchForSelection.Selection.SelectAll();
+            searchForSelection.Locations = SearchLocations.DescendantsAndSelf;
+
+            components.ForEach(o =>
+            {
+                Guid instanceGuid = IfcGuid.FromIfcGUID(o.IfcGuid);
+                SearchCondition condition = SearchCondition.HasPropertyByDisplayName("Item", "GUID")
+                    .EqualValue(VariantData.FromDisplayString(instanceGuid.ToString()));
+
+                List<SearchCondition> searchConditionGroup = new List<SearchCondition>();
+                searchConditionGroup.Add(condition);
+                searchForSelection.SearchConditions.AddGroup(searchConditionGroup);
+            });
+
+            ModelItemCollection searchResultSelection = searchForSelection.FindAll(_oDoc, false);
+            if (searchResultSelection.Count > 0)
+            {
+                oDoc.CurrentSelection.AddRange(searchResultSelection);
+            }
         }
         public void CreateSectionPlane(int index, ClippingPlane cp) 
         {
