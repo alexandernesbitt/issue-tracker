@@ -25,7 +25,7 @@ namespace ARUP.IssueTracker.Navisworks
 		}
 
 		public override int ExecuteCommand(string commandId, params string[] parameters)
-		{
+		{            
 			switch (commandId)
 			{
 				case "ID_arupissuetracker":

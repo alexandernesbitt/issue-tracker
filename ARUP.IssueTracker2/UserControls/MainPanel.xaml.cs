@@ -25,9 +25,12 @@ using System.Windows.Media.Imaging;
 
 namespace ARUP.IssueTracker.UserControls
 {
+    public delegate void SelectElements(List<Classes.BCF2.Component> components); // for selecting attached elements in Navisworks
+
     public partial class MainPanel : UserControl
     {
-        public IComponentController componentController;
+        public SelectElements selectElements;
+        public IComponentController componentController;  // for selecting attached elements        
         public Jira jira = new Jira();
 
         public MainPanel()
@@ -2156,7 +2159,7 @@ namespace ARUP.IssueTracker.UserControls
             {
                 if (null != components && components.Any())
                 {
-                    ComponentsList cl = new ComponentsList(components, componentController);
+                    ComponentsList cl = new ComponentsList(components, this);
                     cl.Show();
                 }
                 else

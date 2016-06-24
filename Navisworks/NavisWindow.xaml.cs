@@ -24,9 +24,10 @@ using Autodesk.Navisworks.Api.Data;
 using System.Data;
 using System.Xml.Serialization;
 using ARUP.IssueTracker.Classes.BCF2;
+using ARUP.IssueTracker.Windows;
 
 namespace ARUP.IssueTracker.Navisworks
-{   
+{
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
@@ -37,7 +38,6 @@ namespace ARUP.IssueTracker.Navisworks
         List<ModelItem> _elementList;
         readonly Document _oDoc = Autodesk.Navisworks.Api.Application.ActiveDocument;
         FolderItem topFolder;
-        ComponentController componentController;
 
         public NavisWindow()
         {
@@ -59,9 +59,8 @@ namespace ARUP.IssueTracker.Navisworks
             mainPan.jiraPan.CreateSavedViewpointBtn.Click += new RoutedEventHandler(CreateSavedViewpointJira);
             mainPan.bcfPan.CreateSavedViewpointBtn.Click += new RoutedEventHandler(CreateSavedViewpointBCF);
 
-            // for IComponentController
-            componentController = new ComponentController(this);
-            mainPan.componentController = this.componentController;
+            // for selecting attached elements
+            mainPan.selectElements = this.SelectElements;
 
             CheckSavedViewpointTopFolder();
    

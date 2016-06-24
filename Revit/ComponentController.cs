@@ -28,7 +28,7 @@ namespace ARUP.IssueTracker.Revit
             this.doc = window.uiapp.ActiveUIDocument.Document;
         }
 
-        public override void selectElements(List<Component> components)
+        public void selectElements(List<Component> components)
         {
 #if REVIT2014
             SelElementSet elementsToBeSelected = SelElementSet.Create();

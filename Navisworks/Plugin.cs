@@ -12,6 +12,11 @@ namespace ARUP.IssueTracker.Navisworks
   {
     NavisWindow ns;
 
+    public Plugin()
+    {
+
+    }
+
     public override Control CreateControlPane()
     {
       //create an ElementHost

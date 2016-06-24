@@ -9,9 +9,8 @@ using System.Windows.Controls;
 namespace ARUP.IssueTracker.Windows
 {
     //This is an abstraction for attached components within various (versions) authoring tools
-    public abstract class IComponentController
+    public interface IComponentController
     {
-        public AuthoringTool client;
-        public abstract void selectElements(List<Component> components);
+        void selectElements(List<Component> components);
     }
 }

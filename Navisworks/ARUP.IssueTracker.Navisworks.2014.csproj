@@ -96,7 +96,6 @@
       <DependentUpon>AddIssueNavis.xaml</DependentUpon>
     </Compile>
     <Compile Include="CASERibbon.cs" />
-    <Compile Include="ComponentController.cs" />
     <Compile Include="NavisWindow.xaml.cs">
       <DependentUpon>NavisWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
