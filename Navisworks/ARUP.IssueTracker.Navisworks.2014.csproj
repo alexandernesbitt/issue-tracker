@@ -15,6 +15,7 @@
     <ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>None</ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>
     <WarningLevel>4</WarningLevel>
     <TargetFrameworkProfile />
+	<BaseIntermediateOutputPath>obj\Navisworks\2014\</BaseIntermediateOutputPath>
     <!--<SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\..\</SolutionDir>
     <RestorePackages>true</RestorePackages>-->
   </PropertyGroup>
@@ -95,6 +96,7 @@
     <Compile Include="AddIssueNavis.xaml.cs">
       <DependentUpon>AddIssueNavis.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Properties\AssemblyInfo.2014.cs" />
     <Compile Include="CASERibbon.cs" />
     <Compile Include="NavisWindow.xaml.cs">
       <DependentUpon>NavisWindow.xaml</DependentUpon>
@@ -108,9 +110,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Plugin.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>

@@ -5,13 +5,13 @@ using System.Windows;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("ARUP.IssueTracker.Navisworks")]
-[assembly: AssemblyDescription("ARUP.IssueTracker.Navisworks")]
+[assembly: AssemblyTitle("ARUP.IssueTracker.Revit.2015")]
+[assembly: AssemblyDescription("ARUP.IssueTracker.Revit.2015")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("Case Design, Inc.")]
-[assembly: AssemblyProduct("ARUP.IssueTracker.Navisworks")]
-[assembly: AssemblyCopyright("Copyright © Case Design, Inc. 2014")]
-[assembly: AssemblyTrademark("Case Design, Inc.")]
+[assembly: AssemblyCompany("CASE Design, Inc.")]
+[assembly: AssemblyProduct("ARUP.IssueTracker.Revit")]
+[assembly: AssemblyCopyright("Copyright © CASE Design, Inc. 2014")]
+[assembly: AssemblyTrademark("CASE Design, Inc.")]
 [assembly: AssemblyCulture("")]
 
 // Setting ComVisible to false makes the types in this assembly not visible 
@@ -51,4 +51,4 @@ using System.Windows;
 // [assembly: AssemblyVersion("1.0.*")]
 [assembly: AssemblyVersion("2016.06.24.01")]
 [assembly: AssemblyFileVersion("2016.06.24.01")]
-[assembly: GuidAttribute("59068325-ACDC-4D23-892A-1C90C9434BF8")]
+[assembly: GuidAttribute("59068325-ACDC-4DB3-892A-1C90C9434BF8")]
