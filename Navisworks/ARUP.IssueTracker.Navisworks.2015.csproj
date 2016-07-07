@@ -15,7 +15,7 @@
     <ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>None</ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>
     <WarningLevel>4</WarningLevel>
     <TargetFrameworkProfile />
-	<BaseIntermediateOutputPath>obj\Navisworks\2014\</BaseIntermediateOutputPath>
+	<BaseIntermediateOutputPath>obj\Navisworks\2015\</BaseIntermediateOutputPath>
     <!--<SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\..\</SolutionDir>
     <RestorePackages>true</RestorePackages>-->
   </PropertyGroup>
