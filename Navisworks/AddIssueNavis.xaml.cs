@@ -6,6 +6,9 @@ using System.Windows.Controls;
 using ARUP.IssueTracker.Classes;
 using ARUP.IssueTracker.Windows;
 using Autodesk.Navisworks.Api;
+using System;
+using System.Windows.Media;
+using System.Windows.Data;
 
 namespace ARUP.IssueTracker.Navisworks
 {
@@ -151,6 +154,34 @@ namespace ARUP.IssueTracker.Navisworks
             catch (System.Exception ex1)
             {
                 MessageBox.Show("exception: " + ex1);
+            }
+        }
+
+        private void _uxFilter_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            try
+            {
+                string filter = _uxFilter.Text;
+
+                System.ComponentModel.ICollectionView cv = CollectionViewSource.GetDefaultView(savedViewpoints);
+                if (filter == "")
+                {
+                    cv.Filter = null;
+                }
+                else
+                {
+                    cv.Filter = o =>
+                    {
+                        KeyValuePair<SavedViewpoint, string> model = (KeyValuePair<SavedViewpoint, string>) o;
+                        bool savedViewppointNameFilter = (model.Key.DisplayName == null) ? false : model.Key.DisplayName.ToUpper().Contains(filter.ToUpper());
+                        bool issueTitleFilter = (model.Value == null) ? false : model.Value.ToUpper().Contains(filter.ToUpper());
+                        return (savedViewppointNameFilter || issueTitleFilter);
+                    };
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString());
             }
         }
     }

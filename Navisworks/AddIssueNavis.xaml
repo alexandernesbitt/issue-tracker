@@ -17,15 +17,18 @@
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="auto"/>
+            <RowDefinition Height="auto"/>
             <RowDefinition Height="1*"/>
             <RowDefinition Height="auto"/>
             <RowDefinition Height="auto"/>
             <RowDefinition Height="auto"/>
             <RowDefinition Height="auto"/>
+            <RowDefinition Height="auto"/>
         </Grid.RowDefinitions>
-        <Label Content="Select the viewpoints to import as Issues:" />
+        <Label Grid.Row="0" Content="Select the viewpoints to import as Issues:" />
+        <ctr:Placeholder Margin="5" Grid.Row="1" LabelText="Type something to filter saved viewpoints..." x:Name="_uxFilter" TextChanged="_uxFilter_TextChanged" />
         <ListView  SelectionMode="Extended" ScrollViewer.HorizontalScrollBarVisibility="Disabled" ItemContainerStyle="{StaticResource ListGridViewItemStyle}"
-                  Grid.Row="1"   x:Name="issueList" Margin="0" BorderThickness="0" AlternationCount="2"  IsSynchronizedWithCurrentItem="True" >
+                  Grid.Row="2"   x:Name="issueList" Margin="0" BorderThickness="0" AlternationCount="2"  IsSynchronizedWithCurrentItem="True" >
             <ListView.Resources>
                 <Style TargetType="{x:Type GridViewColumnHeader}">
                     <Setter Property="HorizontalContentAlignment" Value="Left" />
@@ -59,12 +62,12 @@
             </ListView.View>
 
         </ListView>
-        <DockPanel Height="30"  HorizontalAlignment="Stretch" Grid.Row="2"  Background="WhiteSmoke"  >
+        <DockPanel Height="30"  HorizontalAlignment="Stretch" Grid.Row="3"  Background="WhiteSmoke"  >
             <Label DockPanel.Dock="Left" HorizontalAlignment="Left" Content="{Binding ElementName=issueList, Path=Items.Count, Converter={StaticResource issueConverter}}"  Margin="5,0" FontStyle="Italic" />
             <Label  DockPanel.Dock="Left" Content="{Binding ElementName=issueList, Path=SelectedItems.Count}" HorizontalAlignment="Left"  Margin="0" FontStyle="Italic" />
             <Label DockPanel.Dock="Left" Content="Selected" HorizontalAlignment="Left"  Margin="0" FontStyle="Italic" />
         </DockPanel>
-        <StackPanel Orientation="Horizontal"  Grid.Row="3" Margin="5" Name="JiraFieldsBox" Visibility="Collapsed">
+        <StackPanel Orientation="Horizontal"  Grid.Row="4" Margin="5" Name="JiraFieldsBox" Visibility="Collapsed">
             <StackPanel Orientation="Horizontal"  Grid.Row="2"  >
                 <Label Content="Issue Type:" VerticalAlignment="Center"/>
                 <ComboBox Name="issueTypeCombo"  SelectedIndex="0" >
@@ -108,7 +111,7 @@
             </StackPanel>
 
         </StackPanel>
-        <StackPanel Orientation="Vertical"  Grid.Row="3" Margin="5" Name="BcfFieldsBox">
+        <StackPanel Orientation="Vertical"  Grid.Row="5" Margin="5" Name="BcfFieldsBox">
             <StackPanel Orientation="Horizontal" Margin="2">
                 <Label Content="Issue Type:" VerticalAlignment="Center"/>
                 <ctr:Placeholder MaxLength="100" LabelText="(optional)" Name="BcfIssueType" HorizontalAlignment="Stretch" Width="150"/>
@@ -123,7 +126,7 @@
             </StackPanel>
 
         </StackPanel>
-        <Expander Header="Attach elements to view"  Grid.Row="4"  VerticalAlignment="Top">
+        <Expander Header="Attach elements to view"  Grid.Row="6"  VerticalAlignment="Top">
             <Grid Margin="20,0" >
                 <Grid.RowDefinitions>
                     <RowDefinition Height="auto"/>
@@ -138,7 +141,7 @@
 
             </Grid>
         </Expander>
-        <StackPanel Orientation="Horizontal" Grid.Row="5" HorizontalAlignment="Right" Margin="5" >
+        <StackPanel Orientation="Horizontal" Grid.Row="7" HorizontalAlignment="Right" Margin="5" >
             <Button Content="Add" IsDefault="True"  Margin="5" Width="75" Click="Button_OK"/>
             <Button Content="Cancel"   Margin="5" Width="75" Click="Button_Cancel" Background="Transparent" BorderBrush="Transparent"/>
         </StackPanel>
