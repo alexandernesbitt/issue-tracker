@@ -584,6 +584,12 @@ namespace ARUP.IssueTracker.UserControls
         {
             try
             {
+                // check if a user just changed AD password recently (only for Arup account)
+                if (MySettings.isActiveAccountPasswordChanged()) 
+                {
+                    MessageBox.Show("Your password has changed. Please also update your password here. If you failed to log in with Arup Issue Tracker, please make sure you are able to log in successfully on Jira.", "Reminder", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    SettingsClick(null, null);
+                }
 
                 string usernameS = MySettings.Get("username");
                 string passwordS = DataProtector.DecryptData(MySettings.Get("password"));
