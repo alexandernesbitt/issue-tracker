@@ -266,6 +266,13 @@ namespace ARUP.IssueTracker.Classes
             return false;
         }
 
+        public static string GetWindowsUsername()
+        {
+            string s = System.Security.Principal.WindowsIdentity.GetCurrent().Name;
+            int stop = s.IndexOf("\\");
+            return (stop > -1) ? s.Substring(stop + 1, s.Length - stop - 1) : "Unknown User";
+        }
+
         private static Configuration GetConfig()
         {
 
