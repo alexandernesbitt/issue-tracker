@@ -4,18 +4,18 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{5CFF3B2D-CBD2-4FBC-A34B-94AF36D4D583}</ProjectGuid>
+    <ProjectGuid>{267CACE7-941C-4E2A-B550-8E18F1EC8CC3}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>ARUP.IssueTracker.Revit</RootNamespace>
-    <AssemblyName>ARUP.IssueTracker.Revit.2014</AssemblyName>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <AssemblyName>ARUP.IssueTracker.Revit.2017</AssemblyName>
+    <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{60dc8134-eba5-43b8-bcc9-bb4bc16c2548};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
     <ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>None</ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>
     <WarningLevel>4</WarningLevel>
     <TargetFrameworkProfile />
-    <BaseIntermediateOutputPath>obj\Revit\2014\</BaseIntermediateOutputPath>
+    <BaseIntermediateOutputPath>obj\Revit\2017\</BaseIntermediateOutputPath>
     <!--<SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\..\</SolutionDir>
     <RestorePackages>true</RestorePackages>-->
   </PropertyGroup>
@@ -25,7 +25,7 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>TRACE;DEBUG;REVIT2014</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;REVIT2017</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <Prefer32Bit>false</Prefer32Bit>
@@ -35,7 +35,7 @@
     <DebugType>none</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE;REVIT2014</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;REVIT2017</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <Prefer32Bit>false</Prefer32Bit>
@@ -46,7 +46,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'ManualObfuscation|AnyCPU'">
     <DebugSymbols>true</DebugSymbols>
     <OutputPath>bin\ManualObfuscation\</OutputPath>
-    <DefineConstants>TRACE;DEBUG;REVIT2014</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;REVIT2017</DefineConstants>
     <DebugType>full</DebugType>
     <PlatformTarget>AnyCPU</PlatformTarget>
     <ErrorReport>prompt</ErrorReport>
@@ -55,16 +55,13 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="RevitAPI">
-      <HintPath>C:\Program Files\Autodesk\Revit 2014\RevitAPI.dll</HintPath>
-      <Private>False</Private>
+      <HintPath>..\..\..\Program Files\Autodesk\Revit 2017\RevitAPI.dll</HintPath>
     </Reference>
     <Reference Include="RevitAPIIFC">
-      <HintPath>C:\Program Files\Autodesk\Revit 2014\RevitAPIIFC.dll</HintPath>
-      <Private>False</Private>
+      <HintPath>..\..\..\Program Files\Autodesk\Revit 2017\RevitAPIIFC.dll</HintPath>
     </Reference>
     <Reference Include="RevitAPIUI">
-      <HintPath>C:\Program Files\Autodesk\Revit 2014\RevitAPIUI.dll</HintPath>
-      <Private>False</Private>
+      <HintPath>..\..\..\Program Files\Autodesk\Revit 2017\RevitAPIUI.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.configuration" />
@@ -93,7 +90,7 @@
     <Compile Include="AddIssueRevit.xaml.cs">
       <DependentUpon>AddIssueRevit.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Properties\AssemblyInfo.2014.cs" />
+    <Compile Include="Properties\AssemblyInfo.2016.cs" />
     <Compile Include="Classes\Utils.cs" />
     <Compile Include="CommentController.cs" />
     <Compile Include="ComponentController.cs" />
@@ -133,20 +130,19 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\ARUP.IssueTracker2\ARUP.IssueTracker.csproj">
-      <Project>{1b969ad1-c7e6-40fb-b3b0-20e7eb735876}</Project>
-      <Name>ARUP.IssueTracker</Name>
-      <Private>False</Private>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
+    <Content Include="ARUP.IssueTracker.Revit.2016.addin">
+      <SubType>Designer</SubType>
+    </Content>
     <Resource Include="Assets\snapshot.png" />
   </ItemGroup>
   <ItemGroup>
     <WCFMetadata Include="Service References\" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="ARUP.IssueTracker.Revit.2014.addin" />
+    <ProjectReference Include="..\ARUP.IssueTracker2\ARUP.IssueTracker.csproj">
+      <Project>{1b969ad1-c7e6-40fb-b3b0-20e7eb735876}</Project>
+      <Name>ARUP.IssueTracker</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
@@ -154,10 +150,10 @@
     </PreBuildEvent>
   </PropertyGroup>
   <PropertyGroup>
-    <PostBuildEvent>copy /Y "$(TargetDir)ARUP.IssueTracker.Revit.2014.dll" "C:\ProgramData\Autodesk\Revit\Addins\2014\CASE\ARUP.IssueTracker.Revit\ARUP.IssueTracker.Revit.2014.dll"</PostBuildEvent>
+    <PostBuildEvent>copy /Y "$(TargetDir)ARUP.IssueTracker.Revit.2017.dll" "C:\ProgramData\Autodesk\Revit\Addins\2017\CASE\ARUP.IssueTracker.Revit\ARUP.IssueTracker.Revit.2017.dll"</PostBuildEvent>
   </PropertyGroup>
   <!--<Import Project="$(SolutionDir)\.nuget\nuget.targets" />-->
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it.
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">
   </Target>

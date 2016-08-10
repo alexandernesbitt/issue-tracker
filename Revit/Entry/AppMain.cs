@@ -30,9 +30,18 @@ namespace ARUP.IssueTracker.Revit.Entry
 		{
 
 			try
-			{          
+			{
+#if REVIT2014
+                string versionNumber = "2014";
+#elif REVIT2015
+                string versionNumber = "2015";
+#elif REVIT2016
+                string versionNumber = "2016";
+#elif REVIT2017
+                string versionNumber = "2017";
+#endif
                 // Version
-				if (!application.ControlledApplication.VersionName.Contains("2014") && !application.ControlledApplication.VersionName.Contains("2015") && !application.ControlledApplication.VersionName.Contains("2016"))
+                if (!application.ControlledApplication.VersionName.Contains(versionNumber))
 				{
 					using (TaskDialog td = new TaskDialog("Cannot Continue"))
 					{
@@ -75,14 +84,6 @@ namespace ARUP.IssueTracker.Revit.Entry
 
 				// Tab
 				RibbonPanel m_panel = application.CreateRibbonPanel(c_tabName, "Arup Issue Tracker");
-
-#if REVIT2014
-                string versionNumber = "2014";
-#elif REVIT2015
-                string versionNumber = "2015";
-#else
-                string versionNumber = "2016";
-#endif
 
 				// Button Data
 				PushButton m_pushButton = m_panel.AddItem(new PushButtonData("Issue Tracker",

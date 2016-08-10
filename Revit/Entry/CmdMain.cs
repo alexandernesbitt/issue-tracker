@@ -34,8 +34,10 @@ namespace ARUP.IssueTracker.Revit.Entry
                 string versionNumber = "2014";
 #elif REVIT2015
                 string versionNumber = "2015";
-#else
+#elif REVIT2016
                 string versionNumber = "2016";
+#elif REVIT2017
+                string versionNumber = "2017";
 #endif
 
                 // Version
