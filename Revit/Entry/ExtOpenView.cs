@@ -267,7 +267,7 @@ namespace ARUP.IssueTracker.Revit.Entry
                     {
                         var bcfguid = IfcGuid.FromIfcGUID(e.IfcGuid);
                         int authoringToolId = string.IsNullOrWhiteSpace(e.AuthoringToolId)? -1 : int.Parse(e.AuthoringToolId);
-                        var ids = collection.Where(o => bcfguid == ExportUtils.GetExportId(doc, o) | authoringToolId == Convert.ToInt32(doc.GetElement(o).UniqueId.Substring(37), 16));
+                        var ids = collection.AsParallel().Where(o => bcfguid == ExportUtils.GetExportId(doc, o) | authoringToolId == Convert.ToInt32(doc.GetElement(o).UniqueId.Substring(37), 16));
                         if (ids.Any())
                         {
                             // handle visibility

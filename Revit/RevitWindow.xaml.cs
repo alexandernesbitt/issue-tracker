@@ -489,19 +489,19 @@ namespace ARUP.IssueTracker.Revit
                   // Transform the min and max to model coordinates
                   XYZ maxInModelCoords = trf.OfPoint(max);
                   XYZ minInModelCoords = trf.OfPoint(min);
+
+                  // Convert to shared coordinates
+                  maxInModelCoords = ARUP.IssueTracker.Revit.Classes.Utils.ConvertToFromSharedCoordinate(doc, maxInModelCoords, false);
+                  minInModelCoords = ARUP.IssueTracker.Revit.Classes.Utils.ConvertToFromSharedCoordinate(doc, minInModelCoords, false);
                  
                   // Convert to project unit
-                  DisplayUnitType lengthUnitType = doc.GetUnits().GetFormatOptions(UnitType.UT_Length).DisplayUnits;
+                  DisplayUnitType lengthUnitType = DisplayUnitType.DUT_METERS;
                   maxInModelCoords = new XYZ(UnitUtils.ConvertFromInternalUnits(maxInModelCoords.X, lengthUnitType),
                                              UnitUtils.ConvertFromInternalUnits(maxInModelCoords.Y, lengthUnitType),
                                              UnitUtils.ConvertFromInternalUnits(maxInModelCoords.Z, lengthUnitType));
                   minInModelCoords = new XYZ(UnitUtils.ConvertFromInternalUnits(minInModelCoords.X, lengthUnitType),
                                              UnitUtils.ConvertFromInternalUnits(minInModelCoords.Y, lengthUnitType),
                                              UnitUtils.ConvertFromInternalUnits(minInModelCoords.Z, lengthUnitType));
-
-                  // Convert to shared coordinates
-                  maxInModelCoords = ARUP.IssueTracker.Revit.Classes.Utils.ConvertToFromSharedCoordinate(doc, maxInModelCoords, false);
-                  minInModelCoords = ARUP.IssueTracker.Revit.Classes.Utils.ConvertToFromSharedCoordinate(doc, minInModelCoords, false);
 
                   // Add to BCF clipping planes
                   v.ClippingPlanes = BcfAdapter.GetClippingPlanesFromBoundingBox
