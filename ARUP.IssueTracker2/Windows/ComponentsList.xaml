@@ -24,7 +24,7 @@
             </ListView.Resources>
             <ListView.View>
                 <GridView>
-                    <GridViewColumn Header="IFC GuiID">
+                    <GridViewColumn Header="IFC GUID">
                         <GridViewColumn.CellTemplate>
                             <DataTemplate>
                                 <TextBox IsReadOnly="True"  Text="{Binding  IfcGuid}" BorderThickness="0" Background="Transparent" />

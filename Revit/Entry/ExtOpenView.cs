@@ -10,6 +10,7 @@ using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
 using Autodesk.Revit.UI.Selection;
 using ARUP.IssueTracker.Classes.BCF2;
+using System.Collections.Concurrent;
 
 namespace ARUP.IssueTracker.Revit.Entry
 {
@@ -36,10 +37,10 @@ namespace ARUP.IssueTracker.Revit.Entry
                 UIDocument uidoc = app.ActiveUIDocument;
                 Document doc = uidoc.Document;
                 //Selection m_elementsToHide = uidoc.Selection; //SelElementSet.Create();
-               
-                List<ElementId> elementsToBeIsolated = new List<ElementId>();
-                List<ElementId> elementsToBeHidden = new List<ElementId>();
-                List<ElementId> elementsToBeSelected = new List<ElementId>();
+
+                BlockingCollection<ElementId> elementsToBeIsolated = new BlockingCollection<ElementId>();
+                BlockingCollection<ElementId> elementsToBeHidden = new BlockingCollection<ElementId>();
+                BlockingCollection<ElementId> elementsToBeSelected = new BlockingCollection<ElementId>();
 
 
                 // IS ORTHOGONAL
@@ -253,6 +254,7 @@ namespace ARUP.IssueTracker.Revit.Entry
                 {
                     if (v.Components.Count > 100)
                     {
+                        // TODO: do we remove this dialog or offer a way to jump out
                         var result = MessageBox.Show("Too many elements attached. It may take for a while to isolate/select them. Do you want to continue?", "Warning", MessageBoxButton.YesNo, MessageBoxImage.Warning);
                         if (result == MessageBoxResult.No)
                         {
@@ -261,26 +263,54 @@ namespace ARUP.IssueTracker.Revit.Entry
                         }
                     }
 
-                    FilteredElementCollector collector = new FilteredElementCollector(doc, doc.ActiveView.Id).WhereElementIsNotElementType();
+                    FilteredElementCollector collector = new FilteredElementCollector(doc, doc.ActiveView.Id);
                     System.Collections.Generic.ICollection<ElementId> collection = collector.ToElementIds();
-                    foreach (var e in v.Components)
-                    {
-                        var bcfguid = IfcGuid.FromIfcGUID(e.IfcGuid);
-                        int authoringToolId = string.IsNullOrWhiteSpace(e.AuthoringToolId)? -1 : int.Parse(e.AuthoringToolId);
-                        var ids = collection.AsParallel().Where(o => bcfguid == ExportUtils.GetExportId(doc, o) | authoringToolId == Convert.ToInt32(doc.GetElement(o).UniqueId.Substring(37), 16));
-                        if (ids.Any())
+                    System.Threading.Tasks.Parallel.For(0, v.Components.Count, i => {
+                        ARUP.IssueTracker.Classes.BCF2.Component e = v.Components[i];
+                        ElementId currentElementId = null;
+
+                        // find by ElementId first if OriginatingSystem is Revit
+                        if(e.OriginatingSystem.Contains("Revit") && !string.IsNullOrEmpty(e.AuthoringToolId))
+                        {
+                            try 
+                            {
+                                Element ele = doc.GetElement(new ElementId(int.Parse(e.AuthoringToolId)));
+                                if (ele != null)
+                                {
+                                    currentElementId = ele.Id;
+                                }
+                            }
+                            catch
+                            {
+                                currentElementId = null;
+                            }                            
+                        }
+
+                        // find by IfcGuid if ElementId not found
+                        if (currentElementId == null)
+                        {
+                            var bcfguid = IfcGuid.FromIfcGUID(e.IfcGuid);
+                            int authoringToolId = string.IsNullOrWhiteSpace(e.AuthoringToolId) ? -1 : int.Parse(e.AuthoringToolId);
+                            var ids = collection.AsParallel().Where(o => bcfguid == ExportUtils.GetExportId(doc, o) || authoringToolId == Convert.ToInt32(doc.GetElement(o).UniqueId.Substring(37), 16));
+                            if (ids.Any())
+                            {
+                                currentElementId = ids.First();
+                            }
+                        }
+
+                        if (currentElementId != null)
                         {
                             // handle visibility
                             if (e.Visible)
-                                elementsToBeIsolated.Add(ids.First());
+                                elementsToBeIsolated.Add(currentElementId);
                             else
-                                elementsToBeHidden.Add(ids.First());
+                                elementsToBeHidden.Add(currentElementId);
 
                             // handle selection
                             if (e.Selected)
-                                elementsToBeSelected.Add(ids.First());
+                                elementsToBeSelected.Add(currentElementId);
                         }
-                    }
+                    }); 
 
                     if (elementsToBeHidden.Count > 0)
                     {
@@ -288,7 +318,7 @@ namespace ARUP.IssueTracker.Revit.Entry
                         {
                             if (trans.Start("Hide Elements") == TransactionStatus.Started)
                             {
-                                uidoc.ActiveView.HideElementsTemporary(elementsToBeHidden);
+                                uidoc.ActiveView.HideElementsTemporary(elementsToBeHidden.ToList());
                             }
                             trans.Commit();
                         }
@@ -299,7 +329,7 @@ namespace ARUP.IssueTracker.Revit.Entry
                         {
                             if (trans.Start("Isolate Elements") == TransactionStatus.Started)
                             {
-                                uidoc.ActiveView.IsolateElementsTemporary(elementsToBeIsolated);
+                                uidoc.ActiveView.IsolateElementsTemporary(elementsToBeIsolated.ToList());
                             }
                             trans.Commit();
                         }
@@ -313,14 +343,14 @@ namespace ARUP.IssueTracker.Revit.Entry
                             {
 #if REVIT2014
                                 SelElementSet selectedElements = SelElementSet.Create();
-                                elementsToBeSelected.ForEach(id =>
+                                elementsToBeSelected.ToList().ForEach(id =>
                                 {
                                     selectedElements.Add(doc.GetElement(id));
                                 });
 
                                 uidoc.Selection.Elements = selectedElements;
 #else
-                                uidoc.Selection.SetElementIds(elementsToBeSelected);
+                                uidoc.Selection.SetElementIds(elementsToBeSelected.ToList());
 #endif
                             }
                             trans.Commit();
