@@ -2,29 +2,18 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
-//using System.Threading.Tasks;
 using System.Windows;
 using System.IO;
 using System.Windows.Controls;
-
-//using System.Windows.Data;
-//using System.Windows.Documents;
-//using System.Windows.Input;
-//using System.Windows.Navigation;
-
-//Add two new namespaces
 using ARUP.IssueTracker.Classes;
 using Autodesk.Navisworks.Api;
-using ComBridge = Autodesk.Navisworks.Api.ComApi.ComApiBridge;
 using ComApiBridge = Autodesk.Navisworks.Api.ComApi;
 using ComApi = Autodesk.Navisworks.Api.Interop.ComApi;
-using Com = Autodesk.Navisworks.Api.Interop.ComApi;
 using Autodesk.Navisworks.Api.DocumentParts;
 using Autodesk.Navisworks.Api.Data;
 using System.Data;
 using System.Xml.Serialization;
 using ARUP.IssueTracker.Classes.BCF2;
-using ARUP.IssueTracker.Windows;
 
 namespace ARUP.IssueTracker.Navisworks
 {
@@ -675,8 +664,6 @@ namespace ARUP.IssueTracker.Navisworks
                 // get copy viewpoint
                 Viewpoint oCopyVP = new Viewpoint();
 
-
-
                 oCopyVP.AlignDirection(tuple.Item3);
                 oCopyVP.AlignUp(tuple.Item2);
                 oCopyVP.Projection = tuple.Item4;
@@ -737,40 +724,54 @@ namespace ARUP.IssueTracker.Navisworks
                     }
                 }
                 
-                if (v.Components != null && v.Components.Any())
+                if (v.Components != null && v.Components.Count > 0)
                 {
                     // Use search engine
-                    Search searchForVisibility = new Search();
-                    searchForVisibility.Selection.SelectAll();
-                    searchForVisibility.Locations = SearchLocations.DescendantsAndSelf;
+                    Search searchForVisible = new Search();
+                    searchForVisible.Selection.SelectAll();
+                    searchForVisible.Locations = SearchLocations.DescendantsAndSelf;
+
+                    Search searchForHidden = new Search();
+                    searchForHidden.Selection.SelectAll();
+                    searchForHidden.Locations = SearchLocations.DescendantsAndSelf;
 
                     Search searchForSelection = new Search();
                     searchForSelection.Selection.SelectAll();
                     searchForSelection.Locations = SearchLocations.DescendantsAndSelf;
 
-                    // handle visibility
-                    if (v.Components.Any(ele => ele.Visible == false))
-                    {
-                        v.Components.ForEach(o =>
-                        {
-                            Guid instanceGuid = IfcGuid.FromIfcGUID(o.IfcGuid);
-                            // Set up the search condition:
-                            SearchCondition condition = SearchCondition.HasPropertyByDisplayName("Item", "GUID")
+                    v.Components.ForEach(o => {
+                        
+                        Guid instanceGuid = IfcGuid.FromIfcGUID(o.IfcGuid);
+                        SearchCondition condition = SearchCondition.HasPropertyByDisplayName("Item", "GUID")
                                 .EqualValue(VariantData.FromDisplayString(instanceGuid.ToString()));
 
-                            if (o.Visible == false)
-                            {
-                                // it's an OR condition among groups
-                                List<SearchCondition> searchConditionGroup = new List<SearchCondition>();
-                                searchConditionGroup.Add(condition);
-                                searchForVisibility.SearchConditions.AddGroup(searchConditionGroup);
-                            }
-                        });
+                        // it's an OR condition among groups
+                        List<SearchCondition> searchConditionGroup = new List<SearchCondition>();
+                        searchConditionGroup.Add(condition);
+                        // handle visibility
+                        if (o.Visible)
+                        {
+                            searchForVisible.SearchConditions.AddGroup(searchConditionGroup);
+                        }
+                        else
+                        {
+                            searchForHidden.SearchConditions.AddGroup(searchConditionGroup);
+                        }
+                        // handle selection
+                        if(o.Selected)
+                        {
+                            searchForSelection.SearchConditions.AddGroup(searchConditionGroup);
+                        }
+                    });
 
+                    // TODO: test benchmark of find incremental vs find all
+
+                    if(searchForHidden.SearchConditions.Count > 0)
+                    {
                         // Get the collection of model items that satisfy the search condition:
-                        ModelItemCollection searchResultVisibility = searchForVisibility.FindAll(_oDoc, false);
+                        var searchResultVisibility = searchForHidden.FindIncremental(_oDoc, true);
 
-                        if (searchResultVisibility.Count > 0)
+                        if (searchResultVisibility.Any())
                         {
                             oDoc.Models.ResetAllHidden();
 
@@ -778,25 +779,12 @@ namespace ARUP.IssueTracker.Navisworks
                             oDoc.Models.SetHidden(searchResultVisibility, true);
                         }
                     }
-                    else 
-                    {                        
-                        v.Components.ForEach(o =>
-                        {
-                            Guid instanceGuid = IfcGuid.FromIfcGUID(o.IfcGuid);
-                            // Set up the search condition:
-                            SearchCondition condition = SearchCondition.HasPropertyByDisplayName("Item", "GUID")
-                                .EqualValue(VariantData.FromDisplayString(instanceGuid.ToString()));
-
-                            // it's an OR condition among groups
-                            List<SearchCondition> searchConditionGroup = new List<SearchCondition>();
-                            searchConditionGroup.Add(condition);
-                            searchForVisibility.SearchConditions.AddGroup(searchConditionGroup);
-                        });                        
-
+                    else if (searchForVisible.SearchConditions.Count > 0)
+                    {
                         // Get the collection of model items that satisfy the search condition:
-                        ModelItemCollection searchResultVisibility = searchForVisibility.FindAll(_oDoc, false);
+                        var searchResultVisibility = searchForVisible.FindIncremental(_oDoc, true);
 
-                        if (searchResultVisibility.Count > 0)
+                        if (searchResultVisibility.Any())
                         {
                             oDoc.Models.ResetAllHidden();
                             oDoc.CurrentSelection.Clear();
@@ -809,31 +797,14 @@ namespace ARUP.IssueTracker.Navisworks
                         }
                     }
 
-                    // handle selection
-                    oDoc.CurrentSelection.Clear();
-
-                    if (v.Components.Any(ele => ele.Selected == true)) 
+                    if (searchForSelection.SearchConditions.Count > 0)
                     {
-                        v.Components.ForEach(o =>
-                        {
-                            if (o.Selected)
-                            {
-                                Guid instanceGuid = IfcGuid.FromIfcGUID(o.IfcGuid);
-                                SearchCondition condition = SearchCondition.HasPropertyByDisplayName("Item", "GUID")
-                                    .EqualValue(VariantData.FromDisplayString(instanceGuid.ToString()));
-
-                                List<SearchCondition> searchConditionGroup = new List<SearchCondition>();
-                                searchConditionGroup.Add(condition);
-                                searchForSelection.SearchConditions.AddGroup(searchConditionGroup);
-                            }
-                        });
-
-                        ModelItemCollection searchResultSelection = searchForSelection.FindAll(_oDoc, false);
-                        if (searchResultSelection.Count > 0)
+                        var searchResultSelection = searchForSelection.FindIncremental(_oDoc, true);
+                        if (searchResultSelection.Any())
                         {
                             oDoc.CurrentSelection.AddRange(searchResultSelection);
                         }
-                    }                    
+                    }                
                 }
 
             }
@@ -923,6 +894,15 @@ namespace ARUP.IssueTracker.Navisworks
             //get collection of sectioning planes 
             ComApi.InwClippingPlaneColl2 clipColl =
                 (ComApi.InwClippingPlaneColl2)state.CurrentView.ClippingPlanes();
+
+            //foreach (ComApi.InwOaClipPlane p in clipColl) 
+            //{
+            //    // get the normal of the section plane (and convert from feet to meter)
+            //    double normalX = -p.Plane.GetNormal().data1;
+            //    double normalY = -p.Plane.GetNormal().data2;
+            //    double normalZ = -p.Plane.GetNormal().data3;
+            //    MessageBox.Show(string.Format("X: {0}, Y: {1}, Z: {2}, Distance: {3}", normalX, normalY, normalZ, p.Plane.distance()));
+            //}
 
             if (clipColl.Count <= 1)
             {
