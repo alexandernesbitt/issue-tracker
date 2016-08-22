@@ -5,6 +5,8 @@ using System.Text;
 using System.Threading.Tasks;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
+using ARUP.IssueTracker.Classes;
+using ARUP.IssueTracker.Classes.BCF2;
 
 namespace ARUP.IssueTracker.Revit.Classes
 {
@@ -81,6 +83,24 @@ namespace ARUP.IssueTracker.Revit.Classes
             return new ViewOrientation3D(newC, newUp, newView);
         }
 
+        // not used for now
+        public static XYZ SharedToModelCoordinate(Document doc, XYZ c)
+        {
+            ProjectPosition projectPosition = doc.ActiveProjectLocation.get_ProjectPosition(XYZ.Zero);
+            Transform t1 = Transform.CreateTranslation(new XYZ(-projectPosition.EastWest, -projectPosition.NorthSouth, -projectPosition.Elevation));
+            Transform t2 = Transform.CreateRotation(XYZ.BasisZ, -projectPosition.Angle);
+            return t2.OfPoint(t1.OfPoint(c));
+        }
+
+        // not used for now
+        public static XYZ ModelToSharedCoordinate(Document doc, XYZ c)
+        {
+            ProjectPosition projectPosition = doc.ActiveProjectLocation.get_ProjectPosition(XYZ.Zero);
+            Transform t1 = Transform.CreateTranslation(new XYZ(projectPosition.EastWest, projectPosition.NorthSouth, projectPosition.Elevation));
+            Transform t2 = Transform.CreateRotation(XYZ.BasisZ, projectPosition.Angle);
+            return t1.OfPoint(t2.OfPoint(c));
+        }
+
         public static XYZ ConvertToFromSharedCoordinate(Document doc, XYZ c, bool negative)
         {
             double angle = 0;
@@ -123,11 +143,10 @@ namespace ARUP.IssueTracker.Revit.Classes
             else // I do the addition AFTERWARDS
                 newC = new XYZ(centX + x, centY + y, c.Z + z);
 
-
             return newC;
         }
 
-        public static XYZ GetXYZ(double x, double y, double z)
+        public static XYZ GetInternalXYZ(double x, double y, double z)
         {
 
             XYZ myXYZ = new XYZ(
@@ -135,6 +154,69 @@ namespace ARUP.IssueTracker.Revit.Classes
               UnitUtils.ConvertToInternalUnits(y, DisplayUnitType.DUT_METERS),
               UnitUtils.ConvertToInternalUnits(z, DisplayUnitType.DUT_METERS));
             return myXYZ;
+        }
+
+        public static ClippingPlane[] GetClippingPlanesFromBoundingBox(XYZ max, XYZ min, Document doc)
+        {
+            List<ClippingPlane> clippingPlanes = new List<ClippingPlane>();
+
+            // transform six normals to shared coordinates
+            ProjectPosition projectPosition = doc.ActiveProjectLocation.get_ProjectPosition(XYZ.Zero);
+            Transform t1 = Transform.CreateTranslation(new XYZ(projectPosition.EastWest, projectPosition.NorthSouth, projectPosition.Elevation));
+            Transform t2 = Transform.CreateRotation(XYZ.BasisZ, projectPosition.Angle);
+
+            XYZ xPositiveNormalTransformed = t1.OfVector(t2.OfVector(new XYZ(1, 0, 0)));
+            XYZ yPositiveNormalTransformed = t1.OfVector(t2.OfVector(new XYZ(0, 1, 0)));
+            XYZ zPositiveNormalTransformed = t1.OfVector(t2.OfVector(new XYZ(0, 0, 1)));
+            XYZ xNegativeNormalTransformed = t1.OfVector(t2.OfVector(new XYZ(-1, 0, 0)));
+            XYZ yNegativeNormalTransformed = t1.OfVector(t2.OfVector(new XYZ(0, -1, 0)));
+            XYZ zNegativeNormalTransformed = t1.OfVector(t2.OfVector(new XYZ(0, 0, -1)));            
+            
+            // generate BCF clipping planes
+            ClippingPlane xPositive = new ClippingPlane()
+            {                
+                Direction = new Direction() { X = xPositiveNormalTransformed.X, Y = xPositiveNormalTransformed.Y, Z = xPositiveNormalTransformed.Z },
+                Location = new ARUP.IssueTracker.Classes.BCF2.Point() { X = max.X, Y = max.Y, Z = max.Z }
+            };
+
+            ClippingPlane yPositive = new ClippingPlane()
+            {
+                Direction = new Direction() { X = yPositiveNormalTransformed.X, Y = yPositiveNormalTransformed.Y, Z = yPositiveNormalTransformed.Z },
+                Location = new ARUP.IssueTracker.Classes.BCF2.Point() { X = max.X, Y = max.Y, Z = max.Z }
+            };
+
+            ClippingPlane zPositive = new ClippingPlane()
+            {
+                Direction = new Direction() { X = zPositiveNormalTransformed.X, Y = zPositiveNormalTransformed.Y, Z = zPositiveNormalTransformed.Z },
+                Location = new ARUP.IssueTracker.Classes.BCF2.Point() { X = max.X, Y = max.Y, Z = max.Z }
+            };
+
+            ClippingPlane xNegative = new ClippingPlane()
+            {
+                Direction = new Direction() { X = xNegativeNormalTransformed.X, Y = xNegativeNormalTransformed.Y, Z = xNegativeNormalTransformed.Z },
+                Location = new ARUP.IssueTracker.Classes.BCF2.Point() { X = min.X, Y = min.Y, Z = min.Z }
+            };
+
+            ClippingPlane yNegative = new ClippingPlane()
+            {
+                Direction = new Direction() { X = yNegativeNormalTransformed.X, Y = -yNegativeNormalTransformed.Y, Z = yNegativeNormalTransformed.Z },
+                Location = new ARUP.IssueTracker.Classes.BCF2.Point() { X = min.X, Y = min.Y, Z = min.Z }
+            };
+
+            ClippingPlane zNegative = new ClippingPlane()
+            {
+                Direction = new Direction() { X = zNegativeNormalTransformed.X, Y = zNegativeNormalTransformed.Y, Z = zNegativeNormalTransformed.Z },
+                Location = new ARUP.IssueTracker.Classes.BCF2.Point() { X = min.X, Y = min.Y, Z = min.Z }
+            };
+
+            clippingPlanes.Add(xPositive);
+            clippingPlanes.Add(yPositive);
+            clippingPlanes.Add(zPositive);
+            clippingPlanes.Add(xNegative);
+            clippingPlanes.Add(yNegative);
+            clippingPlanes.Add(zNegative);
+
+            return clippingPlanes.ToArray();
         }
     }
 }

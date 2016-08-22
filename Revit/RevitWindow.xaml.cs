@@ -504,11 +504,7 @@ namespace ARUP.IssueTracker.Revit
                                              UnitUtils.ConvertFromInternalUnits(minInModelCoords.Z, lengthUnitType));
 
                   // Add to BCF clipping planes
-                  v.ClippingPlanes = BcfAdapter.GetClippingPlanesFromBoundingBox
-                  (
-                      maxInModelCoords.X, maxInModelCoords.Y, maxInModelCoords.Z,
-                      minInModelCoords.X, minInModelCoords.Y, minInModelCoords.Z
-                  );
+                  v.ClippingPlanes = ARUP.IssueTracker.Revit.Classes.Utils.GetClippingPlanesFromBoundingBox(maxInModelCoords, minInModelCoords, doc);
 
               }
 

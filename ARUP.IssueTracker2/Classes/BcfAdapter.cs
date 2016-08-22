@@ -1040,55 +1040,6 @@ namespace ARUP.IssueTracker.Classes
             MessageBox.Show(args.Message);
         }
 
-        public static BCF2.ClippingPlane[] GetClippingPlanesFromBoundingBox(double maxX, double maxY, double maxZ, double minX, double minY, double minZ) 
-        {
-            List<BCF2.ClippingPlane> clippingPlanes = new List<BCF2.ClippingPlane>();
-            BCF2.ClippingPlane xPositive = new BCF2.ClippingPlane()
-            {
-                Direction = new BCF2.Direction() { X = 1, Y = 0, Z = 0 },
-                Location = new IssueTracker.Classes.BCF2.Point() { X = maxX, Y = maxY, Z = maxZ }
-            };
-
-            BCF2.ClippingPlane yPositive = new BCF2.ClippingPlane()
-            {
-                Direction = new BCF2.Direction() { X = 0, Y = 1, Z = 0 },
-                Location = new IssueTracker.Classes.BCF2.Point() { X = maxX, Y = maxY, Z = maxZ }
-            };
-
-            BCF2.ClippingPlane zPositive = new BCF2.ClippingPlane()
-            {
-                Direction = new BCF2.Direction() { X = 0, Y = 0, Z = 1 },
-                Location = new IssueTracker.Classes.BCF2.Point() { X = maxX, Y = maxY, Z = maxZ }
-            };
-
-            BCF2.ClippingPlane xNegative = new BCF2.ClippingPlane()
-            {
-                Direction = new BCF2.Direction() { X = -1, Y = 0, Z = 0 },
-                Location = new IssueTracker.Classes.BCF2.Point() { X = minX, Y = minY, Z = minZ }
-            };
-
-            BCF2.ClippingPlane yNegative = new BCF2.ClippingPlane()
-            {
-                Direction = new BCF2.Direction() { X = 0, Y = -1, Z = 0 },
-                Location = new IssueTracker.Classes.BCF2.Point() { X = minX, Y = minY, Z = minZ }
-            };
-
-            BCF2.ClippingPlane zNegative = new BCF2.ClippingPlane()
-            {
-                Direction = new BCF2.Direction() { X = 0, Y = 0, Z = -1 },
-                Location = new IssueTracker.Classes.BCF2.Point() { X = minX, Y = minY, Z = minZ }
-            };
-
-            clippingPlanes.Add(xPositive);
-            clippingPlanes.Add(yPositive);
-            clippingPlanes.Add(zPositive);
-            clippingPlanes.Add(xNegative);
-            clippingPlanes.Add(yNegative);
-            clippingPlanes.Add(zNegative);
-
-            return clippingPlanes.ToArray();
-        }
-
         public static BCF2.Point GetBoundingBoxMaxPointFromClippingPlanes(BCF2.ClippingPlane[] clippingPlanes) 
         {
             List<BCF2.ClippingPlane> clippingPlanesList = clippingPlanes.ToList();
