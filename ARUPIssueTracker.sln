@@ -23,6 +23,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ARUP.IssueTracker.Naviswork
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ARUP.IssueTracker.Revit.2017", "Revit\ARUP.IssueTracker.Revit.2017.csproj", "{267CACE7-941C-4E2A-B550-8E18F1EC8CC3}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ARUP.IssueTracker.Navisworks.2017", "Navisworks\ARUP.IssueTracker.Navisworks.2017.csproj", "{BA6093B9-D910-4344-8DE3-2F690EA07AF5}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		2014|Any CPU = 2014|Any CPU
@@ -122,6 +124,16 @@ Global
 		{267CACE7-941C-4E2A-B550-8E18F1EC8CC3}.ManualObfuscation|Any CPU.Build.0 = ManualObfuscation|Any CPU
 		{267CACE7-941C-4E2A-B550-8E18F1EC8CC3}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{267CACE7-941C-4E2A-B550-8E18F1EC8CC3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BA6093B9-D910-4344-8DE3-2F690EA07AF5}.2014|Any CPU.ActiveCfg = ManualObfuscation|Any CPU
+		{BA6093B9-D910-4344-8DE3-2F690EA07AF5}.2014|Any CPU.Build.0 = ManualObfuscation|Any CPU
+		{BA6093B9-D910-4344-8DE3-2F690EA07AF5}.2015|Any CPU.ActiveCfg = ManualObfuscation|Any CPU
+		{BA6093B9-D910-4344-8DE3-2F690EA07AF5}.2015|Any CPU.Build.0 = ManualObfuscation|Any CPU
+		{BA6093B9-D910-4344-8DE3-2F690EA07AF5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BA6093B9-D910-4344-8DE3-2F690EA07AF5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BA6093B9-D910-4344-8DE3-2F690EA07AF5}.ManualObfuscation|Any CPU.ActiveCfg = ManualObfuscation|Any CPU
+		{BA6093B9-D910-4344-8DE3-2F690EA07AF5}.ManualObfuscation|Any CPU.Build.0 = ManualObfuscation|Any CPU
+		{BA6093B9-D910-4344-8DE3-2F690EA07AF5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BA6093B9-D910-4344-8DE3-2F690EA07AF5}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -134,5 +146,6 @@ Global
 		{16619324-5D78-41D0-8ABC-1612C1B46D81} = {E76C78AF-A432-4FA2-A02D-713D37BB350D}
 		{0A8ABFCD-E357-45F6-B6BD-3348637FA5F1} = {E76C78AF-A432-4FA2-A02D-713D37BB350D}
 		{C8DABF50-AE26-4A2E-B1C7-6BE6AFC6B0B1} = {E76C78AF-A432-4FA2-A02D-713D37BB350D}
+		{BA6093B9-D910-4344-8DE3-2F690EA07AF5} = {E76C78AF-A432-4FA2-A02D-713D37BB350D}
 	EndGlobalSection
 EndGlobal
