@@ -764,8 +764,6 @@ namespace ARUP.IssueTracker.Navisworks
                         }
                     });
 
-                    // TODO: test benchmark of find incremental vs find all
-
                     if(searchForHidden.SearchConditions.Count > 0)
                     {
                         // Get the collection of model items that satisfy the search condition:
@@ -834,7 +832,7 @@ namespace ARUP.IssueTracker.Navisworks
                 searchForSelection.SearchConditions.AddGroup(searchConditionGroup);
             });
 
-            ModelItemCollection searchResultSelection = searchForSelection.FindAll(_oDoc, false);
+            ModelItemCollection searchResultSelection = searchForSelection.FindAll(_oDoc, true);
             if (searchResultSelection.Count > 0)
             {
                 oDoc.CurrentSelection.AddRange(searchResultSelection);
