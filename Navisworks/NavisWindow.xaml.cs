@@ -714,15 +714,15 @@ namespace ARUP.IssueTracker.Navisworks
                 }
 
                 //Avoid handling too many elements
-                if (v.Components.Count > 100)
-                {
-                    var result = MessageBox.Show("Too many elements attached. It may take for a while to isolate/select them. Do you want to continue?", "Warning", MessageBoxButton.YesNo, MessageBoxImage.Warning);
-                    if (result == MessageBoxResult.No)
-                    {
-                        oDoc.Models.ResetAllHidden();
-                        return;
-                    }
-                }
+                //if (v.Components.Count > 100)
+                //{
+                //    var result = MessageBox.Show("Too many elements attached. It may take for a while to isolate/select them. Do you want to continue?", "Warning", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+                //    if (result == MessageBoxResult.No)
+                //    {
+                //        oDoc.Models.ResetAllHidden();
+                //        return;
+                //    }
+                //}
                 
                 if (v.Components != null && v.Components.Count > 0)
                 {

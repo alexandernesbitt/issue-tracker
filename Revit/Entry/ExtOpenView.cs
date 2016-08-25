@@ -11,6 +11,7 @@ using Autodesk.Revit.UI;
 using Autodesk.Revit.UI.Selection;
 using ARUP.IssueTracker.Classes.BCF2;
 using System.Collections.Concurrent;
+using System.Windows.Threading;
 
 namespace ARUP.IssueTracker.Revit.Entry
 {
@@ -25,15 +26,23 @@ namespace ARUP.IssueTracker.Revit.Entry
         public VisualizationInfo v;
 
         /// <summary>
+        /// for cancel the external event
+        /// </summary>
+        public EventHandler cancelEvent;
+
+        /// <summary>
+        /// for updating progress window in Paralle.For()
+        /// </summary>
+        public Dispatcher mainDispatcher;
+
+        /// <summary>
         /// External Event Implementation
         /// </summary>
         /// <param name="app"></param>
         public void Execute(UIApplication app)
         {
-
             try
             {
-
                 UIDocument uidoc = app.ActiveUIDocument;
                 Document doc = uidoc.Document;
                 //Selection m_elementsToHide = uidoc.Selection; //SelElementSet.Create();
@@ -41,7 +50,6 @@ namespace ARUP.IssueTracker.Revit.Entry
                 BlockingCollection<ElementId> elementsToBeIsolated = new BlockingCollection<ElementId>();
                 BlockingCollection<ElementId> elementsToBeHidden = new BlockingCollection<ElementId>();
                 BlockingCollection<ElementId> elementsToBeSelected = new BlockingCollection<ElementId>();
-
 
                 // IS ORTHOGONAL
                 if (v.OrthogonalCamera != null)
@@ -252,27 +260,39 @@ namespace ARUP.IssueTracker.Revit.Entry
                 //select/hide elements
                 if (v.Components != null && v.Components.Any())
                 {
-                    if (v.Components.Count > 100)
-                    {
-                        // TODO: do we remove this dialog or offer a way to jump out
-                        var result = MessageBox.Show("Too many elements attached. It may take for a while to isolate/select them. Do you want to continue?", "Warning", MessageBoxButton.YesNo, MessageBoxImage.Warning);
-                        if (result == MessageBoxResult.No)
-                        {
-                            uidoc.RefreshActiveView();
-                            return;
-                        }
-                    }
+                    //if (v.Components.Count > 100)
+                    //{
+                    //    var result = MessageBox.Show("Too many elements attached. It may take for a while to isolate/select them. Do you want to continue?", "Warning", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+                    //    if (result == MessageBoxResult.No)
+                    //    {
+                    //        uidoc.RefreshActiveView();
+                    //        return;
+                    //    }
+                    //}
+
+                    ARUP.IssueTracker.Windows.ProgressWin progressWin = new ARUP.IssueTracker.Windows.ProgressWin();
+                    progressWin.WindowStartupLocation = WindowStartupLocation.CenterScreen;
+                    int elementCount = 0;
+                    progressWin.SetProgress(0, string.Format("Finding elements 0/{0}", v.Components.Count));
+                    progressWin.killWorker += cancelEvent;
+                    progressWin.Show();
 
                     FilteredElementCollector collector = new FilteredElementCollector(doc, doc.ActiveView.Id);
                     System.Collections.Generic.ICollection<ElementId> collection = collector.ToElementIds();
-                    System.Threading.Tasks.Parallel.For(0, v.Components.Count, i => {
+                    
+                    for(int i=0; i<v.Components.Count; i++)
+                    {
+                        int elementCountProgress = System.Threading.Interlocked.Increment(ref elementCount);
+                        double percentage = ((double)elementCountProgress / (double)v.Components.Count) * 100;
+                        progressWin.SetProgress((int)percentage, string.Format("Finding elements {0}/{1}", elementCountProgress, v.Components.Count));
+                                                
                         ARUP.IssueTracker.Classes.BCF2.Component e = v.Components[i];
                         ElementId currentElementId = null;
 
                         // find by ElementId first if OriginatingSystem is Revit
-                        if(e.OriginatingSystem.Contains("Revit") && !string.IsNullOrEmpty(e.AuthoringToolId))
+                        if (e.OriginatingSystem.Contains("Revit") && !string.IsNullOrEmpty(e.AuthoringToolId))
                         {
-                            try 
+                            try
                             {
                                 Element ele = doc.GetElement(new ElementId(int.Parse(e.AuthoringToolId)));
                                 if (ele != null)
@@ -283,7 +303,7 @@ namespace ARUP.IssueTracker.Revit.Entry
                             catch
                             {
                                 currentElementId = null;
-                            }                            
+                            }
                         }
 
                         // find by IfcGuid if ElementId not found
@@ -310,7 +330,7 @@ namespace ARUP.IssueTracker.Revit.Entry
                             if (e.Selected)
                                 elementsToBeSelected.Add(currentElementId);
                         }
-                    }); 
+                    }
 
                     if (elementsToBeHidden.Count > 0)
                     {
@@ -356,7 +376,8 @@ namespace ARUP.IssueTracker.Revit.Entry
                             trans.Commit();
                         }
                     }
-                    
+
+                    progressWin.Close();
                 }                                
 
                 uidoc.RefreshActiveView();

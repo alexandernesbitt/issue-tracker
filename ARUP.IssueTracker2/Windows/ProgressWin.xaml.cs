@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Windows;
+using System.Windows.Threading;
 
 namespace ARUP.IssueTracker.Windows
 {
@@ -10,14 +11,18 @@ namespace ARUP.IssueTracker.Windows
     {
         public event EventHandler killWorker;
 
+        // for updating progress window
+        private static Action EmptyDelegate = delegate() { };
+
         public ProgressWin()
         {
             InitializeComponent();
         }
+
         public void SetProgress(int i, string s) {
             progress.Value = i;
             taskProgress.Content = s;
-
+            progress.Dispatcher.Invoke(DispatcherPriority.Input, EmptyDelegate);
         }
 
         private void cancelBtn_Click(object sender, RoutedEventArgs e)
@@ -25,6 +30,7 @@ namespace ARUP.IssueTracker.Windows
             if (killWorker != null)
             {
                 killWorker(this, e);
+                this.Close();
             }
         }
 

@@ -360,6 +360,8 @@ namespace ARUP.IssueTracker.Revit
 
             }
             m_Handler.v = v;
+            m_Handler.cancelEvent = new EventHandler(cancelExternalEvent);
+            m_Handler.mainDispatcher = this.Dispatcher;
 
             //var touple = GetViewCoordinates(doc, v);
             //if (touple == null)
@@ -376,6 +378,16 @@ namespace ARUP.IssueTracker.Revit
         {
             TaskDialog.Show("Error!", "exception: " + ex1);
         }
+    }
+
+    private void cancelExternalEvent(object sender, EventArgs e)
+    {
+        m_ExEvent.Dispose();
+        
+        // re-create a new handler to handle request posting by the dialog  
+        m_Handler = new ExtOpenView();
+        // external Event for the dialog to use (to post requests)  
+        m_ExEvent = ExternalEvent.Create(m_Handler);
     }
 
 

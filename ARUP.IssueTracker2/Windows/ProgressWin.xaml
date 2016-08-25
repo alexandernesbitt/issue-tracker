@@ -10,7 +10,7 @@
             <RowDefinition Height="auto"/>
         </Grid.RowDefinitions>
         <Label Name="taskProgress" Content="Issue 1/12..." Margin="5"/>
-        <ProgressBar Name="progress" Grid.Row="1" Height="30" Margin="5"/>
+        <ProgressBar Name="progress" Maximum="100" Minimum="0" Grid.Row="1" Height="30" Margin="5"/>
         <Button HorizontalAlignment="Center" Name="cancelBtn" Click="cancelBtn_Click" Grid.Row="2" Content="Cancel" Margin="5" Width="75"/>
     </Grid>
 </Window>
