@@ -11,9 +11,6 @@ namespace ARUP.IssueTracker.Windows
     {
         public event EventHandler killWorker;
 
-        // for updating progress window
-        private static Action EmptyDelegate = delegate() { };
-
         public ProgressWin()
         {
             InitializeComponent();
@@ -22,7 +19,6 @@ namespace ARUP.IssueTracker.Windows
         public void SetProgress(int i, string s) {
             progress.Value = i;
             taskProgress.Content = s;
-            progress.Dispatcher.Invoke(DispatcherPriority.Input, EmptyDelegate);
         }
 
         private void cancelBtn_Click(object sender, RoutedEventArgs e)

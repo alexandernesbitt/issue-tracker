@@ -2,17 +2,8 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
-//using System.Threading.Tasks;
 using System.Windows;
 using System.IO;
-//using System.Windows.Controls;
-//using System.Windows.Data;
-//using System.Windows.Documents;
-//using System.Windows.Input;
-//using System.Windows.Media;
-//using System.Windows.Media.Imaging;
-//using System.Windows.Navigation;
-//using System.Windows.Shapes;
 using ARUP.IssueTracker.Revit.Entry;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.DB.IFC;
@@ -36,6 +27,11 @@ namespace ARUP.IssueTracker.Revit
     public UIApplication uiapp;
     private CommentController commentController;
     private ComponentController componentController;
+
+    /// <summary>
+    /// used for reporting progress of finding elements
+    /// </summary>
+    private ProgressWin progressWin;
 
     /// <summary>
     /// Constructor
@@ -360,8 +356,7 @@ namespace ARUP.IssueTracker.Revit
 
             }
             m_Handler.v = v;
-            m_Handler.cancelEvent = new EventHandler(cancelExternalEvent);
-            m_Handler.mainDispatcher = this.Dispatcher;
+            m_Handler.revitWindow = this;
 
             //var touple = GetViewCoordinates(doc, v);
             //if (touple == null)
@@ -380,6 +375,25 @@ namespace ARUP.IssueTracker.Revit
         }
     }
 
+    public void initializeProgressWin(int totalNumOfElements) 
+    {
+        progressWin = new ProgressWin();
+        progressWin.WindowStartupLocation = WindowStartupLocation.CenterScreen;
+        progressWin.SetProgress(0, string.Format("Finding elements 0/{0}", totalNumOfElements));
+        progressWin.killWorker += cancelExternalEvent;
+        progressWin.Show();
+    }
+
+    public void updateProgressWin(int percentage, int elementCountProgress, int totalNumOfElements)
+    {
+        this.Dispatcher.Invoke(() => progressWin.SetProgress(percentage, string.Format("Finding elements {0}/{1}", elementCountProgress, totalNumOfElements)), System.Windows.Threading.DispatcherPriority.Input);
+    }
+
+    public void disposeProgressWin()
+    {
+        progressWin.Close();
+    }
+
     private void cancelExternalEvent(object sender, EventArgs e)
     {
         m_ExEvent.Dispose();
@@ -389,7 +403,6 @@ namespace ARUP.IssueTracker.Revit
         // external Event for the dialog to use (to post requests)  
         m_ExEvent = ExternalEvent.Create(m_Handler);
     }
-
 
     #region viewpoint operations
 

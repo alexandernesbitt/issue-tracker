@@ -26,14 +26,9 @@ namespace ARUP.IssueTracker.Revit.Entry
         public VisualizationInfo v;
 
         /// <summary>
-        /// for cancel the external event
-        /// </summary>
-        public EventHandler cancelEvent;
-
-        /// <summary>
         /// for updating progress window in Paralle.For()
         /// </summary>
-        public Dispatcher mainDispatcher;
+        public RevitWindow revitWindow;
 
         /// <summary>
         /// External Event Implementation
@@ -270,21 +265,15 @@ namespace ARUP.IssueTracker.Revit.Entry
                     //    }
                     //}
 
-                    ARUP.IssueTracker.Windows.ProgressWin progressWin = new ARUP.IssueTracker.Windows.ProgressWin();
-                    progressWin.WindowStartupLocation = WindowStartupLocation.CenterScreen;
-                    int elementCount = 0;
-                    progressWin.SetProgress(0, string.Format("Finding elements 0/{0}", v.Components.Count));
-                    progressWin.killWorker += cancelEvent;
-                    progressWin.Show();
+                    revitWindow.initializeProgressWin(v.Components.Count);
 
                     FilteredElementCollector collector = new FilteredElementCollector(doc, doc.ActiveView.Id);
                     System.Collections.Generic.ICollection<ElementId> collection = collector.ToElementIds();
-                    
-                    for(int i=0; i<v.Components.Count; i++)
-                    {
-                        int elementCountProgress = System.Threading.Interlocked.Increment(ref elementCount);
-                        double percentage = ((double)elementCountProgress / (double)v.Components.Count) * 100;
-                        progressWin.SetProgress((int)percentage, string.Format("Finding elements {0}/{1}", elementCountProgress, v.Components.Count));
+                    //System.Threading.Tasks.Parallel.For(0, v.Components.Count, i => {
+                    for(int i=0; i<v.Components.Count; i++){
+
+                        double percentage = ((double)i / (double)v.Components.Count) * 100;
+                        revitWindow.updateProgressWin((int) percentage, i, v.Components.Count);
                                                 
                         ARUP.IssueTracker.Classes.BCF2.Component e = v.Components[i];
                         ElementId currentElementId = null;
@@ -330,7 +319,7 @@ namespace ARUP.IssueTracker.Revit.Entry
                             if (e.Selected)
                                 elementsToBeSelected.Add(currentElementId);
                         }
-                    }
+                    };
 
                     if (elementsToBeHidden.Count > 0)
                     {
@@ -377,7 +366,7 @@ namespace ARUP.IssueTracker.Revit.Entry
                         }
                     }
 
-                    progressWin.Close();
+                    revitWindow.disposeProgressWin();
                 }                                
 
                 uidoc.RefreshActiveView();
