@@ -386,7 +386,8 @@ namespace ARUP.IssueTracker.Revit
 
     public void updateProgressWin(int percentage, int elementCountProgress, int totalNumOfElements)
     {
-        this.Dispatcher.Invoke(() => progressWin.SetProgress(percentage, string.Format("Finding elements {0}/{1}", elementCountProgress, totalNumOfElements)), System.Windows.Threading.DispatcherPriority.Input);
+        if (elementCountProgress % 10 == 0)
+            this.Dispatcher.Invoke(() => progressWin.SetProgress(percentage, string.Format("Finding elements {0}/{1}", elementCountProgress, totalNumOfElements)), System.Windows.Threading.DispatcherPriority.Input);
     }
 
     public void disposeProgressWin()
