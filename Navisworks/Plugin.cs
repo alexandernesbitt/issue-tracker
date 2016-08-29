@@ -19,35 +19,32 @@ namespace ARUP.IssueTracker.Navisworks
 
     public override Control CreateControlPane()
     {
-      //create an ElementHost
-      ElementHost eh = new ElementHost();
+        //create an ElementHost
+        ElementHost eh = new ElementHost();
 
-      //assign the control
-      //eh.Anchor = AnchorStyles.Top;
-      eh.Dock = DockStyle.Top;
-      eh.Anchor = AnchorStyles.Top;
-      ns = new NavisWindow();
-      eh.Child = ns;
-      eh.HandleCreated += eh_HandleCreated;
-      eh.CreateControl();
-        
-      //return the ElementHost
-      return eh;
+        //assign the control
+        eh.Dock = DockStyle.Top;
+        eh.Anchor = AnchorStyles.Top;
+        ns = new NavisWindow();
+        eh.Child = ns;
+        eh.HandleCreated += eh_HandleCreated;
+        eh.CreateControl();
+
+        //return the ElementHost
+        return eh;
     }
 
     void eh_HandleCreated(object sender, EventArgs e)
     {
-      ElementHost eh = sender as ElementHost;
-      eh.Dock = DockStyle.Top;
-      eh.Anchor = AnchorStyles.Top;
-
+        ElementHost eh = sender as ElementHost;
+        eh.Dock = DockStyle.Top;
+        eh.Anchor = AnchorStyles.Top;
     }
 
     public override void DestroyControlPane(Control pane)
     {
-      ns.mainPan.onClosing(null);
-      pane.Dispose();
-       
+        ns.mainPan.onClosing(null);
+        pane.Dispose();       
     }
   }
 }

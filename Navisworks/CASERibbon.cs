@@ -67,8 +67,10 @@ namespace ARUP.IssueTracker.Navisworks
                 string versionNumber = "2014";
 #elif NAVIS2015
                 string versionNumber = "2015";
-#else
+#elif NAVIS2016
                 string versionNumber = "2016";
+#else
+                string versionNumber = "2017";
 #endif
 
             // Version
@@ -93,13 +95,14 @@ namespace ARUP.IssueTracker.Navisworks
 					MessageBox.Show("Required Issue Tracker Library Not Found");
 					return;
 				}
+
 				Assembly.LoadFrom(m_issuetracker);
+
 				//check if it needs loading
 				if (pr.LoadedPlugin == null)
 				{
-
 					string exeConfigPath = GetType().Assembly.Location;
-					pr.LoadPlugin();
+                    pr.LoadPlugin();
 				}
 
 				DockPanePlugin dpp = pr.LoadedPlugin as DockPanePlugin;
