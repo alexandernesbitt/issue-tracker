@@ -883,7 +883,7 @@ namespace ARUP.IssueTracker.Navisworks
             cliPlane.Enabled = true;
         }
         public List<ClippingPlane> GetCurrentSectionPlanes() 
-        {
+        {            
             List<ClippingPlane> sectionPlanes = new List<ClippingPlane>();
 
             ComApi.InwOpState10 state;
@@ -893,61 +893,50 @@ namespace ARUP.IssueTracker.Navisworks
             ComApi.InwClippingPlaneColl2 clipColl =
                 (ComApi.InwClippingPlaneColl2)state.CurrentView.ClippingPlanes();
 
-            //foreach (ComApi.InwOaClipPlane p in clipColl) 
-            //{
-            //    // get the normal of the section plane (and convert from feet to meter)
-            //    double normalX = -p.Plane.GetNormal().data1;
-            //    double normalY = -p.Plane.GetNormal().data2;
-            //    double normalZ = -p.Plane.GetNormal().data3;
-            //    MessageBox.Show(string.Format("X: {0}, Y: {1}, Z: {2}, Distance: {3}", normalX, normalY, normalZ, p.Plane.distance()));
-            //}
-
-            if (clipColl.Count <= 1)
-            {
-                return sectionPlanes;
-            }
-
             foreach (ComApi.InwOaClipPlane p in clipColl)
             {
-                ClippingPlane sp = new ClippingPlane();
+                if(p.Enabled)
+                {
+                    ClippingPlane sp = new ClippingPlane();
 
-                // get the normal of the section plane (and convert from feet to meter)
-                double normalX = -p.Plane.GetNormal().data1;
-                double normalY = -p.Plane.GetNormal().data2;
-                double normalZ = -p.Plane.GetNormal().data3;
-                sp.Direction = new Direction() { X = normalX, Y = normalY, Z = normalZ };
+                    // get the normal of the section plane (and convert from feet to meter)
+                    double normalX = -p.Plane.GetNormal().data1;
+                    double normalY = -p.Plane.GetNormal().data2;
+                    double normalZ = -p.Plane.GetNormal().data3;
+                    sp.Direction = new Direction() { X = normalX, Y = normalY, Z = normalZ };
 
-                // get one point on the plane as a location for BCF
-                if (normalX != 0 && normalY != 0 && normalZ != 0) 
-                {
-                    sp.Location = new ARUP.IssueTracker.Classes.BCF2.Point() { X = 0, Y = 0, Z = -p.Plane.distance() / normalZ / GetGunits() };
-                }
-                else if (normalX == 0 && normalY == 0)
-                {
-                    sp.Location = new ARUP.IssueTracker.Classes.BCF2.Point() { X = 0, Y = 0, Z = -p.Plane.distance() / normalZ / GetGunits() };
-                }
-                else if (normalX == 0 && normalZ == 0)
-                {
-                    sp.Location = new ARUP.IssueTracker.Classes.BCF2.Point() { X = 0, Y = -p.Plane.distance() / normalY / GetGunits(), Z = 0 };
-                }
-                else if (normalZ == 0 && normalY == 0)
-                {
-                    sp.Location = new ARUP.IssueTracker.Classes.BCF2.Point() { X = -p.Plane.distance() / normalX / GetGunits(), Y = 0, Z = 0 };
-                }
-                else if (normalX == 0)
-                {
-                    sp.Location = new ARUP.IssueTracker.Classes.BCF2.Point() { X = 0, Y = 0, Z = -p.Plane.distance() / normalZ / GetGunits() };
-                }
-                else if (normalY == 0)
-                {
-                    sp.Location = new ARUP.IssueTracker.Classes.BCF2.Point() { X = 0, Y = 0, Z = -p.Plane.distance() / normalZ / GetGunits() };
-                }
-                else if (normalZ == 0)
-                {
-                    sp.Location = new ARUP.IssueTracker.Classes.BCF2.Point() { X = -p.Plane.distance() / normalX / GetGunits(), Y = 0, Z = 0 };
-                }
+                    // get one point on the plane as a location for BCF
+                    if (normalX != 0 && normalY != 0 && normalZ != 0)
+                    {
+                        sp.Location = new ARUP.IssueTracker.Classes.BCF2.Point() { X = 0, Y = 0, Z = -p.Plane.distance() / normalZ / GetGunits() };
+                    }
+                    else if (normalX == 0 && normalY == 0)
+                    {
+                        sp.Location = new ARUP.IssueTracker.Classes.BCF2.Point() { X = 0, Y = 0, Z = -p.Plane.distance() / normalZ / GetGunits() };
+                    }
+                    else if (normalX == 0 && normalZ == 0)
+                    {
+                        sp.Location = new ARUP.IssueTracker.Classes.BCF2.Point() { X = 0, Y = -p.Plane.distance() / normalY / GetGunits(), Z = 0 };
+                    }
+                    else if (normalZ == 0 && normalY == 0)
+                    {
+                        sp.Location = new ARUP.IssueTracker.Classes.BCF2.Point() { X = -p.Plane.distance() / normalX / GetGunits(), Y = 0, Z = 0 };
+                    }
+                    else if (normalX == 0)
+                    {
+                        sp.Location = new ARUP.IssueTracker.Classes.BCF2.Point() { X = 0, Y = 0, Z = -p.Plane.distance() / normalZ / GetGunits() };
+                    }
+                    else if (normalY == 0)
+                    {
+                        sp.Location = new ARUP.IssueTracker.Classes.BCF2.Point() { X = 0, Y = 0, Z = -p.Plane.distance() / normalZ / GetGunits() };
+                    }
+                    else if (normalZ == 0)
+                    {
+                        sp.Location = new ARUP.IssueTracker.Classes.BCF2.Point() { X = -p.Plane.distance() / normalX / GetGunits(), Y = 0, Z = 0 };
+                    }
 
-                sectionPlanes.Add(sp);
+                    sectionPlanes.Add(sp);
+                }                
             }
 
             return sectionPlanes;
