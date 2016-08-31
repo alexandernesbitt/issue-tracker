@@ -15,7 +15,7 @@
     <ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>None</ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>
     <WarningLevel>4</WarningLevel>
     <TargetFrameworkProfile />
-	<BaseIntermediateOutputPath>obj\Navisworks\2016\</BaseIntermediateOutputPath>
+    <BaseIntermediateOutputPath>obj\Navisworks\2016\</BaseIntermediateOutputPath>
     <!--<SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\..\</SolutionDir>
     <RestorePackages>true</RestorePackages>-->
   </PropertyGroup>
@@ -130,6 +130,7 @@
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>

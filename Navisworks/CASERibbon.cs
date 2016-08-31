@@ -16,6 +16,9 @@ namespace ARUP.IssueTracker.Navisworks
 	[Command("ID_arupissuetracker", DisplayName = "Arup Issue Tracker", Icon = "ARUPIssueTrackerIcon16x16.png", LargeIcon = "ARUPIssueTrackerIcon32x32.png", ToolTip = "Arup Issue Tracker", ExtendedToolTip = "Arup Issue Tracker by CASE")]
 	public class CASERibbon : CommandHandlerPlugin
 	{
+        private string issueTrackerAssemblyName;
+        private readonly string issueTrackerDllPath = Path.Combine(ProgramFilesx86(), "CASE", "ARUP Issue Tracker", "ARUP.IssueTracker.dll");
+
 		/// <summary>
 		/// Constructor, just initialises variables.
 		/// </summary>
@@ -89,14 +92,17 @@ namespace ARUP.IssueTracker.Navisworks
 
 			if (pr != null && pr is DockPanePluginRecord && pr.IsEnabled)
 			{
-                string m_issuetracker = Path.Combine(ProgramFilesx86(), "CASE", "ARUP Issue Tracker", "ARUP.IssueTracker.dll");
-				if (!File.Exists(m_issuetracker))
+                
+                if (!File.Exists(issueTrackerDllPath))
 				{
 					MessageBox.Show("Required Issue Tracker Library Not Found");
 					return;
 				}
 
-				Assembly.LoadFrom(m_issuetracker);
+                // register AssemblyResolve event
+                AppDomain currentDomain = AppDomain.CurrentDomain;
+                currentDomain.AssemblyResolve += new ResolveEventHandler(assemblyResolveEventHandler);
+                issueTrackerAssemblyName = Assembly.LoadFrom(issueTrackerDllPath).FullName;
 
 				//check if it needs loading
 				if (pr.LoadedPlugin == null)
@@ -114,6 +120,16 @@ namespace ARUP.IssueTracker.Navisworks
 			}
 
 		}
+
+        private Assembly assemblyResolveEventHandler(object sender, ResolveEventArgs args)
+        {
+            if (args.Name == issueTrackerAssemblyName)
+            {
+                return Assembly.LoadFrom(issueTrackerDllPath);
+            }
+            return null;
+        }
+
 		static string ProgramFilesx86()
 		{
 			if (8 == IntPtr.Size

@@ -21,14 +21,21 @@ namespace ARUP.IssueTracker.Navisworks
     {
         //create an ElementHost
         ElementHost eh = new ElementHost();
-
-        //assign the control
-        eh.Dock = DockStyle.Top;
-        eh.Anchor = AnchorStyles.Top;
-        ns = new NavisWindow();
-        eh.Child = ns;
-        eh.HandleCreated += eh_HandleCreated;
-        eh.CreateControl();
+        
+        try
+        {
+            //assign the control
+            eh.Dock = DockStyle.Top;
+            eh.Anchor = AnchorStyles.Top;
+            ns = new NavisWindow();
+            eh.Child = ns;
+            eh.HandleCreated += eh_HandleCreated;
+            eh.CreateControl();
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show(ex.ToString(), "Exception");
+        }        
 
         //return the ElementHost
         return eh;
