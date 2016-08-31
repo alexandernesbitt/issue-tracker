@@ -218,6 +218,16 @@ namespace ARUP.IssueTracker.Revit.Entry
                 View3D view3D = doc.ActiveView as View3D;
                 if (view3D != null)
                 {
+                    // resume section box state
+                    using (Transaction trans = new Transaction(uidoc.Document))
+                    {
+                        if (trans.Start("Resume Section Box") == TransactionStatus.Started)
+                        {
+                            view3D.IsSectionBoxActive = false;
+                        }
+                        trans.Commit();
+                    }
+
                     if (v.ClippingPlanes != null)
                     {
                         if (v.ClippingPlanes.Count() > 0)
@@ -250,6 +260,17 @@ namespace ARUP.IssueTracker.Revit.Entry
                             }                            
                         }
                     }
+                }
+
+                // resume visibility and selection
+                using (Transaction trans = new Transaction(uidoc.Document))
+                {
+                    if (trans.Start("Resume Visibility/Selection") == TransactionStatus.Started)
+                    {
+                        uidoc.ActiveView.TemporaryViewModes.DeactivateAllModes();
+                        uidoc.Selection.SetElementIds(new List<ElementId>());
+                    }
+                    trans.Commit();
                 }
 
                 //select/hide elements
@@ -319,7 +340,7 @@ namespace ARUP.IssueTracker.Revit.Entry
                             if (e.Selected)
                                 elementsToBeSelected.Add(currentElementId);
                         }
-                    };
+                    };                
 
                     if (elementsToBeHidden.Count > 0)
                     {
