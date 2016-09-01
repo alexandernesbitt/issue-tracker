@@ -17,7 +17,7 @@ namespace ARUP.IssueTracker.Navisworks
 	public class CASERibbon : CommandHandlerPlugin
 	{
         private string issueTrackerAssemblyName;
-        private readonly string issueTrackerDllPath = Path.Combine(ProgramFilesx86(), "CASE", "ARUP Issue Tracker", "ARUP.IssueTracker.dll");
+        public static readonly string issueTrackerDllPath = Path.Combine(ProgramFilesx86(), "CASE", "ARUP Issue Tracker", "ARUP.IssueTracker.dll");
 
 		/// <summary>
 		/// Constructor, just initialises variables.

@@ -34,8 +34,8 @@ namespace ARUP.IssueTracker.Navisworks
         }
         catch (Exception ex)
         {
-            MessageBox.Show(ex.ToString(), "Exception");
-        }        
+            MessageBox.Show(string.Format("Cannot find Arup Issue Tracker dependencies at the following location: {0}. If this is your first time opening Navisworks, please ignore this message.", CASERibbon.issueTrackerDllPath), "Exception");
+        }
 
         //return the ElementHost
         return eh;
