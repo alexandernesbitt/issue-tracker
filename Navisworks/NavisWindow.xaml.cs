@@ -882,10 +882,30 @@ namespace ARUP.IssueTracker.Navisworks
             // enable this sectioning plane 
             cliPlane.Enabled = true;
         }
-        public List<ClippingPlane> GetCurrentSectionPlanes() 
-        {            
+        public List<ClippingPlane> GetCurrentSectionPlanes()
+        {
             List<ClippingPlane> sectionPlanes = new List<ClippingPlane>();
 
+#if NAVIS2017 || NAVIS2016
+            string serialized = _oDoc.ActiveView.GetClippingPlanes();
+            NWClippingPlanes cpCol = JsonUtils.Deserialize<NWClippingPlanes>(serialized);
+            if (cpCol != null)
+            {
+                if (cpCol.Planes != null) 
+                {
+                    cpCol.Planes.ForEach(p => {
+                        if(p.Normal != null)
+                        {
+                            if(p.Normal.Count == 3)
+                            {
+                                // convert to BCF clipping planes
+                                sectionPlanes.Add(ConvertToBcfClippingPlane(-p.Normal[0], -p.Normal[1], -p.Normal[2], p.Distance));
+                            }
+                        }
+                    });
+                }
+            }
+#else
             ComApi.InwOpState10 state;
             state = ComApiBridge.ComApiBridge.State;
 
@@ -895,51 +915,68 @@ namespace ARUP.IssueTracker.Navisworks
 
             foreach (ComApi.InwOaClipPlane p in clipColl)
             {
+                // get the normal of the section plane (and convert from feet to meter)
+                double normalX = -p.Plane.GetNormal().data1;
+                double normalY = -p.Plane.GetNormal().data2;
+                double normalZ = -p.Plane.GetNormal().data3;
+                // MessageBox.Show(string.Format("X: {0}, Y: {1}, Z: {2}, Distance: {3}, Enabled: {4}", normalX, normalY, normalZ, p.Plane.distance(), p.Enabled));
+            }
+
+            foreach (ComApi.InwOaClipPlane p in clipColl)
+            {
                 if(p.Enabled)
                 {
-                    ClippingPlane sp = new ClippingPlane();
-
-                    // get the normal of the section plane (and convert from feet to meter)
+                    // get the normal of the section plane
                     double normalX = -p.Plane.GetNormal().data1;
                     double normalY = -p.Plane.GetNormal().data2;
                     double normalZ = -p.Plane.GetNormal().data3;
-                    sp.Direction = new Direction() { X = normalX, Y = normalY, Z = normalZ };
-
-                    // get one point on the plane as a location for BCF
-                    if (normalX != 0 && normalY != 0 && normalZ != 0)
-                    {
-                        sp.Location = new ARUP.IssueTracker.Classes.BCF2.Point() { X = 0, Y = 0, Z = -p.Plane.distance() / normalZ / GetGunits() };
-                    }
-                    else if (normalX == 0 && normalY == 0)
-                    {
-                        sp.Location = new ARUP.IssueTracker.Classes.BCF2.Point() { X = 0, Y = 0, Z = -p.Plane.distance() / normalZ / GetGunits() };
-                    }
-                    else if (normalX == 0 && normalZ == 0)
-                    {
-                        sp.Location = new ARUP.IssueTracker.Classes.BCF2.Point() { X = 0, Y = -p.Plane.distance() / normalY / GetGunits(), Z = 0 };
-                    }
-                    else if (normalZ == 0 && normalY == 0)
-                    {
-                        sp.Location = new ARUP.IssueTracker.Classes.BCF2.Point() { X = -p.Plane.distance() / normalX / GetGunits(), Y = 0, Z = 0 };
-                    }
-                    else if (normalX == 0)
-                    {
-                        sp.Location = new ARUP.IssueTracker.Classes.BCF2.Point() { X = 0, Y = 0, Z = -p.Plane.distance() / normalZ / GetGunits() };
-                    }
-                    else if (normalY == 0)
-                    {
-                        sp.Location = new ARUP.IssueTracker.Classes.BCF2.Point() { X = 0, Y = 0, Z = -p.Plane.distance() / normalZ / GetGunits() };
-                    }
-                    else if (normalZ == 0)
-                    {
-                        sp.Location = new ARUP.IssueTracker.Classes.BCF2.Point() { X = -p.Plane.distance() / normalX / GetGunits(), Y = 0, Z = 0 };
-                    }
-
-                    sectionPlanes.Add(sp);
+                    
+                    // convert to BCF clipping planes
+                    sectionPlanes.Add(ConvertToBcfClippingPlane(normalX, normalY, normalZ, p.Plane.distance()));
                 }                
             }
+#endif
 
             return sectionPlanes;
+        }
+        private ClippingPlane ConvertToBcfClippingPlane(double normalX, double normalY, double normalZ, double distance) 
+        {
+            ClippingPlane sp = new ClippingPlane();
+
+            // get the normal of the section plane
+            sp.Direction = new Direction() { X = normalX, Y = normalY, Z = normalZ };
+
+            // get one point on the plane as a location for BCF (and convert from feet to meter)
+            if (normalX != 0 && normalY != 0 && normalZ != 0)
+            {
+                sp.Location = new ARUP.IssueTracker.Classes.BCF2.Point() { X = 0, Y = 0, Z = -distance / normalZ / GetGunits() };
+            }
+            else if (normalX == 0 && normalY == 0)
+            {
+                sp.Location = new ARUP.IssueTracker.Classes.BCF2.Point() { X = 0, Y = 0, Z = -distance / normalZ / GetGunits() };
+            }
+            else if (normalX == 0 && normalZ == 0)
+            {
+                sp.Location = new ARUP.IssueTracker.Classes.BCF2.Point() { X = 0, Y = -distance / normalY / GetGunits(), Z = 0 };
+            }
+            else if (normalZ == 0 && normalY == 0)
+            {
+                sp.Location = new ARUP.IssueTracker.Classes.BCF2.Point() { X = -distance / normalX / GetGunits(), Y = 0, Z = 0 };
+            }
+            else if (normalX == 0)
+            {
+                sp.Location = new ARUP.IssueTracker.Classes.BCF2.Point() { X = 0, Y = 0, Z = -distance / normalZ / GetGunits() };
+            }
+            else if (normalY == 0)
+            {
+                sp.Location = new ARUP.IssueTracker.Classes.BCF2.Point() { X = 0, Y = 0, Z = -distance / normalZ / GetGunits() };
+            }
+            else if (normalZ == 0)
+            {
+                sp.Location = new ARUP.IssueTracker.Classes.BCF2.Point() { X = -distance / normalX / GetGunits(), Y = 0, Z = 0 };
+            }
+
+            return sp;
         }
         public void HideUnselected()
         {

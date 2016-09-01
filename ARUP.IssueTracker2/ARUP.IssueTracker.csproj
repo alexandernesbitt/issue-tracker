@@ -111,6 +111,7 @@
     <Compile Include="Classes\BCF\visinfo.cs" />
     <Compile Include="Classes\EventArgs.cs" />
     <Compile Include="Classes\JIRA\Transition.cs" />
+    <Compile Include="Classes\JsonUtils.cs" />
     <Compile Include="Classes\MetadataTables.cs" />
     <Compile Include="Classes\MySettings.cs" />
     <Compile Include="Classes\RestCallback.cs" />
