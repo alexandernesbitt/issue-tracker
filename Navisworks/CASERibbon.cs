@@ -15,9 +15,11 @@ namespace ARUP.IssueTracker.Navisworks
 	[RibbonTab("ID_casearup")]
 	[Command("ID_arupissuetracker", DisplayName = "Arup Issue Tracker", Icon = "ARUPIssueTrackerIcon16x16.png", LargeIcon = "ARUPIssueTrackerIcon32x32.png", ToolTip = "Arup Issue Tracker", ExtendedToolTip = "Arup Issue Tracker by CASE")]
 	public class CASERibbon : CommandHandlerPlugin
-	{
-        private string issueTrackerAssemblyName;
-        public static readonly string issueTrackerDllPath = Path.Combine(ProgramFilesx86(), "CASE", "ARUP Issue Tracker", "ARUP.IssueTracker.dll");
+	{        
+        static CASERibbon()
+        {
+            AppDomain.CurrentDomain.AssemblyResolve += Utils.CurrentDomain_AssemblyResolve;
+        }        
 
 		/// <summary>
 		/// Constructor, just initialises variables.
@@ -25,7 +27,7 @@ namespace ARUP.IssueTracker.Navisworks
 		public CASERibbon()
 		{
 
-		}
+        }
 
 		public override int ExecuteCommand(string commandId, params string[] parameters)
 		{            
@@ -88,23 +90,17 @@ namespace ARUP.IssueTracker.Navisworks
 			}
 
 			//Find the plugin
-                PluginRecord pr = Autodesk.Navisworks.Api.Application.Plugins.FindPlugin("ARUP.IssueTracker.Navisworks.Plugin.CASE");
+            PluginRecord pr = Autodesk.Navisworks.Api.Application.Plugins.FindPlugin("ARUP.IssueTracker.Navisworks.Plugin.CASE");
 
 			if (pr != null && pr is DockPanePluginRecord && pr.IsEnabled)
-			{
-                
-                if (!File.Exists(issueTrackerDllPath))
+			{                
+                if (!File.Exists(Utils.issueTrackerDllPath))
 				{
 					MessageBox.Show("Required Issue Tracker Library Not Found");
 					return;
 				}
 
-                // register AssemblyResolve event
-                AppDomain currentDomain = AppDomain.CurrentDomain;
-                currentDomain.AssemblyResolve += new ResolveEventHandler(assemblyResolveEventHandler);
-                issueTrackerAssemblyName = Assembly.LoadFrom(issueTrackerDllPath).FullName;
-
-				//check if it needs loading
+				// check if it needs loading
 				if (pr.LoadedPlugin == null)
 				{
 					string exeConfigPath = GetType().Assembly.Location;
@@ -119,26 +115,6 @@ namespace ARUP.IssueTracker.Navisworks
 				}
 			}
 
-		}
-
-        private Assembly assemblyResolveEventHandler(object sender, ResolveEventArgs args)
-        {
-            if (args.Name == issueTrackerAssemblyName)
-            {
-                return Assembly.LoadFrom(issueTrackerDllPath);
-            }
-            return null;
-        }
-
-		static string ProgramFilesx86()
-		{
-			if (8 == IntPtr.Size
-				 || (!String.IsNullOrEmpty(Environment.GetEnvironmentVariable("PROCESSOR_ARCHITEW6432"))))
-			{
-				return Environment.GetEnvironmentVariable("ProgramFiles(x86)");
-			}
-
-			return Environment.GetEnvironmentVariable("ProgramFiles");
 		}
 
 	}

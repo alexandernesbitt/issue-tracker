@@ -267,8 +267,13 @@ namespace ARUP.IssueTracker.Revit.Entry
                 {
                     if (trans.Start("Resume Visibility/Selection") == TransactionStatus.Started)
                     {
+#if REVIT2014
+                        uidoc.ActiveView.DisableTemporaryViewMode(TemporaryViewMode.TemporaryHideIsolate);
+                        uidoc.Selection.Elements.Clear();
+#else
                         uidoc.ActiveView.TemporaryViewModes.DeactivateAllModes();
                         uidoc.Selection.SetElementIds(new List<ElementId>());
+#endif
                     }
                     trans.Commit();
                 }

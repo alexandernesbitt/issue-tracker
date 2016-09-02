@@ -10,15 +10,16 @@ namespace ARUP.IssueTracker.Windows
     public partial class SnapWin : Window
     {
         public string snapshot;
-        public SnapWin(string s)
+        public SnapWin(string snapshotPath, string windowTitle)
         {
-            snapshot=s;
+            snapshot = snapshotPath;
             
-
             InitializeComponent();
             DataContext = snapshot;
-          //  Converters.UriToImageConv ui = new Converters.UriToImageConv();
-           // snap.Source = (BitmapImage)ui.Convert(snapshot,typeof(String),null,null);
+            this.Title = windowTitle;
+
+            //  Converters.UriToImageConv ui = new Converters.UriToImageConv();
+            // snap.Source = (BitmapImage)ui.Convert(snapshot,typeof(String),null,null);
         }
     }
 }

@@ -14,6 +14,7 @@ namespace ARUP.IssueTracker.Win
     {
       InitializeComponent();
 
+      mainPan.mainWindow = this;
       // Buttons, etc.
       mainPan.setButtonVisib(false, false, false);
       string[] args = Environment.GetCommandLineArgs();

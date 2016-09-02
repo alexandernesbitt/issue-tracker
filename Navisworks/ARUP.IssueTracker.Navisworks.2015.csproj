@@ -15,7 +15,7 @@
     <ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>None</ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>
     <WarningLevel>4</WarningLevel>
     <TargetFrameworkProfile />
-	<BaseIntermediateOutputPath>obj\Navisworks\2015\</BaseIntermediateOutputPath>
+    <BaseIntermediateOutputPath>obj\Navisworks\2015\</BaseIntermediateOutputPath>
     <!--<SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\..\</SolutionDir>
     <RestorePackages>true</RestorePackages>-->
   </PropertyGroup>
@@ -85,6 +85,7 @@
     <Reference Include="WindowsFormsIntegration" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Utils.cs" />
     <Page Include="AddIssueNavis.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>

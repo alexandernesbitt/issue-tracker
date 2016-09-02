@@ -92,6 +92,8 @@
     <Reference Include="WindowsFormsIntegration" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="NWClippingPlanes.cs" />
+    <Compile Include="Utils.cs" />
     <Page Include="AddIssueNavis.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>

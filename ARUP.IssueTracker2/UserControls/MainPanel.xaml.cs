@@ -33,6 +33,15 @@ namespace ARUP.IssueTracker.UserControls
         public IComponentController componentController;  // for selecting attached elements        
         public Jira jira = new Jira();
 
+        /// <summary>
+        /// this serves as the title of the snapshot image window
+        /// </summary>
+        private string currentIssueTitle;
+        /// <summary>
+        /// this is for binding standalone app main window
+        /// </summary>
+        public Window mainWindow;
+
         public MainPanel()
         {
             InitializeComponent();
@@ -74,7 +83,7 @@ namespace ARUP.IssueTracker.UserControls
                 bcfPan.SaveBcf1.Click += new RoutedEventHandler(SaveBCF1);
                 bcfPan.SaveBcf2.Click += new RoutedEventHandler(SaveBCF2);
                 bcfPan.OpenBCFBtn.Click += new RoutedEventHandler(OpenBCFFile);
-                bcfPan.issueList.SelectionChanged += issueList_SelectionChanged;
+                bcfPan.issueList.SelectionChanged += bcfIssueList_SelectionChanged;
                 //JIRA events
                 jiraPan.DelIssueBtn.Click += new RoutedEventHandler(DelJiraIssueButt_Click);
                 jiraPan.ExpIssueBtn.Click += new RoutedEventHandler(ExportJiraIssueToBcf2);                
@@ -93,6 +102,7 @@ namespace ARUP.IssueTracker.UserControls
                 jiraPan.ChangePriority.Click += new RoutedEventHandler(ChangePriority_Click);
                 jiraPan.ChangeStatus.Click += new RoutedEventHandler(ChangeStatus_Click);
                 jiraPan.ChangeComponents.Click += new RoutedEventHandler(ChangeComponents_Click);
+                jiraPan.issueList.SelectionChanged += jiraIssueList_SelectionChanged;
                 #endregion
                 DataContext = jira;
                 //initialize
@@ -108,11 +118,24 @@ namespace ARUP.IssueTracker.UserControls
             }
         }
 
-        private void issueList_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private void jiraIssueList_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            int index = jiraPan.issueList.SelectedIndex;
+            Issue issue = jira.IssuesCollection[index];
+            if(issue != null)
+            {
+                currentIssueTitle = issue.formattedsubject;
+            }
+        }
+
+        private void bcfIssueList_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             Markup markup = bcfPan.issueList.SelectedItem as Markup;
             if(markup != null)
             {
+                // update current issue title
+                currentIssueTitle = markup.Topic.Title;
+
                 ViewPoint firstVP = markup.Viewpoints.ToList().Find(vp => vp.Snapshot == "snapshot.png");
                 if(firstVP.Snapshot != null)
                 {
@@ -2144,9 +2167,10 @@ namespace ARUP.IssueTracker.UserControls
                     string ext = IOPath.GetExtension(content).ToLower();
                     if (ext == ".jpg" || ext == ".jpeg" || ext == ".png" || ext == ".gif" || ext == ".bmp")
                     {
-                        SnapWin win = new SnapWin(content);
+                        SnapWin win = new SnapWin(content, currentIssueTitle);
                         win.WindowStartupLocation = System.Windows.WindowStartupLocation.CenterScreen;
-                        win.ShowDialog();
+                        win.Show();
+                        win.Owner = mainWindow;
                     }
                     else 
                     {
