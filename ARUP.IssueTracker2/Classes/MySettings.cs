@@ -20,7 +20,7 @@ namespace ARUP.IssueTracker.Classes
         /// <summary>
         /// the time account is saved on machine
         /// </summary>
-        public DateTime savedTime { get; set; }
+        public long savedTime { get; set; }
     }
 
     public static class MySettings
@@ -126,7 +126,7 @@ namespace ARUP.IssueTracker.Classes
                         }
                         catch (Exception ex)
                         {
-                            allAccounts.Add(new JiraAccount() { active = false, jiraserver = string.Empty, username = string.Empty, password = string.Empty, guidfield = string.Empty, savedTime = DateTime.Now });
+                            allAccounts.Add(new JiraAccount() { active = false, jiraserver = string.Empty, username = string.Empty, password = string.Empty, guidfield = string.Empty, savedTime = (long)DateTime.Now.Subtract(new DateTime(1970, 1, 1)).TotalSeconds });
                         }
                     }
                 }
@@ -134,7 +134,7 @@ namespace ARUP.IssueTracker.Classes
                 // Compatibility for old version
                 if (allAccounts.Count == 0)
                 {
-                    JiraAccount ac = new JiraAccount() { active = true, jiraserver = Get("jiraserver"), username = Get("username"), password = Get("password"), guidfield = Get("guidfield"), savedTime = DateTime.Now };
+                    JiraAccount ac = new JiraAccount() { active = true, jiraserver = Get("jiraserver"), username = Get("username"), password = Get("password"), guidfield = Get("guidfield"), savedTime = (long)DateTime.Now.Subtract(new DateTime(1970, 1, 1)).TotalSeconds };
                     allAccounts.Add(ac);
                     string key = "jiraaccount_" + Convert.ToInt32(DateTime.UtcNow.AddHours(8).Subtract(new DateTime(1970, 1, 1)).TotalSeconds);
                     string value = SimpleJson.SerializeObject(ac);
@@ -178,7 +178,7 @@ namespace ARUP.IssueTracker.Classes
                     if (!string.IsNullOrWhiteSpace(ac.jiraserver) || !string.IsNullOrWhiteSpace(ac.username) || !string.IsNullOrWhiteSpace(ac.password) || !string.IsNullOrWhiteSpace(ac.guidfield))
                     {
                         ac.password = DataProtector.EncryptData(ac.password);
-                        ac.savedTime = DateTime.Now;
+                        ac.savedTime = GetWindowsAccountPasswordLastSetTime(ac.username);
                         string key = "jiraaccount_" + Guid.NewGuid().ToString();
                         string value = SimpleJson.SerializeObject(ac);
                         config.AppSettings.Settings.Add(key, value);
@@ -208,7 +208,6 @@ namespace ARUP.IssueTracker.Classes
         /// <returns>Always return false if not an Arup account</returns>
         public static bool isActiveAccountPasswordChanged() 
         {
-            DateTime now = DateTime.Now;
             if (MySettings.Get("jiraserver").Trim() == _jiraserverarup)
             {
                 string username = MySettings.Get("username").Trim();
@@ -216,7 +215,7 @@ namespace ARUP.IssueTracker.Classes
                 Configuration config = GetConfig();
                 if (config == null)
                     return false;
-                DateTime lastSavedTime = now;
+                long lastSavedTime = (long) DateTime.Now.Subtract(new DateTime(1970, 1, 1)).TotalSeconds;
                 foreach (string key in config.AppSettings.Settings.AllKeys)
                 {
                     if (key.StartsWith("jiraaccount_"))
@@ -224,8 +223,14 @@ namespace ARUP.IssueTracker.Classes
                         try
                         {
                             JiraAccount ac = SimpleJson.DeserializeObject<JiraAccount>(config.AppSettings.Settings[key].Value);
-                            if (ac.username.Trim() == username && ac.jiraserver.Trim() == _jiraserverarup && ac.savedTime != DateTime.MinValue)
+                            if (ac.username.Trim() == username && ac.jiraserver.Trim() == _jiraserverarup)
                             {
+                                // fallback to old settings w/o password saved time
+                                if (ac.savedTime == 0)
+                                {
+                                    ac.savedTime = GetWindowsAccountPasswordLastSetTime(ac.username);
+                                }
+
                                 lastSavedTime = ac.savedTime;
                                 break;
                             }
@@ -237,26 +242,7 @@ namespace ARUP.IssueTracker.Classes
                     }
                 }
                 // find last changed time on AD
-                DateTime lastChangedTime = now;
-                Process process = new Process();
-                ProcessStartInfo startInfo = new ProcessStartInfo();
-                startInfo.WindowStyle = System.Diagnostics.ProcessWindowStyle.Hidden;
-                startInfo.FileName = "net.exe";
-                startInfo.Arguments = string.Format("user {0} /domain", username);
-                startInfo.RedirectStandardError = true;
-                startInfo.RedirectStandardOutput = true;
-                startInfo.UseShellExecute = false;
-                startInfo.CreateNoWindow = true;
-                process.StartInfo = startInfo;
-                process.Start();
-                while (!process.StandardOutput.EndOfStream)
-                {
-                    string line = process.StandardOutput.ReadLine();
-                    if (line.Contains("Password last set"))
-                    {
-                        lastChangedTime = DateTime.Parse(line.Substring(17).Trim());
-                    }
-                }
+                long lastChangedTime = GetWindowsAccountPasswordLastSetTime(username);
                 // return true if lastChangedTime is later than lastSavedTime
                 if (lastChangedTime > lastSavedTime)
                 {
@@ -264,6 +250,35 @@ namespace ARUP.IssueTracker.Classes
                 }
             }
             return false;
+        }
+
+        /// <summary>
+        /// // find password last changed time on AD
+        /// </summary>
+        public static long GetWindowsAccountPasswordLastSetTime(string username) 
+        {
+            DateTime lastChangedTime = DateTime.Now;
+            Process process = new Process();
+            ProcessStartInfo startInfo = new ProcessStartInfo();
+            startInfo.WindowStyle = System.Diagnostics.ProcessWindowStyle.Hidden;
+            startInfo.FileName = "net.exe";
+            startInfo.Arguments = string.Format("user {0} /domain", username);
+            startInfo.RedirectStandardError = true;
+            startInfo.RedirectStandardOutput = true;
+            startInfo.UseShellExecute = false;
+            startInfo.CreateNoWindow = true;
+            process.StartInfo = startInfo;
+            process.Start();
+            while (!process.StandardOutput.EndOfStream)
+            {
+                string line = process.StandardOutput.ReadLine();
+                if (line.Contains("Password last set"))
+                {
+                    lastChangedTime = DateTime.Parse(line.Substring(17).Trim());
+                    break;
+                }
+            }
+            return (long) lastChangedTime.Subtract(new DateTime(1970, 1, 1)).TotalSeconds;
         }
 
         public static string GetWindowsUsername()
