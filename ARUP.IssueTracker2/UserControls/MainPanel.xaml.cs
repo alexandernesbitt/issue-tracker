@@ -121,11 +121,14 @@ namespace ARUP.IssueTracker.UserControls
         private void jiraIssueList_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             int index = jiraPan.issueList.SelectedIndex;
-            Issue issue = jira.IssuesCollection[index];
-            if(issue != null)
+            if (index >= 0)
             {
-                currentIssueTitle = issue.formattedsubject;
-            }
+                Issue issue = jira.IssuesCollection[index];
+                if(issue != null)
+                {
+                    currentIssueTitle = issue.formattedsubject;
+                }
+            }            
         }
 
         private void bcfIssueList_SelectionChanged(object sender, SelectionChangedEventArgs e)
