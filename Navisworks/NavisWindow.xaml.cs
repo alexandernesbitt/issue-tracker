@@ -646,9 +646,7 @@ namespace ARUP.IssueTracker.Navisworks
         private void Open3DView(VisualizationInfo v)
         {
             try
-            {
-                //    {
-                //      
+            {                
                 Tuple<Point3D, Vector3D, Vector3D, ViewpointProjection, double> tuple = GetViewCoordinatesFromBcf2VisInfo(v);
 
                 if (tuple == null)
@@ -886,56 +884,61 @@ namespace ARUP.IssueTracker.Navisworks
         {
             List<ClippingPlane> sectionPlanes = new List<ClippingPlane>();
 
+            if (Autodesk.Navisworks.Api.Application.Version.Build >= 127894) // Navisworks SP3 build number
+            {
 #if NAVIS2017 || NAVIS2016
-            string serialized = _oDoc.ActiveView.GetClippingPlanes();
-            NWClippingPlanes cpCol = JsonUtils.Deserialize<NWClippingPlanes>(serialized);
-            if (cpCol != null)
-            {
-                if (cpCol.Planes != null) 
+                string serialized = _oDoc.ActiveView.GetClippingPlanes();
+                NWClippingPlanes cpCol = JsonUtils.Deserialize<NWClippingPlanes>(serialized);
+                if (cpCol != null)
                 {
-                    cpCol.Planes.ForEach(p => {
-                        if(p.Normal != null)
-                        {
-                            if(p.Normal.Count == 3)
+                    if (cpCol.Planes != null) 
+                    {
+                        cpCol.Planes.ForEach(p => {
+                            if(p.Normal != null)
                             {
-                                // convert to BCF clipping planes
-                                sectionPlanes.Add(ConvertToBcfClippingPlane(-p.Normal[0], -p.Normal[1], -p.Normal[2], p.Distance));
+                                if(p.Normal.Count == 3)
+                                {
+                                    // convert to BCF clipping planes
+                                    sectionPlanes.Add(ConvertToBcfClippingPlane(-p.Normal[0], -p.Normal[1], -p.Normal[2], p.Distance));
+                                }
                             }
-                        }
-                    });
+                        });
+                    }
                 }
+#endif
             }
-#else
-            ComApi.InwOpState10 state;
-            state = ComApiBridge.ComApiBridge.State;
-
-            //get collection of sectioning planes 
-            ComApi.InwClippingPlaneColl2 clipColl =
-                (ComApi.InwClippingPlaneColl2)state.CurrentView.ClippingPlanes();
-
-            foreach (ComApi.InwOaClipPlane p in clipColl)
+            else
             {
-                // get the normal of the section plane (and convert from feet to meter)
-                double normalX = -p.Plane.GetNormal().data1;
-                double normalY = -p.Plane.GetNormal().data2;
-                double normalZ = -p.Plane.GetNormal().data3;
-                // MessageBox.Show(string.Format("X: {0}, Y: {1}, Z: {2}, Distance: {3}, Enabled: {4}", normalX, normalY, normalZ, p.Plane.distance(), p.Enabled));
-            }
+                ComApi.InwOpState10 state;
+                state = ComApiBridge.ComApiBridge.State;
 
-            foreach (ComApi.InwOaClipPlane p in clipColl)
-            {
-                if(p.Enabled)
+                //get collection of sectioning planes 
+                ComApi.InwClippingPlaneColl2 clipColl =
+                    (ComApi.InwClippingPlaneColl2)state.CurrentView.ClippingPlanes();
+
+                foreach (ComApi.InwOaClipPlane p in clipColl)
                 {
-                    // get the normal of the section plane
+                    // get the normal of the section plane (and convert from feet to meter)
                     double normalX = -p.Plane.GetNormal().data1;
                     double normalY = -p.Plane.GetNormal().data2;
                     double normalZ = -p.Plane.GetNormal().data3;
+                    // MessageBox.Show(string.Format("X: {0}, Y: {1}, Z: {2}, Distance: {3}, Enabled: {4}", normalX, normalY, normalZ, p.Plane.distance(), p.Enabled));
+                }
+
+                foreach (ComApi.InwOaClipPlane p in clipColl)
+                {
+                    if(p.Enabled)
+                    {
+                        // get the normal of the section plane
+                        double normalX = -p.Plane.GetNormal().data1;
+                        double normalY = -p.Plane.GetNormal().data2;
+                        double normalZ = -p.Plane.GetNormal().data3;
                     
-                    // convert to BCF clipping planes
-                    sectionPlanes.Add(ConvertToBcfClippingPlane(normalX, normalY, normalZ, p.Plane.distance()));
-                }                
+                        // convert to BCF clipping planes
+                        sectionPlanes.Add(ConvertToBcfClippingPlane(normalX, normalY, normalZ, p.Plane.distance()));
+                    }                
+                }
             }
-#endif
 
             return sectionPlanes;
         }
