@@ -270,6 +270,9 @@ namespace ARUP.IssueTracker.Revit.Entry
 #if REVIT2014
                         uidoc.ActiveView.DisableTemporaryViewMode(TemporaryViewMode.TemporaryHideIsolate);
                         uidoc.Selection.Elements.Clear();
+#elif REVIT2015
+                        uidoc.ActiveView.DisableTemporaryViewMode(TemporaryViewMode.TemporaryHideIsolate);
+                        uidoc.Selection.SetElementIds(new List<ElementId>());
 #else
                         uidoc.ActiveView.TemporaryViewModes.DeactivateAllModes();
                         uidoc.Selection.SetElementIds(new List<ElementId>());
