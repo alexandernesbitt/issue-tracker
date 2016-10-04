@@ -199,7 +199,7 @@ namespace ARUP.IssueTracker.Revit.Classes
 
             ClippingPlane yNegative = new ClippingPlane()
             {
-                Direction = new Direction() { X = yNegativeNormalTransformed.X, Y = -yNegativeNormalTransformed.Y, Z = yNegativeNormalTransformed.Z },
+                Direction = new Direction() { X = yNegativeNormalTransformed.X, Y = yNegativeNormalTransformed.Y, Z = yNegativeNormalTransformed.Z },
                 Location = new ARUP.IssueTracker.Classes.BCF2.Point() { X = min.X, Y = min.Y, Z = min.Z }
             };
 
