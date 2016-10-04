@@ -308,21 +308,23 @@ namespace ARUP.IssueTracker.Revit.Entry
                         ElementId currentElementId = null;
 
                         // find by ElementId first if OriginatingSystem is Revit
-                        if (e.OriginatingSystem.Contains("Revit") && !string.IsNullOrEmpty(e.AuthoringToolId))
+                        if (e.OriginatingSystem != null)
                         {
-                            try
+                            if (e.OriginatingSystem.Contains("Revit") && !string.IsNullOrEmpty(e.AuthoringToolId))
                             {
-                                Element ele = doc.GetElement(new ElementId(int.Parse(e.AuthoringToolId)));
-                                if (ele != null)
+                                int elementId = -1;
+                                int.TryParse(e.AuthoringToolId, out elementId);
+                                if (elementId != -1)
                                 {
-                                    currentElementId = ele.Id;
+                                    Element ele = doc.GetElement(new ElementId(elementId));
+                                    if (ele != null)
+                                    {
+                                        currentElementId = ele.Id;
+                                    }
                                 }
+                                
                             }
-                            catch
-                            {
-                                currentElementId = null;
-                            }
-                        }
+                        }                        
 
                         // find by IfcGuid if ElementId not found
                         if (currentElementId == null)
