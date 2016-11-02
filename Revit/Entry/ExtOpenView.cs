@@ -330,7 +330,8 @@ namespace ARUP.IssueTracker.Revit.Entry
                         if (currentElementId == null)
                         {
                             var bcfguid = IfcGuid.FromIfcGUID(e.IfcGuid);
-                            int authoringToolId = string.IsNullOrWhiteSpace(e.AuthoringToolId) ? -1 : int.Parse(e.AuthoringToolId);
+                            int authoringToolId = -1;
+                            int.TryParse(e.AuthoringToolId, out authoringToolId);
                             var ids = collection.AsParallel().Where(o => bcfguid == ExportUtils.GetExportId(doc, o) || authoringToolId == Convert.ToInt32(doc.GetElement(o).UniqueId.Substring(37), 16));
                             if (ids.Any())
                             {
