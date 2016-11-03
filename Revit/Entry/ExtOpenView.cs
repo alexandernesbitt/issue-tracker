@@ -297,7 +297,10 @@ namespace ARUP.IssueTracker.Revit.Entry
                     revitWindow.initializeProgressWin(v.Components.Count);
 
                     FilteredElementCollector collector = new FilteredElementCollector(doc, doc.ActiveView.Id);
-                    System.Collections.Generic.ICollection<ElementId> collection = collector.ToElementIds();
+                    var allElementIds = collector.ToElementIds();
+                    var exportIdElementIdDic = allElementIds.ToDictionary(e => ExportUtils.GetExportId(doc, e), e => e);
+                    var uniqueIdElementIdDic = allElementIds.ToDictionary(e => Convert.ToInt32(doc.GetElement(e).UniqueId.Substring(37), 16), e => e);
+
                     //System.Threading.Tasks.Parallel.For(0, v.Components.Count, i => {
                     for(int i=0; i<v.Components.Count; i++){
 
@@ -322,7 +325,7 @@ namespace ARUP.IssueTracker.Revit.Entry
                                         currentElementId = ele.Id;
                                     }
                                 }
-                                
+
                             }
                         }                        
 
@@ -330,12 +333,20 @@ namespace ARUP.IssueTracker.Revit.Entry
                         if (currentElementId == null)
                         {
                             var bcfguid = IfcGuid.FromIfcGUID(e.IfcGuid);
+                            if (exportIdElementIdDic.ContainsKey(bcfguid))
+                            {
+                                currentElementId = exportIdElementIdDic[bcfguid];
+                            }
+                        }
+
+                        // find by UniqueId if IfcGuid not found
+                        if (currentElementId == null)
+                        {
                             int authoringToolId = -1;
                             int.TryParse(e.AuthoringToolId, out authoringToolId);
-                            var ids = collection.AsParallel().Where(o => bcfguid == ExportUtils.GetExportId(doc, o) || authoringToolId == Convert.ToInt32(doc.GetElement(o).UniqueId.Substring(37), 16));
-                            if (ids.Any())
+                            if (uniqueIdElementIdDic.ContainsKey(authoringToolId))
                             {
-                                currentElementId = ids.First();
+                                currentElementId = uniqueIdElementIdDic[authoringToolId];
                             }
                         }
 
