@@ -274,7 +274,7 @@ namespace ARUP.IssueTracker.Classes
                 string line = process.StandardOutput.ReadLine();
                 if (line.Contains("Password last set"))
                 {
-                    lastChangedTime = DateTime.Parse(line.Substring(17).Trim());
+                    DateTime.TryParse(line.Substring(17).Trim(), out lastChangedTime);
                     break;
                 }
             }
