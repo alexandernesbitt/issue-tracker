@@ -4,6 +4,7 @@ using System.Windows;
 using System.Collections.Generic;
 using Arup.RestSharp;
 using System.Diagnostics;
+using System.Globalization;
 
 namespace ARUP.IssueTracker.Classes
 {
@@ -274,7 +275,13 @@ namespace ARUP.IssueTracker.Classes
                 string line = process.StandardOutput.ReadLine();
                 if (line.Contains("Password last set"))
                 {
-                    DateTime.TryParse(line.Substring(17).Trim(), out lastChangedTime);
+                    // try default (en-US format)
+                    bool isParsed = DateTime.TryParse(line.Substring(17).Trim(), out lastChangedTime);
+                    if (!isParsed)
+                    {
+                        // try en-UK format
+                        DateTime.TryParseExact(line.Substring(17).Trim(), "dd/MM/yyyy HH:mm:ss", CultureInfo.InvariantCulture, DateTimeStyles.None, out lastChangedTime);
+                    }
                     break;
                 }
             }
