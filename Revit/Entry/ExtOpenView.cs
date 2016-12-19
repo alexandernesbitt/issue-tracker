@@ -298,9 +298,21 @@ namespace ARUP.IssueTracker.Revit.Entry
 
                     FilteredElementCollector collector = new FilteredElementCollector(doc, doc.ActiveView.Id);
                     var allElementIds = collector.ToElementIds();
-                    var exportIdElementIdDic = allElementIds.ToDictionary(e => ExportUtils.GetExportId(doc, e), e => e);
-                    var uniqueIdElementIdDic = allElementIds.ToDictionary(e => Convert.ToInt32(doc.GetElement(e).UniqueId.Substring(37), 16), e => e);
-
+                    Dictionary<Guid, ElementId> exportIdElementIdDic = new Dictionary<Guid, ElementId>();
+                    Dictionary<int, ElementId> uniqueIdElementIdDic = new Dictionary<int, ElementId>();
+                    foreach (ElementId eId in allElementIds)
+                    {
+                        Guid guid = ExportUtils.GetExportId(doc, eId);
+                        int elementIdInteger = Convert.ToInt32(doc.GetElement(eId).UniqueId.Substring(37), 16);
+                        if (!exportIdElementIdDic.ContainsKey(guid))
+                        {
+                            exportIdElementIdDic.Add(guid, eId);
+                        }
+                        if (!uniqueIdElementIdDic.ContainsKey(elementIdInteger))
+                        {
+                            uniqueIdElementIdDic.Add(elementIdInteger, eId);
+                        }
+                    }                   
                     //System.Threading.Tasks.Parallel.For(0, v.Components.Count, i => {
                     for(int i=0; i<v.Components.Count; i++){
 
