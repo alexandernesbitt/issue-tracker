@@ -728,13 +728,15 @@ namespace ARUP.IssueTracker.Navisworks
                     Search searchForAllModelItems = new Search();
                     searchForAllModelItems.Selection.SelectAll();
                     searchForAllModelItems.Locations = SearchLocations.DescendantsAndSelf;
-                    SearchCondition condition = SearchCondition.HasPropertyByDisplayName("Item", "GUID");
+                    SearchCondition condition = SearchCondition.HasPropertyByName(PropertyCategoryNames.Item, DataPropertyNames.ItemGuid);
                     searchForAllModelItems.SearchConditions.Add(condition);
+                    searchForAllModelItems.PruneBelowMatch = false; // find descendants recursively
 
                     // Get the collection of model items that satisfy the search condition:
-                    var searchResult = searchForAllModelItems.FindAll(_oDoc, true).ToDictionary(o => o.InstanceGuid , o => o);
-                    
-                    List<ModelItem> visibleItems = new List<ModelItem>();
+                    var searchAll = searchForAllModelItems.FindAll(_oDoc, true);
+                    var searchResult = searchAll.GroupBy(item => item.InstanceGuid).Select(group => group.First()).ToDictionary(o => o.InstanceGuid, o => o);
+
+                    ModelItemCollection visibleItems = new ModelItemCollection();
                     List<ModelItem> hiddenItems = new List<ModelItem>();
                     List<ModelItem> selectedItems = new List<ModelItem>();
 
@@ -780,11 +782,10 @@ namespace ARUP.IssueTracker.Navisworks
                     else if (visibleItems.Count > 0)
                     {
                         oDoc.Models.ResetAllHidden();
-                        oDoc.CurrentSelection.Clear();
 
                         // hide all elements except visible ones
-                        var invisibleModelItems = searchResult.Values.Except(visibleItems);
-                        oDoc.Models.SetHidden(invisibleModelItems, true);
+                        visibleItems.Invert(oDoc);
+                        oDoc.Models.SetHidden(visibleItems, true);
                     }
 
                     if (selectedItems.Count > 0)
