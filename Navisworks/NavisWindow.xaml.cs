@@ -895,7 +895,7 @@ namespace ARUP.IssueTracker.Navisworks
                     });
                 }
             }
-#endif
+#else
             ComApi.InwOpState10 state;
             state = ComApiBridge.ComApiBridge.State;
 
@@ -929,7 +929,7 @@ namespace ARUP.IssueTracker.Navisworks
                     sectionPlanes.Add(ConvertToBcfClippingPlane(normalX, normalY, normalZ, p.Plane.distance()));
                 }
             }
-
+#endif
             return sectionPlanes;
         }
         private ClippingPlane ConvertToBcfClippingPlane(double normalX, double normalY, double normalZ, double distance) 
