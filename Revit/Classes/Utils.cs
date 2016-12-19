@@ -156,21 +156,21 @@ namespace ARUP.IssueTracker.Revit.Classes
             return myXYZ;
         }
 
-        public static ClippingPlane[] GetClippingPlanesFromBoundingBox(XYZ max, XYZ min, Document doc)
+        public static ClippingPlane[] GetClippingPlanesFromBoundingBox(XYZ max, XYZ min, Transform toMdoelSpaceTransform, Document doc)
         {
             List<ClippingPlane> clippingPlanes = new List<ClippingPlane>();
 
-            // transform six normals to shared coordinates
+            // transform six normals to model coordinates and shared coordinates
             ProjectPosition projectPosition = doc.ActiveProjectLocation.get_ProjectPosition(XYZ.Zero);
             Transform t1 = Transform.CreateTranslation(new XYZ(projectPosition.EastWest, projectPosition.NorthSouth, projectPosition.Elevation));
             Transform t2 = Transform.CreateRotation(XYZ.BasisZ, projectPosition.Angle);
 
-            XYZ xPositiveNormalTransformed = t1.OfVector(t2.OfVector(new XYZ(1, 0, 0)));
-            XYZ yPositiveNormalTransformed = t1.OfVector(t2.OfVector(new XYZ(0, 1, 0)));
-            XYZ zPositiveNormalTransformed = t1.OfVector(t2.OfVector(new XYZ(0, 0, 1)));
-            XYZ xNegativeNormalTransformed = t1.OfVector(t2.OfVector(new XYZ(-1, 0, 0)));
-            XYZ yNegativeNormalTransformed = t1.OfVector(t2.OfVector(new XYZ(0, -1, 0)));
-            XYZ zNegativeNormalTransformed = t1.OfVector(t2.OfVector(new XYZ(0, 0, -1)));            
+            XYZ xPositiveNormalTransformed = t1.OfVector(t2.OfVector(toMdoelSpaceTransform.OfVector(new XYZ(1, 0, 0))));
+            XYZ yPositiveNormalTransformed = t1.OfVector(t2.OfVector(toMdoelSpaceTransform.OfVector(new XYZ(0, 1, 0))));
+            XYZ zPositiveNormalTransformed = t1.OfVector(t2.OfVector(toMdoelSpaceTransform.OfVector(new XYZ(0, 0, 1))));
+            XYZ xNegativeNormalTransformed = t1.OfVector(t2.OfVector(toMdoelSpaceTransform.OfVector(new XYZ(-1, 0, 0))));
+            XYZ yNegativeNormalTransformed = t1.OfVector(t2.OfVector(toMdoelSpaceTransform.OfVector(new XYZ(0, -1, 0))));
+            XYZ zNegativeNormalTransformed = t1.OfVector(t2.OfVector(toMdoelSpaceTransform.OfVector(new XYZ(0, 0, -1))));            
             
             // generate BCF clipping planes
             ClippingPlane xPositive = new ClippingPlane()

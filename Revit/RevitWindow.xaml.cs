@@ -530,7 +530,7 @@ namespace ARUP.IssueTracker.Revit
                                              UnitUtils.ConvertFromInternalUnits(minInModelCoords.Z, lengthUnitType));
 
                   // Add to BCF clipping planes
-                  v.ClippingPlanes = ARUP.IssueTracker.Revit.Classes.Utils.GetClippingPlanesFromBoundingBox(maxInModelCoords, minInModelCoords, doc);
+                  v.ClippingPlanes = ARUP.IssueTracker.Revit.Classes.Utils.GetClippingPlanesFromBoundingBox(maxInModelCoords, minInModelCoords, trf, doc);
 
               }
 
