@@ -884,7 +884,7 @@ namespace ARUP.IssueTracker.Navisworks
                 if (cpCol.Planes != null) 
                 {
                     cpCol.Planes.ForEach(p => {
-                        if(p.Normal != null)
+                        if(p.Normal != null && p.Enabled)
                         {
                             if(p.Normal.Count == 3)
                             {
