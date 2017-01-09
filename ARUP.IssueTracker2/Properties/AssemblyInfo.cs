@@ -8,10 +8,10 @@ using System.Windows;
 [assembly: AssemblyTitle("ARUP.IssueTracker")]
 [assembly: AssemblyDescription("ARUP.IssueTracker")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("CASE Design, Inc.")]
+[assembly: AssemblyCompany("Arup")]
 [assembly: AssemblyProduct("ARUP.IssueTracker")]
-[assembly: AssemblyCopyright("Copyright © CASE Design, Inc. 2014")]
-[assembly: AssemblyTrademark("CASE Design, Inc.")]
+[assembly: AssemblyCopyright("Copyright © Arup 2017")]
+[assembly: AssemblyTrademark("Arup")]
 [assembly: AssemblyCulture("")]
 
 // Setting ComVisible to false makes the types in this assembly not visible 
@@ -49,6 +49,6 @@ using System.Windows;
 // You can specify all the values or you can default the Build and Revision Numbers 
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("2016.10.05.01")]
-[assembly: AssemblyFileVersion("2016.10.05.01")]
+[assembly: AssemblyVersion("2017.01.09.01")]
+[assembly: AssemblyFileVersion("2017.01.09.01")]
 [assembly: GuidAttribute("C94C66EF-FBB9-48C6-95AD-6B4B4596E7C8")]
