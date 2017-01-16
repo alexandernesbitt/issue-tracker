@@ -255,6 +255,13 @@ namespace ARUP.IssueTracker.Revit
                   {
                       issueJira.fields.components = air.SelectedComponents;
                   }
+
+                  if (!string.IsNullOrWhiteSpace(air.JiraLabels.Text))
+                  {
+                      var labels = air.JiraLabels.Text.Split(',').ToList();
+                      labels.ForEach(s => s.Trim());
+                      issueJira.fields.labels = labels;
+                  }
               }
               
               issue.Viewpoints.Add(vp);

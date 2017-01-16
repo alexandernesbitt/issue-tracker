@@ -31,7 +31,7 @@
 
 
         </StackPanel>
-        <StackPanel Orientation="Vertical" Grid.Row="3" Name="JiraFieldsBox" Visibility="Collapsed">
+        <StackPanel Orientation="Vertical" Grid.Row="3" Name="JiraFieldsBox">
             <StackPanel Orientation="Horizontal"  Grid.Row="2" Margin="0,2">
                 <Label Content="Issue Type:" VerticalAlignment="Center" Width="80"/>
                 <ComboBox Name="issueTypeCombo"  SelectedIndex="0" >
@@ -61,8 +61,8 @@
                    Grid.Row="3" Grid.Column="1" HorizontalAlignment="Left" Content="default" />-->
 
             </StackPanel>
-           
-            <StackPanel Orientation="Horizontal" Name="assigneeStack" >
+
+            <StackPanel Orientation="Horizontal" Name="assigneeStack" Visibility="Collapsed">
                 <Label FontSize="11"  Grid.Row="3" VerticalAlignment="Bottom" Content="Assignee:" Width="80" />
                 <Button Click="ChangeAssign_OnClick" Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}" x:Name="ChangeAssign" FontSize="11" FontWeight="Bold"
                    Grid.Row="3" Grid.Column="1" HorizontalAlignment="Left" Content="none" />
@@ -74,8 +74,12 @@
                    Grid.Row="3" Grid.Column="1" HorizontalAlignment="Left" Content="none" />
 
             </StackPanel>
+            <StackPanel Orientation="Horizontal"  Grid.Row="4" Margin="0,2">
+                <Label FontSize="11"  Grid.Row="3" VerticalAlignment="Bottom" Content="Labels:" Width="80" />
+                <ctr:Placeholder MaxLength="100" LabelText="Labels seperated by commas" Name="JiraLabels" HorizontalAlignment="Stretch" Width="180"/>
+            </StackPanel>
         </StackPanel>
-        <StackPanel Orientation="Vertical" Grid.Row="3" Name="BcfFieldsBox">
+        <StackPanel Orientation="Vertical" Grid.Row="3" Name="BcfFieldsBox" Visibility="Collapsed">
             <StackPanel Orientation="Horizontal"  Grid.Row="2" Margin="0,2">
                 <Label Content="Issue Type:" VerticalAlignment="Center" Width="80"/>
                 <ctr:Placeholder MaxLength="100" LabelText="(optional)" Name="BcfIssueType" HorizontalAlignment="Stretch" Width="180"/>
@@ -84,7 +88,7 @@
                 <Label FontSize="11"  Grid.Row="3" VerticalAlignment="Bottom"  Content="Priority:" Width="80" />
                 <ctr:Placeholder MaxLength="100" LabelText="(optional)" Name="BcfPriority" HorizontalAlignment="Stretch" Width="180"/>
             </StackPanel>
-            <StackPanel Orientation="Horizontal">
+            <StackPanel Orientation="Horizontal"  Margin="0,2">
                 <Label FontSize="11"  Grid.Row="3" VerticalAlignment="Bottom" Content="Assignee:" Width="80" />
                 <ctr:Placeholder MaxLength="100" LabelText="(optional)" Name="BcfAssignee" HorizontalAlignment="Stretch" Width="180"/>
             </StackPanel>

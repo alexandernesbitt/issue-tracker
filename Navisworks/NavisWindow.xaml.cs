@@ -305,6 +305,13 @@ namespace ARUP.IssueTracker.Navisworks
                             {
                                 issueJira.fields.components = ain.SelectedComponents;
                             }
+
+                            if (!string.IsNullOrWhiteSpace(ain.JiraLabels.Text))
+                            {
+                                var labels = ain.JiraLabels.Text.Split(',').ToList();
+                                labels.ForEach(s => s.Trim());
+                                issueJira.fields.labels = labels;
+                            }
                         }
                         
                         string folderIssue = Path.Combine(path, issue.Topic.Guid);
