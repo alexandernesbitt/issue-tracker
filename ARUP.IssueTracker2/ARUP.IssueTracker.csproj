@@ -111,6 +111,7 @@
     <Compile Include="Classes\BCF\visinfo.cs" />
     <Compile Include="Classes\EventArgs.cs" />
     <Compile Include="Classes\JIRA\Transition.cs" />
+    <Compile Include="Classes\JIRA\Watches.cs" />
     <Compile Include="Classes\JsonUtils.cs" />
     <Compile Include="Classes\MetadataTables.cs" />
     <Compile Include="Classes\MySettings.cs" />
@@ -118,6 +119,7 @@
     <Compile Include="Converters\AssigneeConverter.cs" />
     <Compile Include="Converters\BoolStarConv.cs" />
     <Compile Include="Converters\CommConverter.cs" />
+    <Compile Include="Converters\WatcherConverter.cs" />
     <Compile Include="Converters\ExtensionToResourceConverter.cs" />
     <Compile Include="Converters\StringEnabConverter.cs" />
     <Compile Include="Converters\ExpanderConverter.cs" />

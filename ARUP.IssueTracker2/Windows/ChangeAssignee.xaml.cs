@@ -11,6 +11,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using ARUP.IssueTracker.Classes;
+using ARUP.IssueTracker.Classes.JIRA;
 
 namespace ARUP.IssueTracker.Windows
 {
@@ -32,6 +33,22 @@ namespace ARUP.IssueTracker.Windows
             Binding binding = new Binding();
             binding.Source = viewSource;
             BindingOperations.SetBinding(valuesList, ListView.ItemsSourceProperty, binding);
+        }
+
+        public void SetWatchers(List<Watcher> watchers)
+        {
+            valuesList.SelectedItems.Clear();
+            var users = viewSource.Source as List<User>;
+            watchers.ForEach(watcher => {
+                if (!string.IsNullOrWhiteSpace(watcher.name))
+                {
+                    var user = users.Find(u => u.name == watcher.name);
+                    if (user != null)
+                    {
+                        valuesList.SelectedItems.Add(user);
+                    }
+                }                
+            });            
         }
         private void Button_Click_1(object sender, RoutedEventArgs e)
         {

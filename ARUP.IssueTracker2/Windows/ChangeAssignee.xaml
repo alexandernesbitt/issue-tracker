@@ -40,7 +40,7 @@
         <ListView ScrollViewer.HorizontalScrollBarVisibility="Disabled" ItemContainerStyle="{StaticResource ListViewItemStyle}"
                   HorizontalAlignment="Stretch" VerticalAlignment="Stretch" SelectionMode="Single" x:FieldModifier="public"
                   AlternationCount="2"  IsSynchronizedWithCurrentItem="True" Grid.Row="1"  x:Name="valuesList" Margin="5,5,5,5" 
-                   BorderThickness="0"  MaxHeight="500"  >
+                   BorderThickness="0"  MaxHeight="500">
             <ListView.ItemTemplate>
             <DataTemplate>
                     <Grid>

@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using ARUP.IssueTracker.Classes.JIRA;
 
 namespace ARUP.IssueTracker.Classes
 {
@@ -14,6 +15,7 @@ namespace ARUP.IssueTracker.Classes
         public string updated { get; set; }
         public string description { get; set; }
         public User assignee { get; set; }
+        public Watches watches { get; set; }
         public Issuetype issuetype { get; set; }
         public List<Attachment> attachment { get; set; }
         public Comment comment { get; set; }

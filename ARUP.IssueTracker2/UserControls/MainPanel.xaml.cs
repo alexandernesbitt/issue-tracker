@@ -102,6 +102,7 @@ namespace ARUP.IssueTracker.UserControls
                 jiraPan.ChangePriority.Click += new RoutedEventHandler(ChangePriority_Click);
                 jiraPan.ChangeStatus.Click += new RoutedEventHandler(ChangeStatus_Click);
                 jiraPan.ChangeComponents.Click += new RoutedEventHandler(ChangeComponents_Click);
+                jiraPan.ChangeWatchers.Click += new RoutedEventHandler(ChangeWatchers_Click);
                 jiraPan.issueList.SelectionChanged += jiraIssueList_SelectionChanged;
                 #endregion
                 DataContext = jira;
@@ -265,7 +266,7 @@ namespace ARUP.IssueTracker.UserControls
 
 
                 var request = new RestRequest();
-                string fields = "&fields=summary,key,created,updated,description,assignee,comment,attachment,creator,status,priority,resolution,issuetype,components,labels," + MySettings.Get("guidfield") + "&startAt=" + startAt;
+                string fields = "&fields=summary,key,created,updated,description,assignee,comment,attachment,creator,status,priority,resolution,issuetype,components,watches,labels," + MySettings.Get("guidfield") + "&startAt=" + startAt;
                 string query = "search?jql=project=" + jira.ProjectsCollection[jiraPan.projIndex].key + jiraPan.Assignation + jiraPan.Creator + jiraPan.Filters + jiraPan.Order + fields;
 
                 request = new RestRequest(query, Method.GET);
@@ -301,6 +302,7 @@ namespace ARUP.IssueTracker.UserControls
             {
                 jira.IssuesCollection = new ObservableCollection<Issue>();
                 IRestResponse<Issues> response = e.Responses.Last() as IRestResponse<Issues>;
+
                 if (RestCallback.Check(response) && response.Data.issues != null && response.Data.issues.Any())
                 {
                     // parse here again to handle custom guid field
@@ -1299,7 +1301,8 @@ namespace ARUP.IssueTracker.UserControls
                     MessageBox.Show("You don't have permission to Assign people to this Issue");
                     return;
                  }
-                ChangeAssignee cv = new ChangeAssignee(); cv.WindowStartupLocation = WindowStartupLocation.CenterScreen;
+                ChangeAssignee cv = new ChangeAssignee(); 
+                cv.WindowStartupLocation = WindowStartupLocation.CenterScreen;
                 cv.SetList(assignees);
 
                 int indexitem = jiraPan.issueList.SelectedIndex;
@@ -1329,6 +1332,74 @@ namespace ARUP.IssueTracker.UserControls
                         request2.AddBody(newissue);
                         requests.Add(request2);
   
+                    }
+
+                    BackgroundJira bj = new BackgroundJira();
+                    bj.WorkerComplete += new EventHandler<ResponseArg>(ChangeValue_Completed);
+                    bj.Start<User>(requests);
+                }
+            }
+            catch (System.Exception ex1)
+            {
+                MessageBox.Show("exception: " + ex1);
+            }
+
+        }
+        private void ChangeWatchers_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                if (jiraPan.issueList.SelectedItems.Count > 1)
+                    if (MessageBox.Show("Action will apply to all the " + jiraPan.issueList.SelectedItems.Count + " selected issues,\n are you sure to continue?", "Multiple Items", MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.No)
+                        return;
+
+                // GET STATUSES
+                List<User> assignees = getAssigneesIssue();
+                if (!assignees.Any())
+                {
+                    MessageBox.Show("You don't have permission to Assign people to this Issue");
+                    return;
+                }
+
+                // share the same UI with assignee
+                ChangeAssignee cv = new ChangeAssignee(); 
+                cv.WindowStartupLocation = WindowStartupLocation.CenterScreen;
+                cv.valuesList.SelectionMode = SelectionMode.Multiple;
+                cv.Title = "Add Watchers";
+
+                // inject available users
+                cv.SetList(assignees);
+
+                // inject current watchers
+                var request1 = new RestRequest("issue/" + jira.IssuesCollection[jiraPan.issueList.SelectedIndex].key + "/watchers", Method.GET);
+                request1.AddHeader("Content-Type", "application/json");
+                request1.RequestFormat = Arup.RestSharp.DataFormat.Json;
+                var response = JiraClient.Client.Execute<Watches>(request1);
+                if (!RestCallback.Check(response))
+                {
+                    MessageBox.Show("Cannot retrieve data for Watchers.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
+                }
+                if (response.Data != null) 
+                {
+                    cv.SetWatchers(response.Data.watchers);
+                }                
+
+                cv.ShowDialog();
+                if (cv.DialogResult.HasValue && cv.DialogResult.Value)
+                {
+                    List<RestRequest> requests = new List<RestRequest>();
+
+                    for (int i = 0; i < cv.valuesList.SelectedItems.Count; i++)
+                    {
+                        int index = jiraPan.issueList.Items.IndexOf(jiraPan.issueList.SelectedItem);
+
+                        string user = (cv.valuesList.SelectedItems[i] == null) ? null : ((User)cv.valuesList.SelectedItems[i]).name;
+                        var request2 = new RestRequest("issue/" + jira.IssuesCollection[index].key + "/watchers", Method.POST);
+                        request2.AddHeader("Content-Type", "application/json");
+                        request2.RequestFormat = Arup.RestSharp.DataFormat.Json;
+                        request2.AddBody(user);
+                        requests.Add(request2);
                     }
 
                     BackgroundJira bj = new BackgroundJira();

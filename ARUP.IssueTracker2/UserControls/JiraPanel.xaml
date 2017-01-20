@@ -25,6 +25,7 @@
             <src:IntEnabConverter3 x:Key="intEnabConverter3"/>
             <src:ExpandedConverter x:Key="expandedConverter"/>
             <src:AssigneeConverter x:Key="assigneeConverter"/>
+            <src:WatcherConverter x:Key="watcherConverter"/>
             <src:PathToImageConv x:Key="pathToImageConv"/>
             <src:IntVisibConverter x:Key="intVisibConverter"/>
             <src:ListConverter x:Key="listConverter"/>
@@ -289,8 +290,6 @@
                             </StackPanel>
                         </Button>
 
-
-
                         <Label FontSize="11" Grid.Column="2" Grid.Row="3" VerticalAlignment="Bottom" Content="Priority:" />
                         <Button Click="ChangePriority_Click" Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}" x:Name="ChangePriority"  FontSize="11" FontWeight="Bold"
                    Grid.Row="3" Grid.Column="3"  HorizontalAlignment="Left">
@@ -312,8 +311,17 @@
                         <Label FontSize="11" Grid.Column="2" Grid.Row="4" VerticalAlignment="Bottom" Name="ChangeComponentsLabel" Content="Components:" />
                         <Button Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}" x:Name="ChangeComponents"  FontSize="11" FontWeight="Bold" 
                    Grid.Row="4" Grid.Column="3" HorizontalAlignment="Left" Content="{Binding fields.components, Converter={StaticResource listConverter}}" />
-                        <Label Content="Labels:"  Grid.Row="5" Grid.Column="0" Visibility="{Binding ElementName=issueList, Path=SelectedItem.fields.labels.Count, Converter={StaticResource intVisibConverter}}"/>
-                        <ListView Grid.Row="5" Grid.Column="1" Grid.ColumnSpan="3"   ItemsSource="{Binding ElementName=issueList, Path=SelectedItem.fields.labels}" 
+
+                        <Label FontSize="11" Grid.Column="0" Grid.Row="5" VerticalAlignment="Top" Content="Watchers:" />
+                        <Button Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}" x:Name="ChangeWatchers"  FontSize="11" FontWeight="Bold"
+                   Grid.Row="5" Grid.Column="1"  HorizontalAlignment="Left" VerticalAlignment="Top">
+                            <StackPanel Orientation="Horizontal" >
+                                <TextBlock Text="{Binding fields.watches.watchCount, Converter={StaticResource watcherConverter}}"/>
+                            </StackPanel>
+                        </Button>
+
+                        <Label Content="Labels:"  Grid.Row="5" Grid.Column="2" Visibility="{Binding ElementName=issueList, Path=SelectedItem.fields.labels.Count, Converter={StaticResource intVisibConverter}}"/>
+                        <ListView Grid.Row="5" Grid.Column="3" ItemsSource="{Binding ElementName=issueList, Path=SelectedItem.fields.labels}" 
                                     x:Name="labelList" Margin="0" BorderThickness="0" 
                                     ScrollViewer.HorizontalScrollBarVisibility="Disabled">
                             <ListView.Template>
@@ -333,7 +341,8 @@
                                     </Button>
                                 </DataTemplate>
                             </ListView.ItemTemplate>
-                        </ListView>
+                        </ListView>                        
+
                     </Grid>
                     <!--<GridSplitter Grid.Column="2" Grid.Row="3" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Grid.RowSpan="1" />-->
                     
