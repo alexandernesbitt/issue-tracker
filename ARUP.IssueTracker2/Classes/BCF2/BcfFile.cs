@@ -275,8 +275,6 @@ namespace ARUP.IssueTracker.Classes.BCF2
         }
         HasBeenSaved = false;
 
-
-
       }
       catch (System.Exception ex1)
       {

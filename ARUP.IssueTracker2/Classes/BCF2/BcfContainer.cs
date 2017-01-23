@@ -117,13 +117,11 @@ namespace ARUP.IssueTracker.Classes.BCF2
 
     }
 
-
-    #region private methods
     /// <summary>
     /// Prompts a dialog to select one or more BCF files to open
     /// </summary>
     /// <returns></returns>
-    private static IEnumerable<BcfFile> OpenBcfDialog()
+    public static IEnumerable<BcfFile> OpenBcfDialog()
     {
       try
       {
@@ -148,6 +146,7 @@ namespace ARUP.IssueTracker.Classes.BCF2
       return null;
     }
 
+    #region private methods
     /// <summary>
     /// Logic that extracts files from a bcfzip and deserializes them
     /// </summary>

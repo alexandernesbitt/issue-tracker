@@ -61,7 +61,7 @@
             <Button ToolTip="Save BCF Report as..." DockPanel.Dock="Left" Name="SaveBCFBtn" Margin="5,5,0,5" >
                 <StackPanel Orientation="Horizontal">
                     <Path   Margin="5,0,0,0" Height="15" Width="15" Stretch="Uniform" Fill="#FF2E94D3"  Data="M91,100.3h9.1v-82L81.9,0L18.2,0L0,0l0,100.3H91z M18.2,9.1h27.3v27.3h18.2V9.1h9.1v36.5H18.2V9.1z" UseLayoutRounding="False"/>
-                    <TextBlock Margin="5,2" Text="Save..." />
+                    <TextBlock Margin="5,2" Text="Save" />
                 </StackPanel>
             </Button>
             <!-- Print Toggle Button -->
@@ -95,10 +95,17 @@
             <Button ToolTip="Open BCF..." DockPanel.Dock="Left" Name="OpenBCFBtn" Margin="5" >
                 <StackPanel Orientation="Horizontal">
                     <Path   Margin="5,0,0,0" Height="15" Width="15" Stretch="Uniform" Fill="#FF2E94D3"  Data="M0.5,86.5h72.5l27.2-53.2H27.6L0.5,86.5z M-0.2,73.5l23.4-47.1l49.7-0.1V10.6H35.5V0.8H9.5l-9.1,9.8L-0.2,73.5z" UseLayoutRounding="False"/>
-                    <TextBlock Margin="5,2" Text="Open..." />
+                    <TextBlock Margin="5,2" Text="Open" />
                 </StackPanel>
             </Button>
 
+            <Button ToolTip="Import BCF to merge with current one..." DockPanel.Dock="Left" Name="ImportBCFBtn" Margin="5" >
+                <StackPanel Orientation="Horizontal">
+                    <Path   Margin="5,0,0,0" Height="15" Width="15" Stretch="Uniform" Fill="#FF2E94D3"  Data="F1 M 21,23L 21,53L 26,53L 26,57L 17,57L 17,19L 26,19L 26,23L 21,23 Z M 27,47L 31,47L 31,53L 55,53L 55,35L 43,35L 43,23L 31,23L 31,41L 27,41L 27,19L 47.25,19L 59,30.75L 59,57L 27,57L 27,47 Z M 22,42L 40,42L 33,36L 39,36L 48.2918,44.3334L 39,52L 33,52L 40,46L 22,46L 22,42 Z M 47,24.25L 47,31L 53.75,31L 47,24.25 Z " UseLayoutRounding="False"/>
+                    <TextBlock Margin="5,2" Text="Import" />
+                </StackPanel>
+            </Button>
+            
             <Label Content="File name:" VerticalAlignment="Center" FontWeight="Bold"/>
             <TextBlock Text="{Binding Bcf.Filename}" Name="filenameField" VerticalAlignment="Center"/>
             <TextBlock Text="{Binding Bcf.HasBeenSaved, Converter={StaticResource boolStarConv}}" Name="savedField" VerticalAlignment="Center"/>

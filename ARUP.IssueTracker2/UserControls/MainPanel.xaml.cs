@@ -83,6 +83,7 @@ namespace ARUP.IssueTracker.UserControls
                 bcfPan.SaveBcf1.Click += new RoutedEventHandler(SaveBCF1);
                 bcfPan.SaveBcf2.Click += new RoutedEventHandler(SaveBCF2);
                 bcfPan.OpenBCFBtn.Click += new RoutedEventHandler(OpenBCFFile);
+                bcfPan.ImportBCFBtn.Click += new RoutedEventHandler(ImportBCFFile);
                 bcfPan.issueList.SelectionChanged += bcfIssueList_SelectionChanged;
                 //JIRA events
                 jiraPan.DelIssueBtn.Click += new RoutedEventHandler(DelJiraIssueButt_Click);
@@ -1773,6 +1774,27 @@ namespace ARUP.IssueTracker.UserControls
                     OpenBCF(openFileDialog1.FileName);
 
                 }
+            }
+            catch (System.Exception ex1)
+            {
+                MessageBox.Show("exception: " + ex1);
+            }
+
+        }
+        private void ImportBCFFile(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                if (jira.Bcf.Issues.Count == 0)
+                {
+                    MessageBox.Show("The current BCF Report is empty. Open a BCF file first!", "No Issue", MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
+                }
+
+                var bcffiles = BcfContainer.OpenBcfDialog();
+                if (bcffiles == null)
+                    return;
+                jira.Bcf.MergeBcfFile(bcffiles);
             }
             catch (System.Exception ex1)
             {
