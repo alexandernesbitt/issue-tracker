@@ -129,6 +129,11 @@
                 <Label Margin="10,0,0,0" FontSize="11"  Grid.Row="3" VerticalAlignment="Bottom" Content="Priority:" />
                 <ctr:Placeholder MaxLength="100" LabelText="(optional)" Name="BcfPriority" HorizontalAlignment="Stretch" Width="150"/>
             </StackPanel>
+            <StackPanel Orientation="Horizontal" Margin="2">
+                <Label FontSize="11"  Grid.Row="3" VerticalAlignment="Bottom" Content="Labels:" />
+                <ctr:Placeholder MaxLength="200" LabelText="Labels seperated by commas" Name="BcfLabels" HorizontalAlignment="Stretch" Width="200"/>
+
+            </StackPanel>
 
         </StackPanel>
         <Expander Header="Attach elements to view"  Grid.Row="6"  VerticalAlignment="Top">

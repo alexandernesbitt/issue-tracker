@@ -361,6 +361,12 @@ namespace ARUP.IssueTracker.Navisworks
                         string projFilename = !string.IsNullOrEmpty(_oDoc.FileName) ? System.IO.Path.GetFileName(_oDoc.FileName) : "";
                         issue.Header[0].Filename = projFilename;
                         issue.Header[0].Date = DateTime.Now;
+                        if (!string.IsNullOrWhiteSpace(ain.BcfLabels.Text))
+                        {
+                            var labels = ain.BcfLabels.Text.Split(',').ToList();
+                            labels.ForEach(s => s.Trim());
+                            issue.Topic.Labels = labels.ToArray();
+                        }
 
                         //comment
                         if (sv.Comments.Any())

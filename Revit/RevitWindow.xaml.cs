@@ -272,6 +272,12 @@ namespace ARUP.IssueTracker.Revit
               issue.Topic.Priority = air.BcfPriority.Text;
               issue.Topic.TopicStatus = air.VerbalStatus.Text;
               issue.Topic.TopicType = air.BcfIssueType.Text;
+              if (!string.IsNullOrWhiteSpace(air.BcfLabels.Text))
+              {
+                  var labels = air.BcfLabels.Text.Split(',').ToList();
+                  labels.ForEach(s => s.Trim());
+                  issue.Topic.Labels = labels.ToArray();
+              }
               
               issue.Header[0].IfcProject = ExporterIFCUtils.CreateProjectLevelGUID(doc,
                   Autodesk.Revit.DB.IFC.IFCProjectLevelGUIDType.Project);
