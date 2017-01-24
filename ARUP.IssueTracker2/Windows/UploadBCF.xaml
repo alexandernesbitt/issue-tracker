@@ -60,9 +60,9 @@
                 </ComboBox.ItemTemplate>
             </ComboBox>
             --><!--<Button Click="ChangePriority_OnClick" Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}" x:Name="ChangePriority" FontSize="11" FontWeight="Bold"
-                   Grid.Row="3" Grid.Column="1" HorizontalAlignment="Left" Content="default" />--><!--
+                   Grid.Row="3" Grid.Column="1" HorizontalAlignment="Left" Content="default" />
 
-        </StackPanel>
+        </StackPanel>-->
 
         <StackPanel Orientation="Horizontal" Grid.Row="4" Margin="5">
             <Label FontSize="11"   VerticalAlignment="Bottom" Content="Assignee:" Width="75" />
@@ -75,7 +75,7 @@
             <Button Click="ChangeComponents_OnClick" Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}" Name="ChangeComponents" FontSize="11" FontWeight="Bold"
                    Grid.Row="3" Grid.Column="1" HorizontalAlignment="Left" Content="none" />
 
-        </StackPanel>-->
+        </StackPanel>
         <StackPanel Orientation="Horizontal" Grid.Row="6" HorizontalAlignment="Right" Margin="5" >
             <Button Content="Upload" IsDefault="True"  Margin="5" Width="75" Click="OKBtnClick"/>
             <Button Content="Cancel"   Margin="5" Width="75" Click="CancelBtnClick" Background="Transparent" BorderBrush="Transparent"/>

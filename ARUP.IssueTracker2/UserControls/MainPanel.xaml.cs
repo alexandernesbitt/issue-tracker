@@ -1847,6 +1847,16 @@ namespace ARUP.IssueTracker.UserControls
                         issueJira.fields = new Fields();
                         issueJira.fields.issuetype = (Issuetype) ub.issueTypeCombo.SelectedItem;
                         issueJira.fields.creator = new User() { name = jira.Self.name };
+                        // add assignee if selected
+                        if (ub.selectedAssignee != null)
+                        {
+                            issueJira.fields.assignee = ub.selectedAssignee;
+                        }
+                        // add components if any
+                        if (ub.selectedComponents.Count > 0)
+                        {
+                            issueJira.fields.components = ub.selectedComponents;
+                        }
                         
                         // manually deep copy here
                         Markup originalBcfIssue = jira.Bcf.Issues[index];
@@ -1864,12 +1874,6 @@ namespace ARUP.IssueTracker.UserControls
 
                         if (copiedBcfIssue != null)
                         {
-                            // add assignee if present
-                            if (copiedBcfIssue.Topic.AssignedTo != null) 
-                            {
-                                issueJira.fields.assignee = new User() { name = copiedBcfIssue.Topic.AssignedTo };                            
-                            }
-
                             // add labels if present
                             if (copiedBcfIssue.Topic.Labels != null)
                             {
