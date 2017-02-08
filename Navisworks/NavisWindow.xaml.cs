@@ -353,7 +353,7 @@ namespace ARUP.IssueTracker.Navisworks
                         
                         issue.Topic.Title = string.IsNullOrEmpty(originalIssueTitle) ? sv.DisplayName : originalIssueTitle;
                         issue.Topic.AssignedTo = ain.BcfAssignee.Text;
-                        issue.Topic.CreationAuthor = MySettings.Get("username");
+                        issue.Topic.CreationAuthor = string.IsNullOrWhiteSpace(MySettings.Get("username")) ? MySettings.Get("BCFusername") : MySettings.Get("username");
                         issue.Topic.Priority = ain.BcfPriority.Text;
                         issue.Topic.TopicStatus = ain.BcfStatus.Text;
                         issue.Topic.TopicType = ain.BcfIssueType.Text;

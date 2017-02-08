@@ -40,7 +40,13 @@ namespace ARUP.IssueTracker.Windows
             }
 
             // check guid field id for active account
-            JiraAccount activeAccount = accounts.Find(ac => ac.active);            
+            JiraAccount activeAccount = accounts.Find(ac => ac.active);
+            if(string.IsNullOrWhiteSpace(activeAccount.username))
+            {
+                // for setting BCF username only
+                DialogResult = true;
+                return;
+            }
             var client = new RestClient(activeAccount.jiraserver);
             client.CookieContainer = new System.Net.CookieContainer();
             var request = new RestRequest("/rest/auth/1/session", Method.POST);

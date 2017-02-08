@@ -268,7 +268,7 @@ namespace ARUP.IssueTracker.Revit
               issue.Topic.Title = air.TitleBox.Text;
               issue.Topic.Description = descriptionText.ToString().Trim();
               issue.Topic.AssignedTo = air.BcfAssignee.Text;
-              issue.Topic.CreationAuthor = MySettings.Get("username");
+              issue.Topic.CreationAuthor = string.IsNullOrWhiteSpace(MySettings.Get("username")) ? MySettings.Get("BCFusername") : MySettings.Get("username");
               issue.Topic.Priority = air.BcfPriority.Text;
               issue.Topic.TopicStatus = air.VerbalStatus.Text;
               issue.Topic.TopicType = air.BcfIssueType.Text;
