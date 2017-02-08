@@ -136,6 +136,9 @@ namespace ARUP.IssueTracker.Classes
                 if (allAccounts.Count == 0)
                 {
                     JiraAccount ac = new JiraAccount() { active = true, jiraserver = Get("jiraserver"), username = Get("username"), password = Get("password"), guidfield = Get("guidfield"), savedTime = (long)DateTime.Now.Subtract(new DateTime(1970, 1, 1)).TotalSeconds };
+                    // force to get a new config object to avoid conflict
+                    config = GetConfig();
+                    
                     allAccounts.Add(ac);
                     string key = "jiraaccount_" + Convert.ToInt32(DateTime.UtcNow.AddHours(8).Subtract(new DateTime(1970, 1, 1)).TotalSeconds);
                     string value = SimpleJson.SerializeObject(ac);
@@ -183,7 +186,7 @@ namespace ARUP.IssueTracker.Classes
                         string key = "jiraaccount_" + Guid.NewGuid().ToString();
                         string value = SimpleJson.SerializeObject(ac);
                         config.AppSettings.Settings.Add(key, value);
-                        config.Save(ConfigurationSaveMode.Modified);         
+                        config.Save(ConfigurationSaveMode.Modified);
                     }                               
                 }                
 
@@ -212,6 +215,11 @@ namespace ARUP.IssueTracker.Classes
             if (MySettings.Get("jiraserver").Trim() == _jiraserverarup)
             {
                 string username = MySettings.Get("username").Trim();
+                if(string.IsNullOrEmpty(username))
+                {
+                    return false;
+                }
+
                 // get last saved time on user machine
                 Configuration config = GetConfig();
                 if (config == null)
@@ -259,32 +267,37 @@ namespace ARUP.IssueTracker.Classes
         public static long GetWindowsAccountPasswordLastSetTime(string username) 
         {
             DateTime lastChangedTime = DateTime.Now;
-            Process process = new Process();
-            ProcessStartInfo startInfo = new ProcessStartInfo();
-            startInfo.WindowStyle = System.Diagnostics.ProcessWindowStyle.Hidden;
-            startInfo.FileName = "net.exe";
-            startInfo.Arguments = string.Format("user {0} /domain", username);
-            startInfo.RedirectStandardError = true;
-            startInfo.RedirectStandardOutput = true;
-            startInfo.UseShellExecute = false;
-            startInfo.CreateNoWindow = true;
-            process.StartInfo = startInfo;
-            process.Start();
-            while (!process.StandardOutput.EndOfStream)
+
+            if (!string.IsNullOrWhiteSpace(username))
             {
-                string line = process.StandardOutput.ReadLine();
-                if (line.Contains("Password last set"))
+                Process process = new Process();
+                ProcessStartInfo startInfo = new ProcessStartInfo();
+                startInfo.WindowStyle = System.Diagnostics.ProcessWindowStyle.Hidden;
+                startInfo.FileName = "net.exe";
+                startInfo.Arguments = string.Format("user {0} /domain", username);
+                startInfo.RedirectStandardError = true;
+                startInfo.RedirectStandardOutput = true;
+                startInfo.UseShellExecute = false;
+                startInfo.CreateNoWindow = true;
+                process.StartInfo = startInfo;
+                process.Start();
+                while (!process.StandardOutput.EndOfStream)
                 {
-                    // try default (en-US format)
-                    bool isParsed = DateTime.TryParse(line.Substring(17).Trim(), out lastChangedTime);
-                    if (!isParsed)
+                    string line = process.StandardOutput.ReadLine();
+                    if (line.Contains("Password last set"))
                     {
-                        // try en-UK format
-                        DateTime.TryParseExact(line.Substring(17).Trim(), "dd/MM/yyyy HH:mm:ss", CultureInfo.InvariantCulture, DateTimeStyles.None, out lastChangedTime);
+                        // try default (en-US format)
+                        bool isParsed = DateTime.TryParse(line.Substring(17).Trim(), out lastChangedTime);
+                        if (!isParsed)
+                        {
+                            // try en-UK format
+                            DateTime.TryParseExact(line.Substring(17).Trim(), "dd/MM/yyyy HH:mm:ss", CultureInfo.InvariantCulture, DateTimeStyles.None, out lastChangedTime);
+                        }
+                        break;
                     }
-                    break;
                 }
             }
+            
             return (long) lastChangedTime.Subtract(new DateTime(1970, 1, 1)).TotalSeconds;
         }
 
