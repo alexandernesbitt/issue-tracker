@@ -268,7 +268,7 @@ namespace ARUP.IssueTracker.UserControls
 
                 var request = new RestRequest();
                 string fields = "&fields=summary,key,created,updated,description,assignee,comment,attachment,creator,status,priority,resolution,issuetype,components,watches,labels," + MySettings.Get("guidfield") + "&startAt=" + startAt;
-                string query = "search?jql=project=" + jira.ProjectsCollection[jiraPan.projIndex].key + jiraPan.Assignation + jiraPan.Creator + jiraPan.Filters + jiraPan.Order + fields;
+                string query = "search?jql=project=\"" + jira.ProjectsCollection[jiraPan.projIndex].key + "\"" + jiraPan.Assignation + jiraPan.Creator + jiraPan.Filters + jiraPan.Order + fields;
 
                 request = new RestRequest(query, Method.GET);
                 request.AddHeader("Content-Type", "application/json");
@@ -1358,7 +1358,7 @@ namespace ARUP.IssueTracker.UserControls
                 List<User> assignees = getAssigneesIssue();
                 if (!assignees.Any())
                 {
-                    MessageBox.Show("You don't have permission to Assign people to this Issue");
+                    MessageBox.Show("You don't have permission to change Watchers for this Issue");
                     return;
                 }
 

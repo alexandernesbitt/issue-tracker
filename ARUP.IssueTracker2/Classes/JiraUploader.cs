@@ -85,7 +85,7 @@ namespace ARUP.IssueTracker.Classes
                     // could use the expression: cf[11600] ~ "aaaa"
                     // = operator not supported
                     string fields = " AND  GUID~" + issue.Topic.Guid + "&fields=key,comment";
-                    string query = "search?jql=project=" + projectKey + fields;
+                    string query = "search?jql=project=\"" + projectKey + "\"" + fields;
 
                     var request4 = new RestRequest(query, Method.GET);
                     request4.AddHeader("Content-Type", "application/json");
