@@ -228,12 +228,12 @@ namespace ARUP.IssueTracker.Revit
               {
                   if (vp.VisInfo != null)
                   {
-                      descriptionText.AppendLine(string.Format("{anchor:<Viewpoint>[^{0}]</Viewpoint>}", "viewpoint.bcfv"));
+                      descriptionText.AppendLine(string.Format("{{anchor:<Viewpoint>[^{0}]</Viewpoint>}}", "viewpoint.bcfv"));
                   }
                   if (!string.IsNullOrWhiteSpace(vp.SnapshotPath))
                   {
                       descriptionText.AppendLine(string.Format("!{0}|thumbnail!", "snapshot.png"));
-                      descriptionText.AppendLine(string.Format("{anchor:<Snapshot>[^{0}]</Snapshot>}", "snapshot.png"));
+                      descriptionText.AppendLine(string.Format("{{anchor:<Snapshot>[^{0}]</Snapshot>}}", "snapshot.png"));
                   }
               }              
 

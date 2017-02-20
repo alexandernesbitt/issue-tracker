@@ -778,16 +778,16 @@ namespace ARUP.IssueTracker.UserControls
                         commentBody.AppendLine(ac.comment.Text);
                         if (!string.IsNullOrWhiteSpace(ac.viewpointFilePath))
                         {
-                            commentBody.AppendLine(string.Format("{anchor:<Viewpoint>[^{0}]</Viewpoint>}", Path.GetFileName(ac.viewpointFilePath)));
+                            commentBody.AppendLine(string.Format("{{anchor:<Viewpoint>[^{0}]</Viewpoint>}}", Path.GetFileName(ac.viewpointFilePath)));
                         }
                         if(!string.IsNullOrWhiteSpace(ac.snapshotFilePath))
                         {
                             commentBody.AppendLine(string.Format("!{0}|thumbnail!", Path.GetFileName(ac.snapshotFilePath)));
-                            commentBody.AppendLine(string.Format("{anchor:<Snapshot>[^{0}]</Snapshot>}", Path.GetFileName(ac.snapshotFilePath)));       
+                            commentBody.AppendLine(string.Format("{{anchor:<Snapshot>[^{0}]</Snapshot>}}", Path.GetFileName(ac.snapshotFilePath)));       
                         }
                         if (!string.IsNullOrWhiteSpace(ac.attachmentFilePath))
                         {
-                            commentBody.AppendLine(string.Format("{anchor:<Attachment>[^{0}]</Attachment>}", Path.GetFileName(ac.attachmentFilePath)));
+                            commentBody.AppendLine(string.Format("{{anchor:<Attachment>[^{0}]</Attachment>}}", Path.GetFileName(ac.attachmentFilePath)));
                         }
                         
                         var newcomment = new { body = commentBody.ToString().Trim() };
@@ -1885,9 +1885,9 @@ namespace ARUP.IssueTracker.UserControls
                             StringBuilder descriptionBody = new StringBuilder();
                             if (!string.IsNullOrWhiteSpace(copiedBcfIssue.Topic.Description))
                                 descriptionBody.AppendLine(copiedBcfIssue.Topic.Description);
-                            descriptionBody.AppendLine(string.Format("{anchor:<Viewpoint>[^{0}]</Viewpoint>}", "viewpoint.bcfv"));
+                            descriptionBody.AppendLine(string.Format("{{anchor:<Viewpoint>[^{0}]</Viewpoint>}}", "viewpoint.bcfv"));
                             descriptionBody.AppendLine(string.Format("!{0}|thumbnail!", "snapshot.png"));
-                            descriptionBody.AppendLine(string.Format("{anchor:<Snapshot>[^{0}]</Snapshot>}", "snapshot.png"));                            
+                            descriptionBody.AppendLine(string.Format("{{anchor:<Snapshot>[^{0}]</Snapshot>}}", "snapshot.png"));                            
                             issueJira.fields.description = descriptionBody.ToString();
 
                             // handle comments
@@ -1903,12 +1903,12 @@ namespace ARUP.IssueTracker.UserControls
                                     {
                                         if (!string.IsNullOrWhiteSpace(bcfViewpoint.Viewpoint))
                                         {
-                                            commentBody.AppendLine(string.Format("{anchor:<Viewpoint>[^{0}]</Viewpoint>}", bcfViewpoint.Viewpoint));
+                                            commentBody.AppendLine(string.Format("{{anchor:<Viewpoint>[^{0}]</Viewpoint>}}", bcfViewpoint.Viewpoint));
                                         }
                                         if (!string.IsNullOrWhiteSpace(bcfViewpoint.Snapshot))
                                         {
                                             commentBody.AppendLine(string.Format("!{0}|thumbnail!", bcfViewpoint.Snapshot));
-                                            commentBody.AppendLine(string.Format("{anchor:<Snapshot>[^{0}]</Snapshot>}", bcfViewpoint.Snapshot));
+                                            commentBody.AppendLine(string.Format("{{anchor:<Snapshot>[^{0}]</Snapshot>}}", bcfViewpoint.Snapshot));
                                         }
                                     }                           
 
