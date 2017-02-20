@@ -14,6 +14,7 @@ using Autodesk.Navisworks.Api.Data;
 using System.Data;
 using System.Xml.Serialization;
 using ARUP.IssueTracker.Classes.BCF2;
+using System.Text;
 
 namespace ARUP.IssueTracker.Navisworks
 {
@@ -283,6 +284,19 @@ namespace ARUP.IssueTracker.Navisworks
                         Issue issueJira = new Issue();
                         Markup issue = new Markup(DateTime.Now);
 
+                        // prepare viewpoint/snapshot
+                        string folderIssue = Path.Combine(path, issue.Topic.Guid);
+                        if (!Directory.Exists(folderIssue))
+                            Directory.CreateDirectory(folderIssue);
+
+                        ViewPoint vp = new ViewPoint(true);
+                        // set the currtent saved viewpoint and then generate sna and BCF viewpoint
+                        _oDoc.SavedViewpoints.CurrentSavedViewpoint = sv;
+                        vp.VisInfo = generateViewpoint(sv.Viewpoint, elemCheck);
+                        vp.SnapshotPath = Path.Combine(folderIssue, "snapshot.png");
+                        issue.Viewpoints.Add(vp);
+                        generateSnapshot(folderIssue);
+
                         // Check if this is a saved viewpoint which was previosly created from Jira/BCF
                         string jiraIssueGuid = GetMetadata(MetadataTables.JiraIssue, sv.Parent.Guid.ToString());
                         if (!string.IsNullOrEmpty(jiraIssueGuid))  // update an existing Jira (or BCF exported from Jira) issue
@@ -291,7 +305,20 @@ namespace ARUP.IssueTracker.Navisworks
                         }
                         if (!isBcf)  // new Jira issue
                         {
+                            //Add annotations for description with snapshot/viewpoint
+                            StringBuilder descriptionText = new StringBuilder();
+                            if (vp.VisInfo != null)
+                            {
+                                descriptionText.AppendLine(string.Format("{{anchor:<Viewpoint>[^{0}]</Viewpoint>}}", "viewpoint.bcfv"));
+                            }
+                            if (!string.IsNullOrWhiteSpace(vp.SnapshotPath))
+                            {
+                                descriptionText.AppendLine(string.Format("!{0}|thumbnail!", "snapshot.png"));
+                                descriptionText.AppendLine(string.Format("{{anchor:<Snapshot>[^{0}]</Snapshot>}}", "snapshot.png"));
+                            }
+
                             issueJira.fields = new Fields();
+                            issueJira.fields.description = descriptionText.ToString().Trim();
                             issueJira.fields.issuetype = (Issuetype)ain.issueTypeCombo.SelectedItem;
                             issueJira.fields.priority = (Priority)ain.priorityCombo.SelectedItem;
                             if (!string.IsNullOrEmpty(ain.ChangeAssign.Content.ToString()) &&
@@ -312,19 +339,7 @@ namespace ARUP.IssueTracker.Navisworks
                                 labels.ForEach(s => s.Trim());
                                 issueJira.fields.labels = labels;
                             }
-                        }
-                        
-                        string folderIssue = Path.Combine(path, issue.Topic.Guid);
-                        if (!Directory.Exists(folderIssue))
-                            Directory.CreateDirectory(folderIssue);
-
-                        ViewPoint vp = new ViewPoint(true);                        
-                        // set the currtent saved viewpoint and then generate sna and BCF viewpoint
-                        _oDoc.SavedViewpoints.CurrentSavedViewpoint = sv;
-                        vp.VisInfo = generateViewpoint(sv.Viewpoint, elemCheck);
-                        vp.SnapshotPath = Path.Combine(folderIssue, "snapshot.png");
-                        issue.Viewpoints.Add(vp);
-                        generateSnapshot(folderIssue);
+                        }                                            
 
                         string originalIssueTitle = null;
                         // Check if this is a saved viewpoint which was previosly created from BCF
