@@ -375,7 +375,7 @@ namespace ARUP.IssueTracker.Classes
             StringBuilder commentBody = new StringBuilder();
             foreach (string line in lines)
             {
-                if (!line.Contains("<Viewpoint>") && !line.Contains("<Snapshot>") && !line.Contains("<Attachment>") && !line.Contains("|width=200!"))
+                if (!line.Contains("<Viewpoint>") && !line.Contains("<Snapshot>") && !line.Contains("<Attachment>") && !line.Contains("|width=200!") && !line.Contains("|thumbnail!"))
                 {
                     commentBody.AppendLine(line);
                 }
