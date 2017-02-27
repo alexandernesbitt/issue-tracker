@@ -473,10 +473,10 @@ namespace ARUP.IssueTracker.Revit.Entry
                 }
                 else
                 {
+                    zPoints[0] = ConvertToInternalAndSharedCoordinate(doc, zPoints[0]);
+                    zPoints[1] = ConvertToInternalAndSharedCoordinate(doc, zPoints[1]);
                     maxZ = zPoints[0].Z > zPoints[1].Z ? zPoints[0].Z : zPoints[1].Z;
                     minZ = zPoints[0].Z < zPoints[1].Z ? zPoints[0].Z : zPoints[1].Z;
-                    maxZ = UnitUtils.ConvertToInternalUnits(maxZ, DisplayUnitType.DUT_METERS);
-                    minZ = UnitUtils.ConvertToInternalUnits(minZ, DisplayUnitType.DUT_METERS);
                 }
 
                 // check if the remaining 4 points are on XY plane
@@ -558,10 +558,10 @@ namespace ARUP.IssueTracker.Revit.Entry
                 }
 
                 // change the coordinate system from Project to Shared
-                rightmost = ConvertToInteranlAndSharedCoordinate(doc, rightmost);
-                leftmost = ConvertToInteranlAndSharedCoordinate(doc, leftmost);
-                topmost = ConvertToInteranlAndSharedCoordinate(doc, topmost);
-                bottommost = ConvertToInteranlAndSharedCoordinate(doc, bottommost);
+                rightmost = ConvertToInternalAndSharedCoordinate(doc, rightmost);
+                leftmost = ConvertToInternalAndSharedCoordinate(doc, leftmost);
+                topmost = ConvertToInternalAndSharedCoordinate(doc, topmost);
+                bottommost = ConvertToInternalAndSharedCoordinate(doc, bottommost);
 
                 // create diagonal and rotation vector
                 XYZ horizontalBase = new XYZ(-1, 0, 0);
@@ -636,7 +636,7 @@ namespace ARUP.IssueTracker.Revit.Entry
 
         }
 
-        private XYZ ConvertToInteranlAndSharedCoordinate(Document doc, XYZ p)
+        private XYZ ConvertToInternalAndSharedCoordinate(Document doc, XYZ p)
         {
             DisplayUnitType lengthUnitType = DisplayUnitType.DUT_METERS;
             p = new XYZ(
