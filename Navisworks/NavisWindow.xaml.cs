@@ -268,8 +268,8 @@ namespace ARUP.IssueTracker.Navisworks
 
                     for (int i = 0; i < ain.issueList.SelectedItems.Count; i++)
                     {
-                        int index = ain.issueList.Items.IndexOf(ain.issueList.SelectedItems[i]);
-                        savedViewpointsImport.Add(_savedViewpoints[index]);
+                        KeyValuePair<SavedViewpoint, string> pair = (KeyValuePair<SavedViewpoint, string>)ain.issueList.SelectedItems[i];
+                        savedViewpointsImport.Add(pair.Key);
                     }
                     if (!savedViewpointsImport.Any())
                         return null;
