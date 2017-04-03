@@ -49,7 +49,6 @@ namespace ARUP.IssueTracker.Civil3D
                 if (!Autodesk.AutoCAD.ApplicationServices.Application.Version.ToString().Contains(versionNumber))
                 {
                     MessageBox.Show(string.Format("This Add-In was built for Civil 3D {0}, please find the Arup Issue Tracker group in Yammer for assistance...", versionNumber), "Incompatible Civil 3D Version");
-                    // TODO: disable all commands?
                 }
 
                 // Assembly Paths
@@ -59,7 +58,6 @@ namespace ARUP.IssueTracker.Civil3D
                 if (!File.Exists(m_issuetracker))
                 {
                     MessageBox.Show(m_issuetracker, "Required Issue Tracker Library Not Found");
-                    // TODO: disable all commands?
                 }
 
                 // Load Assemblies

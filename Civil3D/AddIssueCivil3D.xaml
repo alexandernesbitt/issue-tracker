@@ -124,8 +124,8 @@
 
         </StackPanel>
 
-        <ComboBox Grid.Row="8" HorizontalAlignment="Stretch"  Margin="5, 5"   x:Name="comboVisuals" SelectionChanged="comboVisuals_SelectionChanged"  />
-        <Expander Header="Attach elements to view"  Grid.Row="9"  VerticalAlignment="Top">
+        <!--<ComboBox Grid.Row="8" HorizontalAlignment="Stretch"  Margin="5, 5"   x:Name="comboVisuals" SelectionChanged="comboVisuals_SelectionChanged"  />-->
+        <!--<Expander Header="Attach elements to view"  Grid.Row="9"  VerticalAlignment="Top">
             <Grid Margin="20,0" >
                 <Grid.RowDefinitions>
                     <RowDefinition Height="auto"/>
@@ -139,7 +139,7 @@
 
 
             </Grid>
-        </Expander>
+        </Expander>-->
         <Expander Header="Load a local image as Snapshot"  Grid.Row="10"  VerticalAlignment="Top">
             <Grid >
                 <Grid.RowDefinitions>

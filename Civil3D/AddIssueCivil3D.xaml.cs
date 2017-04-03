@@ -11,6 +11,7 @@ using ARUP.IssueTracker.Windows;
 using System.IO;
 using System.Collections.ObjectModel;
 using ARUP.IssueTracker.Classes;
+using Autodesk.AutoCAD.ApplicationServices;
 
 namespace ARUP.IssueTracker.Civil3D
 {
@@ -19,25 +20,27 @@ namespace ARUP.IssueTracker.Civil3D
     /// </summary>
     public partial class AddIssueCivil3D : Window
     {
-        public string snapshot;
+        public string snapshotPath;
         private string[] visuals = { "FlatColors", "HLR", "Realistic", "RealisticWithEdges", "Rendering", "Shading", "ShadingWithEdges", "Wireframe" };
         private string[] statuses = { "Error", "Warning", "Info", "Unknown" };
         private ObservableCollection<Issuetype> typesCollection = new ObservableCollection<Issuetype>();
         private ObservableCollection<Component> compCollection = new ObservableCollection<Component>();
         private ObservableCollection<Priority> PrioritiesCollection = new ObservableCollection<Priority>();
         private List<User> assignees =  new List<User>();
-        public List<Component> SelectedComponents = new List<Component>(); 
+        public List<Component> SelectedComponents = new List<Component>();
+        private Document doc;
 
-        public AddIssueCivil3D(string folder, ObservableCollection<Issuetype> _typesCollection,
+        public AddIssueCivil3D(Document doc, string folder, ObservableCollection<Issuetype> _typesCollection,
             List<User> _assignees, ObservableCollection<Component> _compCollection, ObservableCollection<Priority> _PrioritiesCollection, bool comp, bool prior, bool assign)
         {
             try
             {
-                snapshot = System.IO.Path.Combine(folder, "snapshot.png");
+                this.doc = doc;
+                snapshotPath = System.IO.Path.Combine(folder, "snapshot.png");
                 InitializeComponent();
                 TitleBox.Focus();
                 
-                comboVisuals.ItemsSource = visuals;
+                //comboVisuals.ItemsSource = visuals;
                 //comboStatuses.ItemsSource = statuses;
                 //comboStatuses.SelectedIndex = 3;
 
@@ -69,15 +72,14 @@ namespace ARUP.IssueTracker.Civil3D
                 
 
                 //select current visual style
-                string currentV = null; // FIXME
-                for (int i = 0; i < comboVisuals.Items.Count; i++)
-                {
-                    if (comboVisuals.Items[i].ToString() == currentV)
-                    {
-                        comboVisuals.SelectedIndex = i;
-                    }
-
-                }
+                //string currentV = null; // FIXME
+                //for (int i = 0; i < comboVisuals.Items.Count; i++)
+                //{
+                //    if (comboVisuals.Items[i].ToString() == currentV)
+                //    {
+                //        comboVisuals.SelectedIndex = i;
+                //    }
+                //}
 
 
                 updateImage();
@@ -94,12 +96,12 @@ namespace ARUP.IssueTracker.Civil3D
             try
             {
                 SnapshotImg.Source = null;
-                
-                // do export
+
+                // FIXME if necessary for changing view style
 
                 BitmapImage source = new BitmapImage();
                 source.BeginInit();
-                source.UriSource = new Uri(snapshot);
+                source.UriSource = new Uri(snapshotPath);
                 source.CacheOption = BitmapCacheOption.OnLoad;
                 source.CreateOptions = BitmapCreateOptions.IgnoreImageCache;
                 source.EndInit();
@@ -109,24 +111,23 @@ namespace ARUP.IssueTracker.Civil3D
             }
             catch (System.Exception ex1)
             {
-                MessageBox.Show("Error!", "exception: " + ex1);
+                MessageBox.Show("exception: " + ex1, "Error!");
             }
 
         }
 
-        private void comboVisuals_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            try
-            {
-                
-                updateImage();
-            }
-            catch (System.Exception ex1)
-            {
-                MessageBox.Show("Error!", "exception: " + ex1);
-            }
+        //private void comboVisuals_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        //{
+        //    try
+        //    {                
+        //        updateImage();
+        //    }
+        //    catch (System.Exception ex1)
+        //    {
+        //        MessageBox.Show("exception: " + ex1, "Error!");
+        //    }
 
-        }
+        //}
 
         //LOAD EXTERNAL IMAGE
         private void Button_LoadImage(object sender, RoutedEventArgs e)
@@ -187,11 +188,11 @@ namespace ARUP.IssueTracker.Civil3D
                     byte[] imageBytes = LoadImageData(openFileDialog1.FileName);
                     ImageSource imageSource = CreateImage(imageBytes, width, 0);
                     imageBytes = GetEncodedImageData(imageSource, ".jpg");
-                    SaveImageData(imageBytes, snapshot);
+                    SaveImageData(imageBytes, snapshotPath);
                     //VISUALIZE IMAGE
                     BitmapImage source = new BitmapImage();
                     source.BeginInit();
-                    source.UriSource = new Uri(snapshot);
+                    source.UriSource = new Uri(snapshotPath);
                     source.CacheOption = BitmapCacheOption.OnLoad;
                     source.CreateOptions = BitmapCreateOptions.IgnoreImageCache;
                     source.EndInit();
@@ -200,7 +201,7 @@ namespace ARUP.IssueTracker.Civil3D
                 }
                 catch (System.Exception ex1)
                 {
-                    MessageBox.Show("Error!", "exception: " + ex1);
+                    MessageBox.Show("exception: " + ex1, "Error!");
                 }
             }
         }
@@ -222,7 +223,7 @@ namespace ARUP.IssueTracker.Civil3D
 
             catch (System.Exception ex1)
             {
-                MessageBox.Show("Error!", "exception: " + ex1);
+                MessageBox.Show("exception: " + ex1, "Error!");
             }
             return null;
         }
@@ -240,7 +241,7 @@ namespace ARUP.IssueTracker.Civil3D
             }
             catch (System.Exception ex1)
             {
-                MessageBox.Show("Error!", "exception: " + ex1);
+                MessageBox.Show("exception: " + ex1, "Error!");
             }
             return null;
         }
@@ -268,7 +269,7 @@ namespace ARUP.IssueTracker.Civil3D
             }
             catch (System.Exception ex1)
             {
-                MessageBox.Show("Error!", "exception: " + ex1);
+                MessageBox.Show("exception: " + ex1, "Error!");
             }
             return null;
         }
@@ -286,7 +287,7 @@ namespace ARUP.IssueTracker.Civil3D
             }
             catch (System.Exception ex1)
             {
-                MessageBox.Show("Error!", "exception: " + ex1);
+                MessageBox.Show("exception: " + ex1, "Error!");
             }
         }
 
@@ -335,7 +336,7 @@ namespace ARUP.IssueTracker.Civil3D
             }
             catch (System.Exception ex1)
             {
-                MessageBox.Show("Error!", "exception: " + ex1);
+                MessageBox.Show("exception: " + ex1, "Error!");
             }
             return null;
         }
@@ -359,13 +360,13 @@ namespace ARUP.IssueTracker.Civil3D
         {
             try
             {
-                if (File.Exists(snapshot))
+                if (File.Exists(snapshotPath))
                 {
                     //edit snapshot
                     string editSnap = "mspaint";
                     Process paint = new Process();
                     // paint.Start(editSnap, "\"" + snapshot + "\"");
-                    ProcessStartInfo paintInfo = new ProcessStartInfo(editSnap, "\"" + snapshot + "\"");
+                    ProcessStartInfo paintInfo = new ProcessStartInfo(editSnap, "\"" + snapshotPath + "\"");
 
                     paintInfo.UseShellExecute = false;
                     //navisworksStartInfo.RedirectStandardOutput = true;
@@ -383,7 +384,7 @@ namespace ARUP.IssueTracker.Civil3D
             }
             catch (System.Exception ex1)
             {
-                MessageBox.Show("Error!", "exception: " + ex1);
+                MessageBox.Show("exception: " + ex1, "Error!");
             }
         }
 
@@ -393,7 +394,7 @@ namespace ARUP.IssueTracker.Civil3D
             {
                 BitmapImage source = new BitmapImage();
                 source.BeginInit();
-                source.UriSource = new Uri(snapshot);
+                source.UriSource = new Uri(snapshotPath);
                 source.CacheOption = BitmapCacheOption.OnLoad;
                 source.CreateOptions = BitmapCreateOptions.IgnoreImageCache;
                 source.EndInit();
@@ -401,7 +402,7 @@ namespace ARUP.IssueTracker.Civil3D
             }
             catch (System.Exception ex1)
             {
-                MessageBox.Show("Error!", "exception: " + ex1);
+                MessageBox.Show("exception: " + ex1, "Error!");
             }
         }
 

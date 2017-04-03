@@ -17,6 +17,7 @@ using Autodesk.AutoCAD.Geometry;
 using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.GraphicsSystem;
 using Autodesk.AutoCAD.GraphicsInterface;
+using Autodesk.AutoCAD.Interop;
 
 namespace ARUP.IssueTracker.Civil3D
 {
@@ -143,9 +144,9 @@ namespace ARUP.IssueTracker.Civil3D
     {
       try
       {
-        if (false) // FIXME
+        if (doc.Editor.GetCurrentView().IsPaperspaceView)
         {
-            MessageBox.Show("I'm sorry,\nonly 3D and 2D views are supported.", "Error!", MessageBoxButton.OK, MessageBoxImage.Error);
+            MessageBox.Show("Please switch to model space as paper space is not supported.", "Error!", MessageBoxButton.OK, MessageBoxImage.Error);
             return null;
         }
 
@@ -181,38 +182,43 @@ namespace ARUP.IssueTracker.Civil3D
 
         }
 
-        AddIssueCivil3D air = new AddIssueCivil3D(folderIssue, types, assignees, components, priorities, noCom, noPrior, noAssign);
-        air.Title = "Add Jira Issue";
+        // get snapshot by AITSNAPSHOT command
+        string snapshotPath = Path.Combine(folderIssue, "snapshot.png");
+        AcadApplication acadApp = (AcadApplication)Autodesk.AutoCAD.ApplicationServices.Application.AcadApplication;
+        acadApp.ActiveDocument.SendCommand(string.Format("_.AITSNAPSHOT {0}\n", snapshotPath));
+
+        AddIssueCivil3D aic = new AddIssueCivil3D(doc, folderIssue, types, assignees, components, priorities, noCom, noPrior, noAssign);
+        aic.Title = "Add Jira Issue";
         if (!isBcf)
         {
-            air.JiraFieldsBox.Visibility = System.Windows.Visibility.Visible;
-            air.VerbalStatus.Visibility = System.Windows.Visibility.Collapsed;
-            air.BcfFieldsBox.Visibility = System.Windows.Visibility.Collapsed;
+            aic.JiraFieldsBox.Visibility = System.Windows.Visibility.Visible;
+            aic.VerbalStatus.Visibility = System.Windows.Visibility.Collapsed;
+            aic.BcfFieldsBox.Visibility = System.Windows.Visibility.Collapsed;
         }
         else 
         {
-            air.JiraFieldsBox.Visibility = System.Windows.Visibility.Collapsed;
-            air.BcfFieldsBox.Visibility = System.Windows.Visibility.Visible;
+            aic.JiraFieldsBox.Visibility = System.Windows.Visibility.Collapsed;
+            aic.BcfFieldsBox.Visibility = System.Windows.Visibility.Visible;
         }
 
-        air.WindowStartupLocation = System.Windows.WindowStartupLocation.CenterScreen;
-        air.ShowDialog();
-          if (air.DialogResult.HasValue && air.DialogResult.Value)
+        aic.WindowStartupLocation = System.Windows.WindowStartupLocation.CenterScreen;
+        aic.ShowDialog();
+          if (aic.DialogResult.HasValue && aic.DialogResult.Value)
           {
               ViewPoint vp = new ViewPoint(true);
-              vp.SnapshotPath = Path.Combine(folderIssue, "snapshot.png");
+              vp.SnapshotPath = snapshotPath;
               int elemCheck = 2;
-              if (air.all.IsChecked.Value)
-                  elemCheck = 0;
-              else if (air.selected.IsChecked.Value)
-                  elemCheck = 1;
+              //if (aic.all.IsChecked.Value)
+              //    elemCheck = 0;
+              //else if (aic.selected.IsChecked.Value)
+              //    elemCheck = 1;
               vp.VisInfo = generateViewpoint(elemCheck);
 
               //Add annotations for description with snapshot/viewpoint
               StringBuilder descriptionText = new StringBuilder();
-              if (!string.IsNullOrWhiteSpace(air.CommentBox.Text))
+              if (!string.IsNullOrWhiteSpace(aic.CommentBox.Text))
               {
-                  descriptionText.AppendLine(air.CommentBox.Text);
+                  descriptionText.AppendLine(aic.CommentBox.Text);
               }
               if (!isBcf) 
               {
@@ -232,46 +238,45 @@ namespace ARUP.IssueTracker.Civil3D
               {
                   issueJira.fields = new Fields();
                   issueJira.fields.description = descriptionText.ToString().Trim();
-                  issueJira.fields.issuetype =  (Issuetype) air.issueTypeCombo.SelectedItem;
-                  issueJira.fields.priority = (Priority) air.priorityCombo.SelectedItem;
-                  if (!string.IsNullOrEmpty(air.ChangeAssign.Content.ToString()) &&
-                      air.ChangeAssign.Content.ToString() != "none")
+                  issueJira.fields.issuetype =  (Issuetype) aic.issueTypeCombo.SelectedItem;
+                  issueJira.fields.priority = (Priority) aic.priorityCombo.SelectedItem;
+                  if (!string.IsNullOrEmpty(aic.ChangeAssign.Content.ToString()) &&
+                      aic.ChangeAssign.Content.ToString() != "none")
                   {
                       issueJira.fields.assignee = new User();
-                      issueJira.fields.assignee.name = air.ChangeAssign.Content.ToString();
+                      issueJira.fields.assignee.name = aic.ChangeAssign.Content.ToString();
                   }
 
-                  if (air.SelectedComponents != null && air.SelectedComponents.Any())
+                  if (aic.SelectedComponents != null && aic.SelectedComponents.Any())
                   {
-                      issueJira.fields.components = air.SelectedComponents;
+                      issueJira.fields.components = aic.SelectedComponents;
                   }
 
-                  if (!string.IsNullOrWhiteSpace(air.JiraLabels.Text))
+                  if (!string.IsNullOrWhiteSpace(aic.JiraLabels.Text))
                   {
-                      var labels = air.JiraLabels.Text.Split(',').ToList();
+                      var labels = aic.JiraLabels.Text.Split(',').ToList();
                       labels.ForEach(s => s.Trim());
                       issueJira.fields.labels = labels;
                   }
               }
               
               issue.Viewpoints.Add(vp);
-              issue.Topic.Title = air.TitleBox.Text;
+              issue.Topic.Title = aic.TitleBox.Text;
               issue.Topic.Description = descriptionText.ToString().Trim();
-              issue.Topic.AssignedTo = air.BcfAssignee.Text;
+              issue.Topic.AssignedTo = aic.BcfAssignee.Text;
               issue.Topic.CreationAuthor = string.IsNullOrWhiteSpace(MySettings.Get("username")) ? MySettings.Get("BCFusername") : MySettings.Get("username");
-              issue.Topic.Priority = air.BcfPriority.Text;
-              issue.Topic.TopicStatus = air.VerbalStatus.Text;
-              issue.Topic.TopicType = air.BcfIssueType.Text;
-              if (!string.IsNullOrWhiteSpace(air.BcfLabels.Text))
+              issue.Topic.Priority = aic.BcfPriority.Text;
+              issue.Topic.TopicStatus = aic.VerbalStatus.Text;
+              issue.Topic.TopicType = aic.BcfIssueType.Text;
+              if (!string.IsNullOrWhiteSpace(aic.BcfLabels.Text))
               {
-                  var labels = air.BcfLabels.Text.Split(',').ToList();
+                  var labels = aic.BcfLabels.Text.Split(',').ToList();
                   labels.ForEach(s => s.Trim());
                   issue.Topic.Labels = labels.ToArray();
               }
 
-              issue.Header[0].IfcProject = null; // FIXME
-              string projFilename = null; // FIXME
-              issue.Header[0].Filename = projFilename;
+              issue.Header[0].IfcProject = doc.Database.FingerprintGuid;
+              issue.Header[0].Filename = doc.Database.OriginalFileName;
               issue.Header[0].Date = DateTime.Now;
 
               return new Tuple<Markup, Issue>(issue, issueJira);
@@ -341,11 +346,96 @@ namespace ARUP.IssueTracker.Civil3D
     {
         try
         {
-            // TODO: check whether in model space
+            if (doc.Editor.GetCurrentView().IsPaperspaceView)
+            {
+                MessageBox.Show("This operation is not allowed in paper space.\nPlease go to model space and retry.",
+                    "Warning!", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            // Get the current database
+            Database acCurDb = doc.Database;
+            double unitFactor = UnitsConverter.GetConversionFactor(UnitsValue.Meters, acCurDb.Insunits);
+
+            Point3d wcsCenter;
+            Vector3d viewDirection, upVector;
+            double zoomValue;
+
+            // IS ORTHOGONAL
+            if (v.OrthogonalCamera != null)
+            {
+                if (v.OrthogonalCamera.CameraViewPoint == null || v.OrthogonalCamera.CameraUpVector == null || v.OrthogonalCamera.CameraDirection == null)
+                    return;
+
+                wcsCenter = new Point3d(v.OrthogonalCamera.CameraViewPoint.X, v.OrthogonalCamera.CameraViewPoint.Y, v.OrthogonalCamera.CameraViewPoint.Z);
+                viewDirection = new Vector3d(v.OrthogonalCamera.CameraDirection.X, v.OrthogonalCamera.CameraDirection.Y, v.OrthogonalCamera.CameraDirection.Z);
+                upVector = new Vector3d(v.OrthogonalCamera.CameraUpVector.X, v.OrthogonalCamera.CameraUpVector.Y, v.OrthogonalCamera.CameraUpVector.Z);
+                double customZoomValue = (MyProjectSettings.Get("useDefaultZoom", acCurDb.ProjectName) == "1") ? 1 : 2.5;
+                zoomValue = v.OrthogonalCamera.ViewToWorldScale / customZoomValue;
+            }
+            else if (v.PerspectiveCamera != null)
+            {
+                if (v.PerspectiveCamera.CameraViewPoint == null || v.PerspectiveCamera.CameraUpVector == null || v.PerspectiveCamera.CameraDirection == null)
+                    return;
+
+                wcsCenter = new Point3d(v.PerspectiveCamera.CameraViewPoint.X, v.PerspectiveCamera.CameraViewPoint.Y, v.PerspectiveCamera.CameraViewPoint.Z);
+                viewDirection = new Vector3d(v.PerspectiveCamera.CameraDirection.X, v.PerspectiveCamera.CameraDirection.Y, v.PerspectiveCamera.CameraDirection.Z);
+                upVector = new Vector3d(v.PerspectiveCamera.CameraUpVector.X, v.PerspectiveCamera.CameraUpVector.Y, v.PerspectiveCamera.CameraUpVector.Z);
+                zoomValue = v.PerspectiveCamera.FieldOfView;
+            }
+            else 
+            {
+                MessageBox.Show("No camera information was found within this viewpoint.",
+                    "Warning!", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            // Start a transaction
+            using (Transaction acTrans = acCurDb.TransactionManager.StartTransaction())
+            {
+                // Get the current view
+                using (ViewTableRecord currentView = doc.Editor.GetCurrentView())
+                {
+                    // Calculate the ratio between the width and height of the current view
+                    double dViewRatio;
+                    dViewRatio = (currentView.Width / currentView.Height);
+
+                    // set target
+                    currentView.Target = wcsCenter * unitFactor;
+
+                    // set direction
+                    currentView.ViewDirection = viewDirection.GetNormal().Negate();
+
+                    // Set scale
+                    currentView.Height = zoomValue * unitFactor;
+                    currentView.Width = zoomValue * dViewRatio * unitFactor;
+
+                    // set up vector
+                    currentView.ViewTwist = Math.Asin(-upVector.X);
+
+                    Matrix3d matWCS2DCS;
+                    matWCS2DCS = Matrix3d.PlaneToWorld(currentView.ViewDirection);
+                    matWCS2DCS = Matrix3d.Displacement(currentView.Target - Point3d.Origin) * matWCS2DCS;
+                    matWCS2DCS = Matrix3d.Rotation(-currentView.ViewTwist,
+                                                    currentView.ViewDirection,
+                                                    currentView.Target) * matWCS2DCS;
+                    matWCS2DCS = matWCS2DCS.Inverse();
+
+                    // Set the center of the view                    
+                    Point3d dcsCenter = wcsCenter.TransformBy(matWCS2DCS);
+                    currentView.CenterPoint = new Point2d(dcsCenter.X, dcsCenter.Y);
+
+                    // Set the current view
+                    doc.Editor.SetCurrentView(currentView);
+                }
+
+                // Commit the changes
+                acTrans.Commit();
+            }
         }
         catch (System.Exception ex1)
         {
-            MessageBox.Show("Error!", "exception: " + ex1);
+            MessageBox.Show("exception: " + ex1, "Error!");
         }
     }
 
@@ -358,19 +448,73 @@ namespace ARUP.IssueTracker.Civil3D
     /// <returns></returns>
     public VisualizationInfo generateViewpoint(int elemCheck)
     {
-
         try
         {
-            VisualizationInfo v = new VisualizationInfo();
+            // get current view
+            Database acCurDb = doc.Database;
+            ViewTableRecord currentView = doc.Editor.GetCurrentView();
+            double unitFactor = UnitsConverter.GetConversionFactor(acCurDb.Insunits, UnitsValue.Meters);
 
-            // do work
+            // camera direction
+            Vector3d direction = currentView.ViewDirection.Negate();
+
+            // camera scale
+            double h = currentView.Height * unitFactor;
+            double w = currentView.Width * unitFactor;
+
+            // transform from DCS to WCS
+            Matrix3d matDCS2WCS;
+            matDCS2WCS = Matrix3d.PlaneToWorld(currentView.ViewDirection);
+            matDCS2WCS = Matrix3d.Displacement(currentView.Target - Point3d.Origin) * matDCS2WCS;
+            matDCS2WCS = Matrix3d.Rotation(-currentView.ViewTwist,
+                                            currentView.ViewDirection,
+                                            currentView.Target) * matDCS2WCS;            
+
+            // camera location
+            Point3d centerPointDCS = new Point3d(currentView.CenterPoint.X, currentView.CenterPoint.Y, 0.0);
+            Point3d centerWCS = centerPointDCS.TransformBy(matDCS2WCS);
+            Point3d cameraLocation = centerWCS.Subtract(direction) * unitFactor;
+
+            // camera up vector
+            Vector3d upVector = new Vector3d(-Math.Sin(currentView.ViewTwist), Math.Cos(currentView.ViewTwist), 0.0).TransformBy(matDCS2WCS).GetNormal();
+
+            // set up BCF viewpoint
+            VisualizationInfo v = new VisualizationInfo();            
+
+            if (currentView.PerspectiveEnabled)
+            {
+                v.PerspectiveCamera = new PerspectiveCamera();
+                v.PerspectiveCamera.CameraViewPoint.X = cameraLocation.X;
+                v.PerspectiveCamera.CameraViewPoint.Y = cameraLocation.Y;
+                v.PerspectiveCamera.CameraViewPoint.Z = cameraLocation.Z;
+                v.PerspectiveCamera.CameraUpVector.X = upVector.X;
+                v.PerspectiveCamera.CameraUpVector.Y = upVector.Y;
+                v.PerspectiveCamera.CameraUpVector.Z = upVector.Z;
+                v.PerspectiveCamera.CameraDirection.X = direction.GetNormal().X;
+                v.PerspectiveCamera.CameraDirection.Y = direction.GetNormal().Y;
+                v.PerspectiveCamera.CameraDirection.Z = direction.GetNormal().Z;
+                v.PerspectiveCamera.FieldOfView = 40;
+            }
+            else 
+            {
+                v.OrthogonalCamera = new OrthogonalCamera();
+                v.OrthogonalCamera.CameraViewPoint.X = cameraLocation.X;
+                v.OrthogonalCamera.CameraViewPoint.Y = cameraLocation.Y;
+                v.OrthogonalCamera.CameraViewPoint.Z = cameraLocation.Z;
+                v.OrthogonalCamera.CameraUpVector.X = upVector.X;
+                v.OrthogonalCamera.CameraUpVector.Y = upVector.Y;
+                v.OrthogonalCamera.CameraUpVector.Z = upVector.Z;
+                v.OrthogonalCamera.CameraDirection.X = direction.GetNormal().X;
+                v.OrthogonalCamera.CameraDirection.Y = direction.GetNormal().Y;
+                v.OrthogonalCamera.CameraDirection.Z = direction.GetNormal().Z;
+                v.OrthogonalCamera.ViewToWorldScale = h;
+            }
 
             return v;
-
         }
         catch (System.Exception ex1)
         {
-            MessageBox.Show("Error!", "exception: " + ex1);
+            MessageBox.Show("exception: " + ex1, "Error!");
         }
         return null;
     }

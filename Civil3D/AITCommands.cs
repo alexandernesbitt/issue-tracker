@@ -37,17 +37,22 @@ namespace ARUP.IssueTracker.Civil3D
         [CommandMethod("AIT", "AITSNAPSHOT", "AITSNAPSHOT", CommandFlags.Modal)]
         public void GenerateSnapshot() // This method can have any name
         {
-            // Put your command code here
-
             Document doc = Autodesk.AutoCAD.ApplicationServices.Application.DocumentManager.MdiActiveDocument;
+            Editor ed = doc.Editor;
+            PromptResult pr = ed.GetString("\nOutput Path: ");
+            if (pr.Status != PromptStatus.OK)
+            {
+                ed.WriteMessage("No path was provided.\n");
+                return;
+            }            
 
             var result = doc.Editor.SelectAll();
             if (result.Status == PromptStatus.OK)
             {
                 Autodesk.AutoCAD.Internal.Utils.SelectObjects(result.Value.GetObjectIds());
             }
-            doc.Editor.Command("_.PNGOUT", "C:\\test.png", "");
 
+            doc.Editor.Command("_.PNGOUT", pr.StringResult, "");
         }
 
         /// <summary>
@@ -73,7 +78,7 @@ namespace ARUP.IssueTracker.Civil3D
                 if (!Autodesk.AutoCAD.ApplicationServices.Application.Version.ToString().Contains(versionNumber))
                 {
                     MessageBox.Show(string.Format("This Add-In was built for Civil 3D {0}, please find the Arup Issue Tracker group in Yammer for assistance...", versionNumber), "Incompatible Civil 3D Version");
-                    // TODO: disable all commands?
+                    return;
                 }
 
                 // Form Running?
