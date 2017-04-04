@@ -58,23 +58,20 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="AcCoreMgd, Version=19.1.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="AcDbMgd, Version=19.1.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="AcMgd, Version=19.1.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <Private>False</Private>
-    </Reference>
     <!--ACA References Begin-->
     <!--ACA Refences End-->
     <!--AME Referebces Begin-->
     <!--AME Reference End-->
-	<Reference Include="Autodesk.AutoCAD.Interop, Version=20.1.0.0, Culture=neutral, processorArchitecture=MSIL">
+    <Reference Include="accoremgd">
+      <HintPath>..\..\..\Program Files\Autodesk\AutoCAD 2017\accoremgd.dll</HintPath>
+    </Reference>
+    <Reference Include="acdbmgd">
+      <HintPath>..\..\..\Program Files\Autodesk\AutoCAD 2017\acdbmgd.dll</HintPath>
+    </Reference>
+    <Reference Include="acmgd">
+      <HintPath>..\..\..\Program Files\Autodesk\AutoCAD 2017\acmgd.dll</HintPath>
+    </Reference>
+    <Reference Include="Autodesk.AutoCAD.Interop, Version=20.1.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <EmbedInteropTypes>True</EmbedInteropTypes>
       <HintPath>..\..\..\Program Files\Autodesk\AutoCAD 2017\Autodesk.AutoCAD.Interop.dll</HintPath>
