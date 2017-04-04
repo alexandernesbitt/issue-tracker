@@ -410,9 +410,6 @@ namespace ARUP.IssueTracker.Civil3D
                     currentView.Height = zoomValue * unitFactor;
                     currentView.Width = zoomValue * dViewRatio * unitFactor;
 
-                    // set up vector
-                    currentView.ViewTwist = Math.Asin(-upVector.GetNormal().X);
-
                     Matrix3d matWCS2DCS;
                     matWCS2DCS = Matrix3d.PlaneToWorld(currentView.ViewDirection);
                     matWCS2DCS = Matrix3d.Displacement(currentView.Target - Point3d.Origin) * matWCS2DCS;
@@ -420,6 +417,9 @@ namespace ARUP.IssueTracker.Civil3D
                                                     currentView.ViewDirection,
                                                     currentView.Target) * matWCS2DCS;
                     matWCS2DCS = matWCS2DCS.Inverse();
+
+                    // set up vector
+                    currentView.ViewTwist = Math.Asin(-upVector.GetNormal().TransformBy(matWCS2DCS).X);
 
                     // Set the center of the view                    
                     Point3d dcsCenter = wcsCenter.TransformBy(matWCS2DCS);
