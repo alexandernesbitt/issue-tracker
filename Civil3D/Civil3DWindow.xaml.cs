@@ -370,8 +370,7 @@ namespace ARUP.IssueTracker.Civil3D
                 wcsCenter = new Point3d(v.OrthogonalCamera.CameraViewPoint.X, v.OrthogonalCamera.CameraViewPoint.Y, v.OrthogonalCamera.CameraViewPoint.Z);
                 viewDirection = new Vector3d(v.OrthogonalCamera.CameraDirection.X, v.OrthogonalCamera.CameraDirection.Y, v.OrthogonalCamera.CameraDirection.Z);
                 upVector = new Vector3d(v.OrthogonalCamera.CameraUpVector.X, v.OrthogonalCamera.CameraUpVector.Y, v.OrthogonalCamera.CameraUpVector.Z);
-                double customZoomValue = (MyProjectSettings.Get("useDefaultZoom", acCurDb.ProjectName) == "1") ? 1 : 2.5;
-                zoomValue = v.OrthogonalCamera.ViewToWorldScale / customZoomValue;
+                zoomValue = v.OrthogonalCamera.ViewToWorldScale;
             }
             else if (v.PerspectiveCamera != null)
             {
@@ -401,7 +400,8 @@ namespace ARUP.IssueTracker.Civil3D
                     dViewRatio = (currentView.Width / currentView.Height);
 
                     // set target
-                    currentView.Target = wcsCenter * unitFactor;
+                    wcsCenter = wcsCenter * unitFactor;
+                    currentView.Target = wcsCenter;
 
                     // set direction
                     currentView.ViewDirection = viewDirection.GetNormal().Negate();
@@ -411,7 +411,7 @@ namespace ARUP.IssueTracker.Civil3D
                     currentView.Width = zoomValue * dViewRatio * unitFactor;
 
                     // set up vector
-                    currentView.ViewTwist = Math.Asin(-upVector.X);
+                    currentView.ViewTwist = Math.Asin(-upVector.GetNormal().X);
 
                     Matrix3d matWCS2DCS;
                     matWCS2DCS = Matrix3d.PlaneToWorld(currentView.ViewDirection);
