@@ -7,6 +7,10 @@ using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.Geometry;
 using Autodesk.AutoCAD.EditorInput;
 using System.Windows;
+using Autodesk.AutoCAD.GraphicsSystem;
+using System.Drawing;
+using System.Runtime.InteropServices;
+using System.Diagnostics;
 
 // This line is not mandatory, but improves loading performances
 [assembly: CommandClass(typeof(ARUP.IssueTracker.Civil3D.AITCommands))]
@@ -44,15 +48,18 @@ namespace ARUP.IssueTracker.Civil3D
             {
                 ed.WriteMessage("No path was provided.\n");
                 return;
-            }            
+            }
 
             var result = doc.Editor.SelectAll();
             if (result.Status == PromptStatus.OK)
             {
                 Autodesk.AutoCAD.Internal.Utils.SelectObjects(result.Value.GetObjectIds());
             }
-
+#if C3D2014
+            doc.SendStringToExecute(string.Format("_.PNGOUT\n{0}\n\n\x03\x03", pr.StringResult), true, false, false);
+#else
             doc.Editor.Command("_.PNGOUT", pr.StringResult, "");
+#endif
         }
 
         /// <summary>
@@ -66,6 +73,7 @@ namespace ARUP.IssueTracker.Civil3D
             {
 #if C3D2014
                 string versionNumber = "19.1";
+                Autodesk.AutoCAD.ApplicationServices.Application.SetSystemVariable("FILEDIA", 0);
 #elif C3D2015
                 string versionNumber = "20.0";
 #elif C3D2016

@@ -672,27 +672,29 @@ namespace ARUP.IssueTracker.UserControls
         {
             try
             {
-                IRestResponse<Self> response = e.Responses.Last() as IRestResponse<Self>;
+                this.Dispatcher.Invoke(() => {
+                    IRestResponse<Self> response = e.Responses.Last() as IRestResponse<Self>;
 
-                if ((response.StatusCode != System.Net.HttpStatusCode.OK
-                    && response.StatusCode != System.Net.HttpStatusCode.Created
-                    && response.StatusCode != System.Net.HttpStatusCode.NoContent)
-                    || response == null)
-                {
-                    MessageBox.Show("Error logging into Jira server.\n"+
-                    "Please check your Jira username and password in the Issue Tracker Settings.\n"+
-                    "Also, try logging into the web interface at http://jira.arup.com", "Error!", MessageBoxButton.OK, MessageBoxImage.Error);
-                    disconnectJira();
-                }
-                else
-                {
-                    string jiraserver = MySettings.Get("jiraserver");
-                    JiraClient.Client.BaseUrl = jiraserver + "/rest/api/2/";
-                    jira.Self = response.Data;
-                    jiraPan.ConncetBtn.Content = "Disconnect";
+                    if ((response.StatusCode != System.Net.HttpStatusCode.OK
+                        && response.StatusCode != System.Net.HttpStatusCode.Created
+                        && response.StatusCode != System.Net.HttpStatusCode.NoContent)
+                        || response == null)
+                    {
+                        MessageBox.Show("Error logging into Jira server.\n" +
+                        "Please check your Jira username and password in the Issue Tracker Settings.\n" +
+                        "Also, try logging into the web interface at http://jira.arup.com", "Error!", MessageBoxButton.OK, MessageBoxImage.Error);
+                        disconnectJira();
+                    }
+                    else
+                    {
+                        string jiraserver = MySettings.Get("jiraserver");
+                        JiraClient.Client.BaseUrl = jiraserver + "/rest/api/2/";
+                        jira.Self = response.Data;
+                        jiraPan.ConncetBtn.Content = "Disconnect";
 
-                    getProjects(); // FINALLY SYNC
-                }
+                        getProjects(); // FINALLY SYNC
+                    }
+                });                
             }
             catch (System.Exception ex1)
             {

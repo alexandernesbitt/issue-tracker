@@ -103,6 +103,7 @@
     <Compile Include="AddIssueCivil3D.xaml.cs">
       <DependentUpon>AddIssueCivil3D.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Properties\AssemblyInfo.2017.cs" />
     <Compile Include="Civil3DWindow.xaml.cs">
       <DependentUpon>Civil3DWindow.xaml</DependentUpon>
     </Compile>
@@ -116,7 +117,6 @@
     <Compile Include="AITPlugin.cs" />
     <Compile Include="AITCommands.cs" />
     <Compile Include="MyProjectSettings.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="AITCommands.resx">

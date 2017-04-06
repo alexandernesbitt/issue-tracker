@@ -166,7 +166,7 @@ namespace ARUP.IssueTracker.Classes.BCF2
 
         using (ZipArchive archive = ZipFile.OpenRead(bcfzipfile))
         {
-          archive.ExtractToDirectory(bcffile.TempPath);
+            archive.ExtractToDirectory(bcffile.TempPath);
         }
 
         var dir = new DirectoryInfo(bcffile.TempPath);
