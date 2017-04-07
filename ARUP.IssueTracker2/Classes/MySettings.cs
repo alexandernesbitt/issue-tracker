@@ -182,7 +182,8 @@ namespace ARUP.IssueTracker.Classes
                     if (!string.IsNullOrWhiteSpace(ac.jiraserver) || !string.IsNullOrWhiteSpace(ac.username) || !string.IsNullOrWhiteSpace(ac.password) || !string.IsNullOrWhiteSpace(ac.guidfield))
                     {
                         ac.password = DataProtector.EncryptData(ac.password);
-                        ac.savedTime = GetWindowsAccountPasswordLastSetTime(ac.username);
+                        DateTime currentTime = DateTime.Now;
+                        ac.savedTime = GetWindowsAccountPasswordLastSetTime(ac.username, currentTime);
                         string key = "jiraaccount_" + Guid.NewGuid().ToString();
                         string value = SimpleJson.SerializeObject(ac);
                         config.AppSettings.Settings.Add(key, value);
@@ -224,7 +225,8 @@ namespace ARUP.IssueTracker.Classes
                 Configuration config = GetConfig();
                 if (config == null)
                     return false;
-                long lastSavedTime = (long) DateTime.Now.Subtract(new DateTime(1970, 1, 1)).TotalSeconds;
+                DateTime currentTime = DateTime.Now;
+                long lastSavedTime = (long) currentTime.Subtract(new DateTime(1970, 1, 1)).TotalSeconds;
                 foreach (string key in config.AppSettings.Settings.AllKeys)
                 {
                     if (key.StartsWith("jiraaccount_"))
@@ -237,7 +239,7 @@ namespace ARUP.IssueTracker.Classes
                                 // fallback to old settings w/o password saved time
                                 if (ac.savedTime == 0)
                                 {
-                                    ac.savedTime = GetWindowsAccountPasswordLastSetTime(ac.username);
+                                    ac.savedTime = GetWindowsAccountPasswordLastSetTime(ac.username, currentTime);
                                 }
 
                                 lastSavedTime = ac.savedTime;
@@ -251,7 +253,7 @@ namespace ARUP.IssueTracker.Classes
                     }
                 }
                 // find last changed time on AD
-                long lastChangedTime = GetWindowsAccountPasswordLastSetTime(username);
+                long lastChangedTime = GetWindowsAccountPasswordLastSetTime(username, currentTime);
                 // return true if lastChangedTime is later than lastSavedTime
                 if (lastChangedTime > lastSavedTime)
                 {
@@ -264,9 +266,9 @@ namespace ARUP.IssueTracker.Classes
         /// <summary>
         /// // find password last changed time on AD
         /// </summary>
-        public static long GetWindowsAccountPasswordLastSetTime(string username) 
+        public static long GetWindowsAccountPasswordLastSetTime(string username, DateTime currentTime) 
         {
-            DateTime lastChangedTime = DateTime.Now;
+            DateTime lastChangedTime = currentTime;
 
             if (!string.IsNullOrWhiteSpace(username))
             {
