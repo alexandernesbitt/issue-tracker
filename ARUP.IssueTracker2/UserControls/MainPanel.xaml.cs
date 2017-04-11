@@ -84,6 +84,7 @@ namespace ARUP.IssueTracker.UserControls
                 bcfPan.SaveBcf2.Click += new RoutedEventHandler(SaveBCF2);
                 bcfPan.OpenBCFBtn.Click += new RoutedEventHandler(OpenBCFFile);
                 bcfPan.ImportBCFBtn.Click += new RoutedEventHandler(ImportBCFFile);
+                bcfPan.CleanUpBtn.Click += new RoutedEventHandler(CleanUpBcf);
                 bcfPan.issueList.SelectionChanged += bcfIssueList_SelectionChanged;
                 //JIRA events
                 jiraPan.DelIssueBtn.Click += new RoutedEventHandler(DelJiraIssueButt_Click);
@@ -1797,6 +1798,32 @@ namespace ARUP.IssueTracker.UserControls
                 if (bcffiles == null)
                     return;
                 jira.Bcf.MergeBcfFile(bcffiles);
+            }
+            catch (System.Exception ex1)
+            {
+                MessageBox.Show("exception: " + ex1);
+            }
+
+        }
+        private void CleanUpBcf(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                if (jira.Bcf.Issues.Count == 0)
+                {
+                    MessageBox.Show("The current BCF Report is empty. Open a BCF file first!", "No Issue", MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
+                }
+                if(MessageBox.Show("This operation will remove all attached BCF components (i.e., model elements) from the current BCF report. Do you want to proceed?", "BCF Cleanup", MessageBoxButton.YesNo, MessageBoxImage.Exclamation) == MessageBoxResult.Yes)
+                {
+                    foreach (var issue in jira.Bcf.Issues)
+                    {
+                        foreach (var viewpoint in issue.Viewpoints)
+                        {
+                            viewpoint.VisInfo.Components.Clear();
+                        }
+                    }
+                }                
             }
             catch (System.Exception ex1)
             {
