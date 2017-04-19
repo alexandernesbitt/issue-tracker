@@ -41,6 +41,7 @@ namespace ARUP.IssueTracker.Civil3D
       try
       {
         InitializeComponent();
+        this.Title = AITPlugin.getAutoCADProductName() + " | Arup Issue Tracker by CASE";
 
         mainPan.jiraPan.AddIssueBtn.Click += new RoutedEventHandler(AddIssueJira);
         mainPan.bcfPan.AddIssueBtn.Click += new RoutedEventHandler(AddIssueBCF);
@@ -63,7 +64,7 @@ namespace ARUP.IssueTracker.Civil3D
         //mainPan.jiraPan.showComponents.Visibility = System.Windows.Visibility.Visible;
         //mainPan.bcfPan.isShowBcfFirstViewpointButtons = true;
 
-        this.doc = doc;        
+        this.doc = doc;
       }
 
       catch (System.Exception ex1)

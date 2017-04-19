@@ -1,6 +1,7 @@
 ﻿// (C) Copyright 2017 by Microsoft 
 //
 using System;
+using System.Linq;
 using Autodesk.AutoCAD.Runtime;
 using Autodesk.AutoCAD.ApplicationServices;
 using Autodesk.AutoCAD.DatabaseServices;
@@ -45,10 +46,11 @@ namespace ARUP.IssueTracker.Civil3D
 #elif C3D2017
                 string versionNumber = "21.0";
 #endif
+
                 // Version
                 if (!Autodesk.AutoCAD.ApplicationServices.Application.Version.ToString().Contains(versionNumber))
                 {
-                    MessageBox.Show(string.Format("This Add-In was built for Civil 3D {0}, please find the Arup Issue Tracker group in Yammer for assistance...", versionNumber), "Incompatible Civil 3D Version");
+                    MessageBox.Show(string.Format("This Add-In was built for {0} {1}, please find the Arup Issue Tracker group in Yammer for assistance...", versionNumber, getAutoCADProductName()), "Incompatible Version");
                 }
 
                 // Assembly Paths
@@ -80,6 +82,27 @@ namespace ARUP.IssueTracker.Civil3D
         }
 
         #endregion
+
+        public static string getAutoCADProductName()
+        {
+            string windowTitle = Autodesk.AutoCAD.ApplicationServices.Application.MainWindow.Text;
+            var tokens = windowTitle.Split(' ').ToList();
+            int startTokenIndex = -1, endTokenIndex = -1;
+            for(int i=0; i<tokens.Count; i++)
+            {
+                int version;
+                if(tokens[i] == "AutoCAD")
+                {
+                    startTokenIndex = i;
+                }
+                else if(int.TryParse(tokens[i], out version) && tokens[i].StartsWith("20"))
+                {
+                    endTokenIndex = i;
+                }
+            }
+
+            return string.Join(" ", tokens.GetRange(startTokenIndex, endTokenIndex-startTokenIndex));
+        }
 
         #region Private Members
 

@@ -85,7 +85,7 @@ namespace ARUP.IssueTracker.Civil3D
                 // Version
                 if (!Autodesk.AutoCAD.ApplicationServices.Application.Version.ToString().Contains(versionNumber))
                 {
-                    MessageBox.Show(string.Format("This Add-In was built for Civil 3D {0}, please find the Arup Issue Tracker group in Yammer for assistance...", versionNumber), "Incompatible Civil 3D Version");
+                    MessageBox.Show(string.Format("This Add-In was built for {0} {1}, please find the Arup Issue Tracker group in Yammer for assistance...", versionNumber, AITPlugin.getAutoCADProductName()), "Incompatible Version");
                     return;
                 }
 
