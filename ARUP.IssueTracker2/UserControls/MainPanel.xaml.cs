@@ -1394,21 +1394,38 @@ namespace ARUP.IssueTracker.UserControls
                 {
                     List<RestRequest> requests = new List<RestRequest>();
 
+                    int currentIssueIndex = jiraPan.issueList.Items.IndexOf(jiraPan.issueList.SelectedItem);
+
+                    // add watchers
                     for (int i = 0; i < cv.valuesList.SelectedItems.Count; i++)
                     {
-                        int index = jiraPan.issueList.Items.IndexOf(jiraPan.issueList.SelectedItem);
-
                         string user = (cv.valuesList.SelectedItems[i] == null) ? null : ((User)cv.valuesList.SelectedItems[i]).name;
-                        var request2 = new RestRequest("issue/" + jira.IssuesCollection[index].key + "/watchers", Method.POST);
+                        var request2 = new RestRequest("issue/" + jira.IssuesCollection[currentIssueIndex].key + "/watchers", Method.POST);
                         request2.AddHeader("Content-Type", "application/json");
                         request2.RequestFormat = Arup.RestSharp.DataFormat.Json;
                         request2.AddBody(user);
                         requests.Add(request2);
                     }
 
-                    BackgroundJira bj = new BackgroundJira();
-                    bj.WorkerComplete += new EventHandler<ResponseArg>(ChangeValue_Completed);
-                    bj.Start<User>(requests);
+                    // remove watchers
+                    var watchersToRemain = response.Data.watchers.FindAll(currentWatcher => cv.valuesList.SelectedItems.OfType<User>().ToList().Find(selectedUser => selectedUser.name == currentWatcher.name) != null);                    
+                    foreach (Watcher watcherToRemove in response.Data.watchers)
+                    {
+                        if (!watchersToRemain.Contains(watcherToRemove))
+                        {
+                            var request2 = new RestRequest("issue/" + jira.IssuesCollection[currentIssueIndex].key + "/watchers?username=" + watcherToRemove.name, Method.DELETE);
+                            request2.AddHeader("Content-Type", "application/json");
+                            request2.RequestFormat = Arup.RestSharp.DataFormat.Json;
+                            requests.Add(request2);
+                        }
+                    }
+
+                    if (requests.Count > 0)
+                    {
+                        BackgroundJira bj = new BackgroundJira();
+                        bj.WorkerComplete += new EventHandler<ResponseArg>(ChangeValue_Completed);
+                        bj.Start<User>(requests);
+                    }                    
                 }
             }
             catch (System.Exception ex1)

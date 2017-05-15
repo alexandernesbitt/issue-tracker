@@ -12,6 +12,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using ARUP.IssueTracker.Classes;
 using ARUP.IssueTracker.Classes.JIRA;
+using System.ComponentModel;
 
 namespace ARUP.IssueTracker.Windows
 {
@@ -21,6 +22,8 @@ namespace ARUP.IssueTracker.Windows
     public partial class ChangeAssignee : Window
     {
         public readonly CollectionViewSource viewSource = new CollectionViewSource();
+        private List<Watcher> watchers;
+
         public ChangeAssignee()
         {
             InitializeComponent();
@@ -37,9 +40,16 @@ namespace ARUP.IssueTracker.Windows
 
         public void SetWatchers(List<Watcher> watchers)
         {
+            this.watchers = watchers;
+            RefreshWatchers();                       
+        }
+
+        private void RefreshWatchers() 
+        {
             valuesList.SelectedItems.Clear();
             var users = viewSource.Source as List<User>;
-            watchers.ForEach(watcher => {
+            watchers.ForEach(watcher =>
+            {
                 if (!string.IsNullOrWhiteSpace(watcher.name))
                 {
                     var user = users.Find(u => u.name == watcher.name);
@@ -47,9 +57,10 @@ namespace ARUP.IssueTracker.Windows
                     {
                         valuesList.SelectedItems.Add(user);
                     }
-                }                
-            });            
+                }
+            }); 
         }
+
         private void Button_Click_1(object sender, RoutedEventArgs e)
         {
             DialogResult = true;
@@ -62,20 +73,39 @@ namespace ARUP.IssueTracker.Windows
 
         private void Search_OnTextChanged(object sender, TextChangedEventArgs e)
         {
-            viewSource.Filter += SearchText;
-            viewSource.Filter += SearchText;
-        }
-        private void SearchText(object sender, System.Windows.Data.FilterEventArgs e)
-        {
-            // see Notes on Filter Methods:
-            var src = e.Item as User;
-            if (src == null)
-                e.Accepted = false;
-            else if (src.displayName != null && !(src.displayName).ToLowerInvariant().Contains(search.Text.ToLowerInvariant())
-                && src.emailAddress != null && !(src.emailAddress).ToLowerInvariant().Contains(search.Text.ToLowerInvariant())
-                && src.name != null && !(src.name).ToLowerInvariant().Contains(search.Text.ToLowerInvariant()))// here is FirstName a Property in my YourCollectionItem
-                e.Accepted = false;
-          
+            try
+            {
+                TextBox t = (TextBox)sender;
+                string filter = t.Text;
+                ICollectionView cv = CollectionViewSource.GetDefaultView(valuesList.ItemsSource);
+                if (filter == string.Empty || filter == null)
+                {
+                    cv.Filter = null;
+                }
+                else
+                {
+                    cv.Filter = o =>
+                    {
+                        User user = o as User;
+                        if (user == null)
+                        {
+                            return false;
+                        }
+                        bool displayNameFilter = (user.displayName == null) ? false : (user.displayName).ToLowerInvariant().Contains(search.Text.ToLowerInvariant());
+                        bool emailFilter = (user.emailAddress == null) ? false : (user.emailAddress).ToLowerInvariant().Contains(search.Text.ToLowerInvariant());
+                        bool nameFilter = (user.name == null) ? false : (user.name).ToLowerInvariant().Contains(search.Text.ToLowerInvariant());
+                        return (displayNameFilter || emailFilter || nameFilter);
+                    };
+                }
+                if (watchers != null)
+                {
+                    RefreshWatchers();
+                }                
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString());
+            }
         }
     }
 }
