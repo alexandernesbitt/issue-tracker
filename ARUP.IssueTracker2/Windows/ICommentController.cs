@@ -9,7 +9,7 @@ namespace ARUP.IssueTracker.Windows
 {
     public enum AuthoringTool 
     {
-        Revit, Navisworks, Civil3D, None
+        Revit, Navisworks, Civil3D, Bentley, None
     }
 
     //This is an abstraction for adding a comment within various (versions) authoring tools

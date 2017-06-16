@@ -6,20 +6,18 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Diagnostics;
+//using System.Drawing;
 using ARUP.IssueTracker.Windows;
 using System.IO;
 using System.Collections.ObjectModel;
 using ARUP.IssueTracker.Classes;
-using BCOM = Bentley.Interop.MicroStationDGN;
-using BM = Bentley.MicroStation;
-using BMI = Bentley.MicroStation.InteropServices;
 
-namespace ARUP.IssueTracker.Bentley
+namespace ARUP.IssueTracker.Win
 {
     /// <summary>
-    /// Interaction logic for AddIssueBentley.xaml
+    /// Interaction logic for AddIssueDialog.xaml
     /// </summary>
-    public partial class AddIssueBentley : Window
+    public partial class AddIssueDialog : Window
     {
         public string snapshotPath;
         private string[] visuals = { "FlatColors", "HLR", "Realistic", "RealisticWithEdges", "Rendering", "Shading", "ShadingWithEdges", "Wireframe" };
@@ -29,14 +27,12 @@ namespace ARUP.IssueTracker.Bentley
         private ObservableCollection<Priority> PrioritiesCollection = new ObservableCollection<Priority>();
         private List<User> assignees =  new List<User>();
         public List<Component> SelectedComponents = new List<Component>();
-        private BCOM.Application MSApp;
 
-        public AddIssueBentley(BCOM.Application MSApp, string folder, ObservableCollection<Issuetype> _typesCollection,
+        public AddIssueDialog(string folder, ObservableCollection<Issuetype> _typesCollection,
             List<User> _assignees, ObservableCollection<Component> _compCollection, ObservableCollection<Priority> _PrioritiesCollection, bool comp, bool prior, bool assign)
         {
             try
             {
-                this.MSApp = MSApp;
                 snapshotPath = System.IO.Path.Combine(folder, "snapshot.png");
                 InitializeComponent();
                 TitleBox.Focus();

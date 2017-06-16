@@ -8,6 +8,10 @@ using System;
 using System.IO;
 using System.Reflection;
 using System.Windows;
+using System.Diagnostics;
+using System.IO.Pipes;
+using System.Text;
+using ARUP.IssueTracker.IPC;
 
 namespace ARUP.IssueTracker.Bentley
 {
@@ -18,28 +22,12 @@ namespace ARUP.IssueTracker.Bentley
     [BM.AddIn(MdlTaskID = "AIT")]
     public class AITPlugin : BM.AddIn
     {
+        private static string aitProcessName = "ARUP.IssueTracker.Win";
+        private static string aitAppPath = Path.Combine(ProgramFilesx86(), @"CASE\ARUP Issue Tracker\ARUP.IssueTracker.Win.exe");
+        private static string pipeName = Guid.NewGuid().ToString();
         private string _path = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
         public static AITPlugin MSAddin = null;
         public static BCOM.Application MSApp = null;
-        public static BentleyWindow mainWindow;
-
-        //static AITPlugin()
-        //{
-        //    AppDomain.CurrentDomain.AssemblyResolve += CurrentDomain_AssemblyResolve;
-        //}
-
-        //public static Assembly CurrentDomain_AssemblyResolve(object sender, ResolveEventArgs args)
-        //{
-        //    string dllFileName = new AssemblyName(args.Name).Name + ".dll";
-        //    string dllPath = Path.Combine(ProgramFilesx86(), "CASE", "ARUP Issue Tracker", dllFileName);
-
-        //    Assembly theAsm = null;
-        //    if (!string.IsNullOrEmpty(dllPath) && File.Exists(dllPath))
-        //    {
-        //        theAsm = Assembly.LoadFrom(dllPath);
-        //    }
-        //    return theAsm;
-        //}
 
         /// <summary>
         /// Private constructor required for all AddIn classes derived from 
@@ -52,26 +40,14 @@ namespace ARUP.IssueTracker.Bentley
             
             try
             {
-                string versionNumber = "V8i";
-
-                // Version
-                // FIXME
-                if (true)
-                {
-                    MessageBox.Show(string.Format("This Add-In was built for {0} {1}, please find the Arup Issue Tracker group in Yammer for assistance...", versionNumber, getBentleyProductName()), "Incompatible Version");
-                }
-
                 // Assembly Paths
-                string m_issuetracker = Path.Combine(ProgramFilesx86(), "CASE", "ARUP Issue Tracker", "ARUP.IssueTracker.dll");
+                string m_issuetracker = Path.Combine(ProgramFilesx86(), @"CASE\ARUP Issue Tracker\ARUP.IssueTracker.dll");
 
                 // Check that File Exists
                 if (!File.Exists(m_issuetracker))
                 {
                     MessageBox.Show(m_issuetracker, "Required Issue Tracker Library Not Found");
                 }
-
-                // Load Assemblies
-                Assembly.LoadFrom(m_issuetracker);
             }
             catch (System.Exception ex1)
             {
@@ -88,12 +64,21 @@ namespace ARUP.IssueTracker.Bentley
         protected override int Run(string[] commandLine)
         {
             MSApp = BMI.Utilities.ComApp;
+
+            // Version check
+            string versionNumber = "V8i";
+            if (!getBentleyProductName().Contains(versionNumber))
+            {
+                MessageBox.Show(string.Format("This Add-In was built for {0} {1}, please find the Arup Issue Tracker group in Yammer for assistance...", versionNumber, getBentleyProductName()), "Incompatible Version");
+                return -1;
+            }
+
             //  Register reload and unload events, and show the form
             ReloadEvent += new ReloadEventHandler(AIT_ReloadEvent);
             UnloadedEvent += new UnloadedEventHandler(AIT_UnloadedEvent);
 
-            mainWindow = new BentleyWindow(MSApp);
-            mainWindow.Show();
+            // Run IPC app
+            RunAIT();
 
             return 0;
         }
@@ -123,12 +108,7 @@ namespace ARUP.IssueTracker.Bentley
         /// <param name="eventArgs"></param>
         private void AIT_ReloadEvent(BM.AddIn sender, ReloadEventArgs eventArgs)
         {
-            //TODO: add specific handling For this Event here       
-            if (mainWindow == null || !mainWindow.IsLoaded)
-            {
-                mainWindow = new BentleyWindow(MSApp);
-                mainWindow.Show();
-            }
+            RunAIT();
         }
 
         /// <summary>
@@ -138,8 +118,10 @@ namespace ARUP.IssueTracker.Bentley
         /// <param name="eventArgs"></param>
         private void AIT_UnloadedEvent(BM.AddIn sender, UnloadedEventArgs eventArgs)
         {
-            mainWindow.Close();
-            mainWindow = null;
+            foreach (var process in Process.GetProcessesByName(aitProcessName))
+            {
+                process.Kill();
+            }
         }
 
         /// <summary>
@@ -149,6 +131,112 @@ namespace ARUP.IssueTracker.Bentley
         protected override void OnUnloading(UnloadingEventArgs eventArgs)
         {
             base.OnUnloading(eventArgs);
+
+            foreach (var process in Process.GetProcessesByName(aitProcessName))
+            {
+                process.Kill();
+            }
+        }
+
+        private void RunAIT() 
+        {
+            // avoid muliple AIT instances
+            if (Process.GetProcessesByName(aitProcessName).Length > 0)
+            {
+                MessageBox.Show("Arup Issue Tracker is already running!", "Arup Issue Tracker", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
+            // create separate process of the standalone app
+            var anotherProcess = new Process
+            {
+                StartInfo =
+                {
+                    FileName = aitAppPath,
+                    CreateNoWindow = true,
+                    UseShellExecute = true,
+                    Arguments = string.Format("IPC \"{0}\" {1}", getBentleyProductName(), pipeName)
+                }
+            };
+            anotherProcess.Start();
+
+            try
+            {
+                // create the new async pipe 
+                NamedPipeServerStream pipeServer = new NamedPipeServerStream(pipeName, PipeDirection.InOut, 1, PipeTransmissionMode.Byte, PipeOptions.Asynchronous);
+
+                // wait for a connection
+                pipeServer.BeginWaitForConnection(new AsyncCallback(WaitForConnectionCallBack), pipeServer);
+            }
+            catch (IOException ex)
+            {
+                // do nothing since server instance has been set up             
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString());
+            }
+        }
+
+        private void WaitForConnectionCallBack(IAsyncResult iar)
+        {
+            try
+            {
+                // Get the pipe
+                NamedPipeServerStream pipeServer = (NamedPipeServerStream)iar.AsyncState;
+                // End waiting for the connection
+                pipeServer.EndWaitForConnection(iar);
+
+                byte[] buffer = new byte[1024];
+
+                // Read the incoming message
+                pipeServer.Read(buffer, 0, 1024);
+
+                // Convert byte buffer to string
+                string jsonRequestMsg = Encoding.UTF8.GetString(buffer, 0, buffer.Length);
+
+                IpcOperationType type = IpcMessageStore.getIpcOperationType(jsonRequestMsg);
+
+                string jsonResponseMsg = null;
+                if (type == IpcOperationType.AddIssueRequest)
+                {
+                    AddIssueResponse response = handleAddIssueRequest();
+                    jsonResponseMsg = IpcMessageStore.savePayload(IpcOperationType.AddIssueResponse, response);
+                }
+                else if (type == IpcOperationType.OpenViewpointRequest)
+                {
+                
+                }
+
+                // Send response
+                byte[] _buffer = Encoding.UTF8.GetBytes(jsonResponseMsg);
+                pipeServer.Write(_buffer, 0, _buffer.Length);
+                pipeServer.Flush();
+
+                // Kill original sever and create new wait server
+                pipeServer.Close();
+                pipeServer = null;
+                pipeServer = new NamedPipeServerStream(pipeName, PipeDirection.InOut, 1, PipeTransmissionMode.Byte, PipeOptions.Asynchronous);
+
+                // Recursively wait for the connection again and again....
+                pipeServer.BeginWaitForConnection(new AsyncCallback(WaitForConnectionCallBack), pipeServer);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString());
+            }
+        }
+
+        private AddIssueResponse handleAddIssueRequest() 
+        {
+            return new AddIssueResponse() 
+            {
+                isValidRequest = true,
+                documentGuid = "guid",
+                documentName = "docName", 
+                tempSnapshotPath = @"C:\test.png", 
+                visualizationInfo = new Classes.BCF2.VisualizationInfo() 
+            };
         }
 
         #region Static Members

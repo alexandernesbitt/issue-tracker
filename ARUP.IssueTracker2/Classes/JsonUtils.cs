@@ -9,13 +9,15 @@ namespace ARUP.IssueTracker.Classes
 {
     public class JsonUtils
     {
+        // FIXME
+
         public static T Deserialize<T>(string serializedJson) 
         {
             try
             {
                 return SimpleJson.DeserializeObject<T>(serializedJson);
             }
-            catch 
+            catch(Exception ex) 
             {
                 return default(T);
             }            
