@@ -9,15 +9,15 @@ namespace ARUP.IssueTracker.Classes
 {
     public class JsonUtils
     {
-        // FIXME
 
+        // Known issue: SimpleJson is not able to parse enum
         public static T Deserialize<T>(string serializedJson) 
         {
             try
             {
-                return SimpleJson.DeserializeObject<T>(serializedJson);
+                return SimpleJson.DeserializeObject<T>(serializedJson.Trim());
             }
-            catch(Exception ex) 
+            catch
             {
                 return default(T);
             }            

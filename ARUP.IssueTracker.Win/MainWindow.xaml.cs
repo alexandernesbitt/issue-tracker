@@ -13,7 +13,6 @@ using System.Collections.ObjectModel;
 
 namespace ARUP.IssueTracker.Win
 {
-
   /// <summary>
   /// Interaction logic for MainWindow.xaml
   /// </summary>
@@ -104,8 +103,8 @@ namespace ARUP.IssueTracker.Win
             {
                 AddIssueResponse response = IpcMessageStore.getPayload<AddIssueResponse>(jsonMsg);
 
-                // return payload obhect in callback
-                ((Tuple<NamedPipeClientStream, Action<object>>)iar.AsyncState).Item2(response);
+                // return payload object in callback in the same UI thread
+                this.Dispatcher.Invoke(() => ((Tuple<NamedPipeClientStream, Action<object>>)iar.AsyncState).Item2(response));
             }
             else if (type == IpcOperationType.Invalid)                    
             {

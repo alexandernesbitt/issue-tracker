@@ -4,8 +4,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Runtime.Serialization;
-using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 using System.Windows;
 
@@ -16,7 +14,7 @@ namespace ARUP.IssueTracker.IPC
         /// <summary>
         /// the type of AIT UI actions
         /// </summary>
-        public IpcOperationType type { get; set; }
+        public int type { get; set; }
 
         /// <summary>
         /// the temp file for object serialization
@@ -32,22 +30,11 @@ namespace ARUP.IssueTracker.IPC
             
             if(data != null)
             {
-                tempFilePath  = Path.GetTempFileName();
-                using (FileStream fs = new FileStream(tempFilePath, FileMode.Create)) 
-                {
-                    BinaryFormatter formatter = new BinaryFormatter();
-                    try
-                    {
-                        formatter.Serialize(fs, data);
-                    }
-                    catch (SerializationException ex)
-                    {
-                        MessageBox.Show("Failed to serialize. Reason: " + ex.ToString());
-                    }
-                }
+                tempFilePath = Path.GetTempFileName();
+                File.WriteAllText(tempFilePath, JsonConvert.SerializeObject(data));
             }                        
 
-            IpcMessageStore msg = new IpcMessageStore() { type = type, tempFilePath = tempFilePath };
+            IpcMessageStore msg = new IpcMessageStore() { type = (int) type, tempFilePath = tempFilePath };
             return JsonConvert.SerializeObject(msg);
         }
 
@@ -55,7 +42,7 @@ namespace ARUP.IssueTracker.IPC
         {
             try
             {
-                return JsonConvert.DeserializeObject<IpcMessageStore>(jsonMsg).type;
+                return (IpcOperationType) JsonConvert.DeserializeObject<IpcMessageStore>(jsonMsg).type;
             }
             catch (Exception ex)
             {
@@ -78,12 +65,11 @@ namespace ARUP.IssueTracker.IPC
                     return default(T);
                 }
 
-                using (FileStream fs = new FileStream(msg.tempFilePath, FileMode.Open))
-                {
-                    BinaryFormatter formatter = new BinaryFormatter();
-                    T obj = (T)formatter.Deserialize(fs);
-                    return obj;
-                }
+                var obj = JsonConvert.DeserializeObject<T>(File.ReadAllText(msg.tempFilePath));
+
+                File.Delete(msg.tempFilePath);
+
+                return obj;
             }
             catch (Exception ex)
             {
