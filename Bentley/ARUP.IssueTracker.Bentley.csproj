@@ -97,6 +97,7 @@
     <Reference Include="PresentationFramework" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CaptureScreenModalHandler.cs" />
     <Compile Include="IPC\Visinfo.cs" />
     <Compile Include="IPC\AddIssueResponse.cs" />
     <Compile Include="IPC\IpcMessageStore.cs" />

@@ -10,6 +10,7 @@ using System.IO.Pipes;
 using System.Text;
 using ARUP.IssueTracker.IPC;
 using System.Collections.ObjectModel;
+using System.Windows.Controls;
 
 namespace ARUP.IssueTracker.Win
 {
@@ -48,8 +49,8 @@ namespace ARUP.IssueTracker.Win
         mainPan.jiraPan.AddIssueBtn.Click += new RoutedEventHandler(AddIssueJira);
         mainPan.bcfPan.AddIssueBtn.Click += new RoutedEventHandler(AddIssueBCF);
 
-        //mainPan.bcfPan.open3dViewEvent += new RoutedEventHandler(Open3dViewBCF);
-        //mainPan.jiraPan.open3dViewEvent += new RoutedEventHandler(Open3dViewJira);
+        mainPan.bcfPan.open3dViewEvent += new RoutedEventHandler(Open3dViewBCF);
+        mainPan.jiraPan.open3dViewEvent += new RoutedEventHandler(Open3dViewJira);
     }
 
     /// <summary>
@@ -207,9 +208,10 @@ namespace ARUP.IssueTracker.Win
                 if (!Directory.Exists(folderIssue))
                     Directory.CreateDirectory(folderIssue);
 
-                // copy snapshot from temp file
+                // copy snapshot from temp file and delete temp file
                 string snapshotPath = Path.Combine(folderIssue, "snapshot.png");
                 File.Copy(ipcResponse.tempSnapshotPath, snapshotPath);
+                File.Delete(ipcResponse.tempSnapshotPath);
 
                 var types = new ObservableCollection<Issuetype>();
                 var assignees = new List<User>();
@@ -342,6 +344,71 @@ namespace ARUP.IssueTracker.Win
                 MessageBox.Show("exception: " + ex1);
             }
         });
+    }
+
+    /// <summary>
+    /// Open 3D View - BCF
+    /// </summary>
+    /// <param name="sender"></param>
+    /// <param name="e"></param>
+    private void Open3dViewBCF(object sender, EventArgs e)
+    {
+        try
+        {
+            VisualizationInfo VisInfo = (VisualizationInfo)((Button)sender).Tag;
+            doOpen3DView(VisInfo);
+        }
+        catch (System.Exception ex1)
+        {
+            MessageBox.Show("exception: " + ex1);
+        }
+    }
+
+    /// <summary>
+    /// Open 3D View - Jira
+    /// </summary>
+    /// <param name="sender"></param>
+    /// <param name="e"></param>
+    private void Open3dViewJira(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            string url = (string)((Button)sender).Tag;
+            VisualizationInfo v = mainPan.getVisInfo(url);
+            if (v == null)
+            {
+                MessageBox.Show("Failed to open the viewpoint", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+            doOpen3DView(v);
+        }
+        catch (System.Exception ex1)
+        {
+            MessageBox.Show("exception: " + ex1);
+        }
+    }
+
+    /// <summary>
+    /// Open a 3D View
+    /// </summary>
+    /// <param name="v"></param>
+    private void doOpen3DView(VisualizationInfo v)
+    {
+        try
+        {
+            if (false)
+            {
+                MessageBox.Show("This operation is not allowed in paper space.\nPlease go to model space and retry.",
+                    "Warning!", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            
+        }
+        catch (System.Exception ex1)
+        {
+            MessageBox.Show("exception: " + ex1, "Error!");
+        }
     }
 
   }

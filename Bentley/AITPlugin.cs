@@ -233,10 +233,34 @@ namespace ARUP.IssueTracker.Bentley
             {
                 isValidRequest = true,
                 documentGuid = "guid",
-                documentName = "docName", 
-                tempSnapshotPath = @"C:\test.png", 
+                documentName = "docName",
+                tempSnapshotPath = generateSnapshot(), 
                 visualizationInfo = new Classes.BCF2.VisualizationInfo() 
             };
+        }
+
+        private int getActiveViewNumber() 
+        {
+            for (int i = 1; i <= 8; i++)
+            {
+                if(MSApp.ActiveDesignFile.Views[i].IsSelected)
+                {
+                    return i;
+                }
+            }
+            return 0;
+        }
+
+        private string generateSnapshot() 
+        {
+            MSApp.CadInputQueue.SendKeyin("null");
+            string tempSnapshotPath = Path.GetTempFileName();
+            CaptureScreenModalHandler handler = new CaptureScreenModalHandler(tempSnapshotPath);
+            MSApp.AddModalDialogEventsHandler(handler);
+            MSApp.CadInputQueue.SendCommand("MDL KEYIN mptools save image");
+            MSApp.RemoveModalDialogEventsHandler(handler);
+            MSApp.CommandState.StartDefaultCommand();
+            return tempSnapshotPath;
         }
 
         #region Static Members
