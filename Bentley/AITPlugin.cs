@@ -12,6 +12,7 @@ using System.Diagnostics;
 using System.IO.Pipes;
 using System.Text;
 using ARUP.IssueTracker.IPC;
+using ARUP.IssueTracker.Classes.BCF2;
 
 namespace ARUP.IssueTracker.Bentley
 {
@@ -205,7 +206,7 @@ namespace ARUP.IssueTracker.Bentley
                 }
                 else if (type == IpcOperationType.OpenViewpointRequest)
                 {
-                
+                    VisualizationInfo visInfo = IpcMessageStore.getPayload<VisualizationInfo>(jsonRequestMsg);
                 }
 
                 // Send response
@@ -231,11 +232,11 @@ namespace ARUP.IssueTracker.Bentley
         {
             return new AddIssueResponse() 
             {
-                isValidRequest = true,
-                documentGuid = "guid",
-                documentName = "docName",
-                tempSnapshotPath = generateSnapshot(), 
-                visualizationInfo = new Classes.BCF2.VisualizationInfo() 
+                isValidRequest = MSApp.ActiveModelReference.Type == MsdModelType.Normal,
+                documentGuid = MSApp.ActiveDesignFile.GetHashCode().ToString(),
+                documentName = MSApp.ActiveDesignFile.Name,
+                tempSnapshotPath = generateSnapshot(),
+                visualizationInfo = generateViewpoint(2)
             };
         }
 
@@ -263,9 +264,120 @@ namespace ARUP.IssueTracker.Bentley
             return tempSnapshotPath;
         }
 
-        #region Static Members
+        /// <summary>
+        /// Generate Viewpoint
+        /// </summary>
+        /// <param name="elemCheck"></param>
+        /// <returns></returns>
+        private VisualizationInfo generateViewpoint(int elemCheck)
+        {
+            try
+            {
+                // get current view
+                View currentView = MSApp.ActiveDesignFile.Views[getActiveViewNumber()];
+                double unitFactor = GetGunits();
 
-        public static string getBentleyProductName()
+                // camera direction
+                Vector3d direction = MSApp.Vector3dNormalize(MSApp.Vector3dFromPoint3d(MSApp.Point3dSubtract(currentView.get_CameraTarget(), currentView.get_CameraPosition())));
+
+                // camera scale
+                double h = currentView.get_Extents().Y * unitFactor;
+                double w = currentView.get_Extents().X *unitFactor;
+                double fov = 180 * currentView.CameraAngle / Math.PI;
+
+                // camera location
+                Point3d cameraLocation = MSApp.Point3dScale(currentView.get_CameraPosition(), unitFactor);
+
+                // camera up vector
+                Point3d upVector = currentView.get_CameraUpVector();
+
+                // set up BCF viewpoint
+                VisualizationInfo v = new VisualizationInfo();
+
+                // FIXME: ignore perspective view for now
+                /*if (currentView.isPerspective)
+                {
+                    v.PerspectiveCamera = new PerspectiveCamera();
+                    v.PerspectiveCamera.CameraViewPoint.X = cameraLocation.X;
+                    v.PerspectiveCamera.CameraViewPoint.Y = cameraLocation.Y;
+                    v.PerspectiveCamera.CameraViewPoint.Z = cameraLocation.Z;
+                    v.PerspectiveCamera.CameraUpVector.X = upVector.X;
+                    v.PerspectiveCamera.CameraUpVector.Y = upVector.Y;
+                    v.PerspectiveCamera.CameraUpVector.Z = upVector.Z;
+                    v.PerspectiveCamera.CameraDirection.X = direction.X;
+                    v.PerspectiveCamera.CameraDirection.Y = direction.Y;
+                    v.PerspectiveCamera.CameraDirection.Z = direction.Z;
+                    v.PerspectiveCamera.FieldOfView = fov;
+                }
+                else
+                {*/
+                    v.OrthogonalCamera = new OrthogonalCamera();
+                    v.OrthogonalCamera.CameraViewPoint.X = cameraLocation.X;
+                    v.OrthogonalCamera.CameraViewPoint.Y = cameraLocation.Y;
+                    v.OrthogonalCamera.CameraViewPoint.Z = cameraLocation.Z;
+                    v.OrthogonalCamera.CameraUpVector.X = upVector.X;
+                    v.OrthogonalCamera.CameraUpVector.Y = upVector.Y;
+                    v.OrthogonalCamera.CameraUpVector.Z = upVector.Z;
+                    v.OrthogonalCamera.CameraDirection.X = direction.X;
+                    v.OrthogonalCamera.CameraDirection.Y = direction.Y;
+                    v.OrthogonalCamera.CameraDirection.Z = direction.Z;
+                    v.OrthogonalCamera.ViewToWorldScale = h;
+                //}
+
+                return v;
+            }
+            catch (System.Exception ex1)
+            {
+                MessageBox.Show("exception: " + ex1, "Error!");
+            }
+            return null;
+        }
+
+        private double GetGunits()
+        {
+            string units = MSApp.ActiveModelReference.get_MasterUnit().Label;
+            double factor = 1;
+            switch (units)
+            {
+                case "cm":
+                    factor = 100;
+                    break;
+                case "ft":
+                    factor = 3.28084;
+                    break;
+                case "im":
+                    factor = 39.3701;
+                    break;
+                case "km":
+                    factor = 0.001;
+                    break;
+                case "m":
+                    factor = 1;
+                    break;
+                case "um":
+                    factor = 1000000;
+                    break;
+                case "mi":
+                    factor = 0.000621371;
+                    break;
+                case "mm":
+                    factor = 1000;
+                    break;
+                case "mil":
+                    factor = 39370.0787;
+                    break;
+                case "yd":
+                    factor = 1.09361;
+                    break;
+                default:
+                    MessageBox.Show("Units " + units + " not recognized.");
+                    factor = 1;
+                    break;
+            }
+            return factor;
+        }
+
+        public string getBentleyProductName()
         {
             string windowTitle = MSApp.Caption;
             int lastIndexOfDash = windowTitle.LastIndexOf('-');
@@ -276,16 +388,13 @@ namespace ARUP.IssueTracker.Bentley
         /// Get System Architecture
         /// </summary>
         /// <returns></returns>
-        static string ProgramFilesx86()
+        public static string ProgramFilesx86()
         {
             if (8 == IntPtr.Size || (!String.IsNullOrEmpty(Environment.GetEnvironmentVariable("PROCESSOR_ARCHITEW6432"))))
                 return Environment.GetEnvironmentVariable("ProgramFiles(x86)");
 
             return Environment.GetEnvironmentVariable("ProgramFiles");
         }
-
-        #endregion
-
     }
 
 }
