@@ -207,6 +207,8 @@ namespace ARUP.IssueTracker.Bentley
                 else if (type == IpcOperationType.OpenViewpointRequest)
                 {
                     VisualizationInfo visInfo = IpcMessageStore.getPayload<VisualizationInfo>(jsonRequestMsg);
+                    jsonResponseMsg = "{}";
+                    doOpen3DView(visInfo);
                 }
 
                 // Send response
@@ -275,10 +277,11 @@ namespace ARUP.IssueTracker.Bentley
             {
                 // get current view
                 View currentView = MSApp.ActiveDesignFile.Views[getActiveViewNumber()];
-                double unitFactor = GetGunits();
+                double unitFactor = 1 / GetGunits();
 
                 // camera direction
-                Vector3d direction = MSApp.Vector3dNormalize(MSApp.Vector3dFromPoint3d(MSApp.Point3dSubtract(currentView.get_CameraTarget(), currentView.get_CameraPosition())));
+                // TODO: check whether initial camera position and camera target are correct in 3D
+                Point3d direction = MSApp.Point3dNormalize(MSApp.Point3dSubtract(currentView.get_CameraTarget(), currentView.get_CameraPosition()));
 
                 // camera scale
                 double h = currentView.get_Extents().Y * unitFactor;
@@ -286,7 +289,7 @@ namespace ARUP.IssueTracker.Bentley
                 double fov = 180 * currentView.CameraAngle / Math.PI;
 
                 // camera location
-                Point3d cameraLocation = MSApp.Point3dScale(currentView.get_CameraPosition(), unitFactor);
+                Point3d cameraLocation = MSApp.Point3dScale(MSApp.Point3dSubtract(currentView.get_Center(), MSApp.Point3dSubtract(currentView.get_CameraTarget(), currentView.get_CameraPosition())), unitFactor);
 
                 // camera up vector
                 Point3d upVector = currentView.get_CameraUpVector();
@@ -331,6 +334,82 @@ namespace ARUP.IssueTracker.Bentley
                 MessageBox.Show("exception: " + ex1, "Error!");
             }
             return null;
+        }
+
+        /// <summary>
+        /// Open a 3D View
+        /// </summary>
+        /// <param name="v"></param>
+        private void doOpen3DView(VisualizationInfo v)
+        {
+            try
+            {
+                MessageBox.Show(Newtonsoft.Json.JsonConvert.SerializeObject(v));
+                if (MSApp.ActiveModelReference.Type != MsdModelType.Normal)
+                {
+                    MessageBox.Show("This operation is not allowed in paper space.\nPlease go to model space and retry.",
+                        "Warning!", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                Point3d cameraPos, viewDirection, upVector;
+                double zoomValue;
+
+                // IS ORTHOGONAL
+                if (v.OrthogonalCamera != null)
+                {
+                    if (v.OrthogonalCamera.CameraViewPoint == null || v.OrthogonalCamera.CameraUpVector == null || v.OrthogonalCamera.CameraDirection == null)
+                        return;
+
+                    cameraPos = MSApp.Point3dFromXYZ(v.OrthogonalCamera.CameraViewPoint.X, v.OrthogonalCamera.CameraViewPoint.Y, v.OrthogonalCamera.CameraViewPoint.Z);
+                    viewDirection = MSApp.Point3dNormalize(MSApp.Point3dFromXYZ(v.OrthogonalCamera.CameraDirection.X, v.OrthogonalCamera.CameraDirection.Y, v.OrthogonalCamera.CameraDirection.Z));
+                    upVector = MSApp.Point3dNormalize(MSApp.Point3dFromXYZ(v.OrthogonalCamera.CameraUpVector.X, v.OrthogonalCamera.CameraUpVector.Y, v.OrthogonalCamera.CameraUpVector.Z));
+                    zoomValue = v.OrthogonalCamera.ViewToWorldScale;
+                }
+                else if (v.PerspectiveCamera != null)
+                {
+                    if (v.PerspectiveCamera.CameraViewPoint == null || v.PerspectiveCamera.CameraUpVector == null || v.PerspectiveCamera.CameraDirection == null)
+                        return;
+
+                    cameraPos = MSApp.Point3dFromXYZ(v.PerspectiveCamera.CameraViewPoint.X, v.PerspectiveCamera.CameraViewPoint.Y, v.PerspectiveCamera.CameraViewPoint.Z);
+                    viewDirection = MSApp.Point3dNormalize(MSApp.Point3dFromXYZ(v.PerspectiveCamera.CameraDirection.X, v.PerspectiveCamera.CameraDirection.Y, v.PerspectiveCamera.CameraDirection.Z));
+                    upVector = MSApp.Point3dNormalize(MSApp.Point3dFromXYZ(v.PerspectiveCamera.CameraUpVector.X, v.PerspectiveCamera.CameraUpVector.Y, v.PerspectiveCamera.CameraUpVector.Z));
+                    zoomValue = v.PerspectiveCamera.FieldOfView;
+                }
+                else
+                {
+                    MessageBox.Show("No camera information was found within this viewpoint.",
+                        "Warning!", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                // get current view
+                View currentView = MSApp.ActiveDesignFile.Views[getActiveViewNumber()];
+                double unitFactor = GetGunits();                
+
+                // set camera properties
+                Point3d scaledCameraPos = MSApp.Point3dScale(cameraPos, unitFactor);
+                //currentView.set_CameraPosition(scaledCameraPos);
+                //currentView.set_CameraTarget(MSApp.Point3dAdd(scaledCameraPos, viewDirection)); 
+                currentView.set_Center(MSApp.Point3dScale(cameraPos, unitFactor));
+                currentView.set_CameraUpVector(upVector);                               
+                if (v.PerspectiveCamera != null)
+                {
+                    currentView.CameraAngle = zoomValue * unitFactor;
+                }
+                else if (v.OrthogonalCamera != null)
+                {
+                    Point3d currentExtent = currentView.get_Extents();
+                    currentView.Zoom(zoomValue * unitFactor / currentExtent.Y);
+                }
+                
+                // redraw current view
+                currentView.Redraw();
+            }
+            catch (System.Exception ex1)
+            {
+                MessageBox.Show("exception: " + ex1, "Error!");
+            }
         }
 
         private double GetGunits()

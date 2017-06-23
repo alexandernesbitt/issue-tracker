@@ -394,21 +394,7 @@ namespace ARUP.IssueTracker.Win
     /// <param name="v"></param>
     private void doOpen3DView(VisualizationInfo v)
     {
-        try
-        {
-            if (false)
-            {
-                MessageBox.Show("This operation is not allowed in paper space.\nPlease go to model space and retry.",
-                    "Warning!", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
-
-            
-        }
-        catch (System.Exception ex1)
-        {
-            MessageBox.Show("exception: " + ex1, "Error!");
-        }
+        sendIpcRequest(IpcOperationType.OpenViewpointRequest, v, null);
     }
 
   }
