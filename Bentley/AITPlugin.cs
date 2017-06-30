@@ -279,8 +279,27 @@ namespace ARUP.IssueTracker.Bentley
                 View currentView = MSApp.ActiveDesignFile.Views[getActiveViewNumber()];
                 double unitFactor = 1 / GetGunits();
 
+                // enable perspective camera back and forth to get correct view attributes, see the post below
+                // https://communities.bentley.com/products/programming/microstation_programming/f/343173/t/80064
+                MSApp.CadInputQueue.SendKeyin("MDL KEYIN BENTLEY.VIEWATTRIBUTESDIALOG,VAD VIEWATTRIBUTESDIALOG SETATTRIBUTE 0 Camera True");
+                MSApp.CadInputQueue.SendKeyin("MDL KEYIN BENTLEY.VIEWATTRIBUTESDIALOG,VAD VIEWATTRIBUTESDIALOG SETATTRIBUTE 0 Camera False");
+
+                // force view center to be identical as camera target
+                Point3d center = new Point3d();
+                center = currentView.get_Center();
+                Point3d extents = new Point3d();
+                extents = currentView.get_Extents();
+                Point3d translation = new Point3d();
+                translation = MSApp.Point3dSubtract(center, currentView.get_CameraTarget());
+                ViewCameraParameters vcp = new ViewCameraParametersClass();
+                vcp.set_CameraPosition(MSApp.Point3dAdd(currentView.get_CameraPosition(), translation));
+                vcp.set_CameraTarget(MSApp.Point3dAdd(currentView.get_CameraTarget(), translation));
+                currentView.SetCameraProperties(vcp);
+                currentView.set_Extents(extents);
+                currentView.set_Center(center);
+                currentView.Redraw();
+                
                 // camera direction
-                // TODO: check whether initial camera position and camera target are correct in 3D
                 Point3d direction = MSApp.Point3dNormalize(MSApp.Point3dSubtract(currentView.get_CameraTarget(), currentView.get_CameraPosition()));
 
                 // camera scale
@@ -289,7 +308,7 @@ namespace ARUP.IssueTracker.Bentley
                 double fov = 180 * currentView.CameraAngle / Math.PI;
 
                 // camera location
-                Point3d cameraLocation = MSApp.Point3dScale(MSApp.Point3dSubtract(currentView.get_Center(), MSApp.Point3dSubtract(currentView.get_CameraTarget(), currentView.get_CameraPosition())), unitFactor);
+                Point3d cameraLocation = MSApp.Point3dScale(currentView.get_CameraPosition(), unitFactor);
 
                 // camera up vector
                 Point3d upVector = currentView.get_CameraUpVector();
@@ -344,7 +363,6 @@ namespace ARUP.IssueTracker.Bentley
         {
             try
             {
-                MessageBox.Show(Newtonsoft.Json.JsonConvert.SerializeObject(v));
                 if (MSApp.ActiveModelReference.Type != MsdModelType.Normal)
                 {
                     MessageBox.Show("This operation is not allowed in paper space.\nPlease go to model space and retry.",
@@ -389,9 +407,10 @@ namespace ARUP.IssueTracker.Bentley
 
                 // set camera properties
                 Point3d scaledCameraPos = MSApp.Point3dScale(cameraPos, unitFactor);
-                //currentView.set_CameraPosition(scaledCameraPos);
-                //currentView.set_CameraTarget(MSApp.Point3dAdd(scaledCameraPos, viewDirection)); 
-                currentView.set_Center(MSApp.Point3dScale(cameraPos, unitFactor));
+                Point3d scaledCameraTarget = MSApp.Point3dAdd(scaledCameraPos, MSApp.Point3dScale(viewDirection, unitFactor));
+                currentView.set_CameraPosition(scaledCameraPos);
+                currentView.set_CameraTarget(scaledCameraTarget);
+                currentView.set_Center(scaledCameraTarget);
                 currentView.set_CameraUpVector(upVector);                               
                 if (v.PerspectiveCamera != null)
                 {
@@ -399,8 +418,8 @@ namespace ARUP.IssueTracker.Bentley
                 }
                 else if (v.OrthogonalCamera != null)
                 {
-                    Point3d currentExtent = currentView.get_Extents();
-                    currentView.Zoom(zoomValue * unitFactor / currentExtent.Y);
+                    Point3d currentExtent = currentView.get_Extents();                    
+                    currentView.Zoom(zoomValue * unitFactor / currentExtent.Y);                    
                 }
                 
                 // redraw current view
