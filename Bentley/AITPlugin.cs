@@ -11,6 +11,7 @@ using System.Windows;
 using System.Diagnostics;
 using System.IO.Pipes;
 using System.Text;
+using System.Linq;
 using ARUP.IssueTracker.IPC;
 using ARUP.IssueTracker.Classes.BCF2;
 
@@ -421,6 +422,18 @@ namespace ARUP.IssueTracker.Bentley
                     Point3d currentExtent = currentView.get_Extents();                    
                     currentView.Zoom(zoomValue * unitFactor / currentExtent.Y);                    
                 }
+
+                // handle clip volume
+                List<Plane3d> clippingPlanes = new List<Plane3d>();
+                foreach(var clippingPlane in v.ClippingPlanes)
+                {
+                    clippingPlanes.Add(new Plane3d() { 
+                        Origin = MSApp.Point3dFromXYZ(clippingPlane.Location.X, clippingPlane.Location.Y, clippingPlane.Location.Z),
+                        Normal = MSApp.Point3dFromXYZ(clippingPlane.Direction.X, clippingPlane.Direction.Y, clippingPlane.Direction.Z) 
+                    });
+                }
+                var intersectionPoints = getIntersectionPointsOfClippingPlanes(clippingPlanes);
+                intersectionPoints.ForEach(p => MessageBox.Show(string.Format("{0} {1} {2}", p.X, p.Y, p.Z)));
                 
                 // redraw current view
                 currentView.Redraw();
@@ -429,6 +442,36 @@ namespace ARUP.IssueTracker.Bentley
             {
                 MessageBox.Show("exception: " + ex1, "Error!");
             }
+        }
+
+        private List<Point3d> getIntersectionPointsOfClippingPlanes(List<Plane3d> clippingPlanes) 
+        {
+            List<Point3d> intersectionPoints = new List<Point3d>();
+            for (int i = 0; i < clippingPlanes.Count; i++)
+            {
+                for (int j = 0; j < clippingPlanes.Count; j++)
+                {
+                    for (int k = 0; k < clippingPlanes.Count; k++)
+                    {
+                        if(i != j && i != k && j != k && i < j && j < k)
+                        {
+                            Plane3d p0 = clippingPlanes[i];
+                            Plane3d p1 = clippingPlanes[j];
+                            Plane3d p2 = clippingPlanes[k];
+
+                            Ray3d ray = new Ray3d();
+                            Point3d intersectionPoint = new Point3d();
+                            double param = 0;
+
+                            if (MSApp.Plane3dIntersectsPlane3d(ref ray, ref p0, ref p1) && MSApp.Plane3dIntersectsRay3d(ref intersectionPoint, ref param, ref p2, ray))
+                            {
+                                intersectionPoints.Add(intersectionPoint);
+                            }
+                        }
+                    }
+                }
+            }
+            return intersectionPoints;
         }
 
         private double GetGunits()
