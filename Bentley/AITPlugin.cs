@@ -403,7 +403,8 @@ namespace ARUP.IssueTracker.Bentley
                 }
 
                 // get current view
-                View currentView = MSApp.ActiveDesignFile.Views[getActiveViewNumber()];
+                int activeViewNum = getActiveViewNumber();
+                View currentView = MSApp.ActiveDesignFile.Views[activeViewNum];
                 double unitFactor = GetGunits();                
 
                 // set camera properties
@@ -420,10 +421,13 @@ namespace ARUP.IssueTracker.Bentley
                 else if (v.OrthogonalCamera != null)
                 {
                     Point3d currentExtent = currentView.get_Extents();                    
-                    currentView.Zoom(zoomValue * unitFactor / currentExtent.Y);                    
+                    currentView.Zoom(zoomValue * unitFactor * 0.7 / currentExtent.Y); // 0.7 is arbitrary zoom level set for Bentley
                 }
 
-                // handle clip volume
+                // disable and clear previous clip volume
+
+                currentView.ClipVolume = false; 
+                // handle model view clipping
                 List<Plane3d> clippingPlanes = new List<Plane3d>();
                 foreach(var clippingPlane in v.ClippingPlanes)
                 {
@@ -432,10 +436,54 @@ namespace ARUP.IssueTracker.Bentley
                         Normal = MSApp.Point3dFromXYZ(clippingPlane.Direction.X, clippingPlane.Direction.Y, clippingPlane.Direction.Z) 
                     });
                 }
-                var intersectionPoints = getIntersectionPointsOfClippingPlanes(clippingPlanes);
-                intersectionPoints.ForEach(p => MessageBox.Show(string.Format("{0} {1} {2}", p.X, p.Y, p.Z)));
-                
+                List<Point3d> intersectionPoints = getIntersectionPointsOfClippingPlanes(clippingPlanes);              
+                double maxZ = intersectionPoints.Max(p => p.Z);
+                double minZ = intersectionPoints.Min(p => p.Z);
+                double midZ = (maxZ + minZ) / 2;
+                double halfOfHeight = (maxZ - minZ) / 2;
+                // find XY projection points
+                List<Vector2d> planeVertices = new List<Vector2d>();
+                foreach(Point3d p in intersectionPoints)
+                {
+                    bool uniqueProjectionPoint = true;
+                    foreach (Vector2d vertex in planeVertices)
+                    {
+                        if(MSApp.Point2dDistance(new Point2d(){ X = vertex.X, Y = vertex.Y }, new Point2d(){ X = p.X, Y = p.Y }) < 0.001) // arbitrary precision for now
+                        {
+                            uniqueProjectionPoint = false;
+                            break;
+                        }
+                    }
+
+                    if (uniqueProjectionPoint)
+                    {
+                        planeVertices.Add(new Vector2d(p.X, p.Y));
+                    }
+                }
+                // determine convex hull points
+                var convexNullPoints = ConvexHullHelper.MonotoneChainConvexHull(planeVertices.ToArray()).Select(p => new Point3d() { X = p.X, Y = p.Y, Z = midZ });  
+                ShapeElement planeShape = MSApp.CreateShapeElement1(null, convexNullPoints.ToArray(), MsdFillMode.UseActive);
+                MSApp.ActiveModelReference.AddElement(planeShape);
+                // produce solid
+                Point3d firstVertex = planeShape.get_Vertex(1);
+                MSApp.CadInputQueue.SendCommand("CONSTRUCT SURFACE PROJECTIONSOLID");
+                MSApp.SetCExpressionValue("tcb->ms3DToolSettings.extrude.solidSkewed", 0, "3DTOOLS");
+                MSApp.SetCExpressionValue("tcb->ms3DToolSettings.extrude.solidIsDist", 1, "3DTOOLS");
+                MSApp.SetCExpressionValue("tcb->ms3DToolSettings.extrudeSolidDistance", (MSApp.ActiveModelReference.UORsPerMasterUnit * halfOfHeight), "3DTOOLS");
+                MSApp.SetCExpressionValue("tcb->ms3DToolSettings.extrude.solidBothWays", 1, "3DTOOLS");
+                MSApp.SetCExpressionValue("tcb->ms3DToolSettings.extrudeSolidYScale", 1, "3DTOOLS");
+                MSApp.SetCExpressionValue("tcb->ms3DToolSettings.extrudeSolidXScale", 1, "3DTOOLS");
+                MSApp.SetCExpressionValue("tcb->ms3DToolSettings.extrude.solidActiveAttib", 0, "3DTOOLS");
+                MSApp.SetCExpressionValue("tcb->ms3DToolSettings.extrude.solidKeepOriginal", 0, "3DTOOLS");
+                MSApp.CadInputQueue.SendDataPoint(firstVertex, activeViewNum);
+                MSApp.CadInputQueue.SendDataPoint(firstVertex, activeViewNum);
+                // clip volume
+                MSApp.CadInputQueue.SendCommand("VIEW CLIP SINGLE");
+                MSApp.SetCExpressionValue("tcb->msToolSettings.clipViewTools.hideClipElement", 1, "CLIPVIEW");
+                MSApp.CadInputQueue.SendDataPoint(firstVertex, activeViewNum);
+                MSApp.CadInputQueue.SendDataPoint(firstVertex, activeViewNum);
                 // redraw current view
+                MSApp.CommandState.StartDefaultCommand();
                 currentView.Redraw();
             }
             catch (System.Exception ex1)
@@ -446,6 +494,8 @@ namespace ARUP.IssueTracker.Bentley
 
         private List<Point3d> getIntersectionPointsOfClippingPlanes(List<Plane3d> clippingPlanes) 
         {
+            double unitFactor = GetGunits();
+
             List<Point3d> intersectionPoints = new List<Point3d>();
             for (int i = 0; i < clippingPlanes.Count; i++)
             {
@@ -465,7 +515,7 @@ namespace ARUP.IssueTracker.Bentley
 
                             if (MSApp.Plane3dIntersectsPlane3d(ref ray, ref p0, ref p1) && MSApp.Plane3dIntersectsRay3d(ref intersectionPoint, ref param, ref p2, ray))
                             {
-                                intersectionPoints.Add(intersectionPoint);
+                                intersectionPoints.Add(MSApp.Point3dScale(intersectionPoint, unitFactor));
                             }
                         }
                     }
