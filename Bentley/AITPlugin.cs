@@ -30,6 +30,7 @@ namespace ARUP.IssueTracker.Bentley
         private string _path = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
         public static AITPlugin MSAddin = null;
         public static BCOM.Application MSApp = null;
+        private static string aitNamedGroupName = "AITCLIPVOLUME";
 
         /// <summary>
         /// Private constructor required for all AddIn classes derived from 
@@ -420,12 +421,22 @@ namespace ARUP.IssueTracker.Bentley
                 }
                 else if (v.OrthogonalCamera != null)
                 {
-                    Point3d currentExtent = currentView.get_Extents();                    
-                    currentView.Zoom(zoomValue * unitFactor * 0.7 / currentExtent.Y); // 0.7 is arbitrary zoom level set for Bentley
+                    Point3d currentExtent = currentView.get_Extents();
+                    double zoomLevel = zoomValue * unitFactor * 1.3 / currentExtent.Y; // 1.3 is arbitrary zoom level set for Bentley
+                    currentView.Zoom(zoomLevel); 
                 }
 
                 // disable and clear previous clip volume
-
+                NamedGroupElement group = MSApp.ActiveModelReference.GetNamedGroup(aitNamedGroupName);
+                if (group == null)
+                {
+                    group = MSApp.ActiveModelReference.AddNewNamedGroup(aitNamedGroupName);
+                }
+                var previousClipVolumeSolids = group.GetRelatedElements(MSApp.ActiveSettings.GraphicGroupLockEnabled, MsdMemberTraverseType.Manipulate).BuildArrayFromContents();
+                foreach (Element clipVolume in previousClipVolumeSolids) 
+                {
+                    MSApp.ActiveModelReference.RemoveElement(clipVolume);
+                }
                 currentView.ClipVolume = false; 
                 // handle model view clipping
                 List<Plane3d> clippingPlanes = new List<Plane3d>();
@@ -477,14 +488,23 @@ namespace ARUP.IssueTracker.Bentley
                 MSApp.SetCExpressionValue("tcb->ms3DToolSettings.extrude.solidKeepOriginal", 0, "3DTOOLS");
                 MSApp.CadInputQueue.SendDataPoint(firstVertex, activeViewNum);
                 MSApp.CadInputQueue.SendDataPoint(firstVertex, activeViewNum);
+                // add current clip volume solid to the named group
+                MSApp.CommandState.StartDefaultCommand();
+                MSApp.CadInputQueue.SendDataPoint(firstVertex, activeViewNum);
+                var currentClipVolumeSolid = MSApp.ActiveModelReference.GetSelectedElements().BuildArrayFromContents();
+                foreach (Element clipVolume in currentClipVolumeSolid)
+                {
+                    group.AddMember(clipVolume);
+                    group.Rewrite();
+                }                
                 // clip volume
                 MSApp.CadInputQueue.SendCommand("VIEW CLIP SINGLE");
                 MSApp.SetCExpressionValue("tcb->msToolSettings.clipViewTools.hideClipElement", 1, "CLIPVIEW");
                 MSApp.CadInputQueue.SendDataPoint(firstVertex, activeViewNum);
                 MSApp.CadInputQueue.SendDataPoint(firstVertex, activeViewNum);
-                // redraw current view
-                MSApp.CommandState.StartDefaultCommand();
+                // redraw current view                
                 currentView.Redraw();
+                MSApp.CommandState.StartDefaultCommand();
             }
             catch (System.Exception ex1)
             {
