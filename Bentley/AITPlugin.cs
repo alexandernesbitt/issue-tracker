@@ -32,6 +32,13 @@ namespace ARUP.IssueTracker.Bentley
         public static BCOM.Application MSApp = null;
         private static string aitNamedGroupName = "AITCLIPVOLUME";
 
+        [DllImport("stdmdlbltin.dll", CallingConvention = CallingConvention.Cdecl)]
+        internal static extern IntPtr mdlView_getClipBoundaryElement
+        (            
+            ref UInt64 pElementId,
+            Int32 viewIndex
+        );
+
         /// <summary>
         /// Private constructor required for all AddIn classes derived from 
         /// Bentley.MicroStation.AddIn.
@@ -427,19 +434,20 @@ namespace ARUP.IssueTracker.Bentley
                 }
 
                 // disable and clear previous clip volume
-                NamedGroupElement group = MSApp.ActiveModelReference.GetNamedGroup(aitNamedGroupName);
-                if (group == null)
+                ulong previousClipVolumeId = 0;
+                int status = mdlView_getClipBoundaryElement(ref previousClipVolumeId, activeViewNum - 1).ToInt32();
+                if (status == 0)
                 {
-                    group = MSApp.ActiveModelReference.AddNewNamedGroup(aitNamedGroupName);
-                }
-                else
-                {
-                    var previousClipVolumeSolids = group.GetElements(MSApp.ActiveSettings.GraphicGroupLockEnabled, MsdMemberTraverseType.Manipulate, true).BuildArrayFromContents();
-                    foreach (Element clipVolume in previousClipVolumeSolids)
+                    try 
                     {
-                        MSApp.ActiveModelReference.RemoveElement(clipVolume);                        
+                        Element previousClipVolume = MSApp.ActiveModelReference.GetElementByID((long)previousClipVolumeId);
+                        MSApp.ActiveModelReference.RemoveElement(previousClipVolume);
                     }
-                }                
+                    catch(COMException ex)
+                    {
+                        // do nothing just for catching the exception when element not found
+                    }         
+                }                               
                 currentView.ClipVolume = false;
 
                 // handle model view clipping
@@ -494,16 +502,6 @@ namespace ARUP.IssueTracker.Bentley
                 MSApp.SetCExpressionValue("tcb->ms3DToolSettings.extrude.solidKeepOriginal", 0, "3DTOOLS");
                 MSApp.CadInputQueue.SendDataPoint(firstVertex, activeViewNum);
                 MSApp.CadInputQueue.SendDataPoint(firstVertex, activeViewNum);
-
-                // add current clip volume solid to the named group
-                MSApp.CommandState.StartDefaultCommand();
-                MSApp.CadInputQueue.SendDataPoint(firstVertex, activeViewNum);
-                var currentClipVolumeSolid = MSApp.ActiveModelReference.GetSelectedElements().BuildArrayFromContents();
-                foreach (Element clipVolume in currentClipVolumeSolid)
-                {
-                    group.AddMember(clipVolume);
-                    group.Rewrite();
-                }
 
                 // clip volume
                 MSApp.CadInputQueue.SendCommand("VIEW CLIP SINGLE");
