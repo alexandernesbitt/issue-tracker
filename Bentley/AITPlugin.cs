@@ -285,7 +285,8 @@ namespace ARUP.IssueTracker.Bentley
             try
             {
                 // get current view
-                View currentView = MSApp.ActiveDesignFile.Views[getActiveViewNumber()];
+                int activeViewNum = getActiveViewNumber();
+                View currentView = MSApp.ActiveDesignFile.Views[activeViewNum];
                 double unitFactor = 1 / GetGunits();
 
                 // enable perspective camera back and forth to get correct view attributes, see the post below
@@ -354,6 +355,48 @@ namespace ARUP.IssueTracker.Bentley
                     v.OrthogonalCamera.CameraDirection.Z = direction.Z;
                     v.OrthogonalCamera.ViewToWorldScale = h;
                 //}
+
+                // get current clip volume and compute clipping planes
+                ulong previousClipVolumeId = 0;
+                int status = mdlView_getClipBoundaryElement(ref previousClipVolumeId, activeViewNum - 1).ToInt32();
+                if (status == 0)
+                {
+                    try
+                    {
+                        Element previousClipVolume = MSApp.ActiveModelReference.GetElementByID((long)previousClipVolumeId);
+                        var smartSolids = MSApp.SmartSolid.ConvertToSmartSolidElement(previousClipVolume).BuildArrayFromContents();
+                        if(smartSolids.Length > 0)
+                        {
+                            // just consider one solid for now
+                            SmartSolidElement clipVolumeSolid = smartSolids[0].AsSmartSolidElement;
+                            var surfaces = clipVolumeSolid.ExtractAllSurfaceFromSolid().BuildArrayFromContents();
+                            List<ClippingPlane> clippingPlanes = new List<ClippingPlane>();
+                            foreach(Element surface in surfaces)
+                            {
+                                ComplexShapeElement surfaceShape = surface.AsComplexShapeElement();
+                                var vertices = surfaceShape.ConstructVertexList(0.1); // arbitrary tolerance for now
+                                if (vertices.Length > 0)
+                                {
+                                    // produce BCF clipping planes
+                                    Point3d location = MSApp.Point3dScale(MSApp.Point3dAdd(clipVolumeSolid.Origin, vertices[0]), unitFactor);
+                                    ClippingPlane clippingPlane = new ClippingPlane()
+                                    {                                        
+                                        Direction = new Direction() { X = surfaceShape.Normal.X, Y = surfaceShape.Normal.Y, Z = surfaceShape.Normal.Z },
+                                        Location = new Classes.BCF2.Point() { X = location.X, Y = location.Y, Z = location.Z }
+                                    };
+                                    clippingPlanes.Add(clippingPlane);
+                                }                                
+                            }
+                            // add to BCF clipping planes
+                            v.ClippingPlanes = clippingPlanes.ToArray();
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        // do nothing just for catching the exception when element not found or not being converted to smart solid
+                        MessageBox.Show(ex.ToString());
+                    }
+                }
 
                 return v;
             }
