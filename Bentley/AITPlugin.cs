@@ -241,13 +241,15 @@ namespace ARUP.IssueTracker.Bentley
 
         private AddIssueResponse handleAddIssueRequest() 
         {
+            // generate BCF viewpoint first to retain selected elements
+            VisualizationInfo visInfo = generateViewpoint();
             return new AddIssueResponse() 
             {
                 isValidRequest = MSApp.ActiveModelReference.Type == MsdModelType.Normal,
                 documentGuid = MSApp.ActiveDesignFile.GetHashCode().ToString(),
                 documentName = MSApp.ActiveDesignFile.Name,
                 tempSnapshotPath = generateSnapshot(),
-                visualizationInfo = generateViewpoint(2)
+                visualizationInfo = visInfo
             };
         }
 
@@ -278,12 +280,30 @@ namespace ARUP.IssueTracker.Bentley
         /// <summary>
         /// Generate Viewpoint
         /// </summary>
-        /// <param name="elemCheck"></param>
-        /// <returns></returns>
-        private VisualizationInfo generateViewpoint(int elemCheck)
+        private VisualizationInfo generateViewpoint()
         {
             try
             {
+                // save selected elements to BCF compoments first
+                List<Component> bcfComponents = new List<Component>();
+                var selectedElements = MSApp.ActiveModelReference.GetSelectedElements().BuildArrayFromContents();
+                if (selectedElements.Length > 0)
+                {
+                    string originatingSystem = getBentleyProductName();
+                    bcfComponents = new List<Component>();
+                    foreach (Element e in selectedElements)
+                    {
+                        string ifcGuid = string.Empty;
+                        PropertyHandler handler = MSApp.CreatePropertyHandler(e);
+                        if (handler.SelectByAccessString("GUID"))
+                        {
+                            Guid guid = new Guid(handler.GetDisplayString());
+                            ifcGuid = IfcGuid.ToIfcGuid(guid).ToString();
+                        }
+                        bcfComponents.Add(new Component(originatingSystem, e.ID.ToString(), ifcGuid));
+                    }
+                }
+
                 // get current view
                 int activeViewNum = getActiveViewNumber();
                 View currentView = MSApp.ActiveDesignFile.Views[activeViewNum];
@@ -325,6 +345,7 @@ namespace ARUP.IssueTracker.Bentley
 
                 // set up BCF viewpoint
                 VisualizationInfo v = new VisualizationInfo();
+                v.Components = bcfComponents;
 
                 // FIXME: ignore perspective view for now
                 /*if (currentView.isPerspective)
@@ -394,26 +415,6 @@ namespace ARUP.IssueTracker.Bentley
                     catch (Exception ex)
                     {
                         // do nothing just for catching the exception when element not found or not being converted to smart solid
-                        MessageBox.Show(ex.ToString());
-                    }
-                }
-
-                // save selected elements to BCF compoments
-                var selectedElements = MSApp.ActiveModelReference.GetSelectedElements().BuildArrayFromContents();
-                if (selectedElements.Length > 0)
-                {
-                    string originatingSystem = getBentleyProductName();
-                    v.Components = new List<Component>();
-                    foreach(Element e in selectedElements)
-                    {
-                        string ifcGuid = string.Empty;
-                        PropertyHandler handler = MSApp.CreatePropertyHandler(e);
-                        if (handler.SelectByAccessString("GUID")) 
-                        {
-                            Guid guid = new Guid(handler.GetDisplayString());
-                            ifcGuid = IfcGuid.ToIfcGuid(guid).ToString();
-                        }
-                        v.Components.Add(new Component(originatingSystem, e.ID.ToString(), ifcGuid));
                     }
                 }
 
