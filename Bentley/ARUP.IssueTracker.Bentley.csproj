@@ -99,6 +99,7 @@
   <ItemGroup>
     <Compile Include="CaptureScreenModalHandler.cs" />
     <Compile Include="Helpers\ConvexHullHelper.cs" />
+    <Compile Include="Helpers\IfcGuid.cs" />
     <Compile Include="Helpers\Vector2d.cs" />
     <Compile Include="IPC\Visinfo.cs" />
     <Compile Include="IPC\AddIssueResponse.cs" />

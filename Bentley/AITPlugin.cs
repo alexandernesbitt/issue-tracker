@@ -398,6 +398,25 @@ namespace ARUP.IssueTracker.Bentley
                     }
                 }
 
+                // save selected elements to BCF compoments
+                var selectedElements = MSApp.ActiveModelReference.GetSelectedElements().BuildArrayFromContents();
+                if (selectedElements.Length > 0)
+                {
+                    string originatingSystem = getBentleyProductName();
+                    v.Components = new List<Component>();
+                    foreach(Element e in selectedElements)
+                    {
+                        string ifcGuid = string.Empty;
+                        PropertyHandler handler = MSApp.CreatePropertyHandler(e);
+                        if (handler.SelectByAccessString("GUID")) 
+                        {
+                            Guid guid = new Guid(handler.GetDisplayString());
+                            ifcGuid = IfcGuid.ToIfcGuid(guid).ToString();
+                        }
+                        v.Components.Add(new Component(originatingSystem, e.ID.ToString(), ifcGuid));
+                    }
+                }
+
                 return v;
             }
             catch (System.Exception ex1)
