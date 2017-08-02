@@ -8,6 +8,6 @@ namespace ARUP.IssueTracker.IPC
 {
     public enum IpcOperationType
     {
-        Invalid, AddIssueRequest, AddIssueResponse, OpenViewpointRequest
+        Invalid, AddIssueRequest, AddIssueResponse, OpenViewpointRequest, SelectElementsRequest
     }
 }

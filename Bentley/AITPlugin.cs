@@ -219,6 +219,12 @@ namespace ARUP.IssueTracker.Bentley
                     jsonResponseMsg = "{}";
                     doOpen3DView(visInfo);
                 }
+                else if (type == IpcOperationType.SelectElementsRequest) 
+                {
+                    List<Component> components = IpcMessageStore.getPayload<List<Component>>(jsonRequestMsg);
+                    jsonResponseMsg = "{}";
+                    selectElements(components, true);
+                }
 
                 // Send response
                 byte[] _buffer = Encoding.UTF8.GetBytes(jsonResponseMsg);
@@ -576,56 +582,7 @@ namespace ARUP.IssueTracker.Bentley
                 }                
 
                 // handle BCF components
-                if (v.Components != null)
-                {
-                    List<Guid> guidsOfMissingElementIDs = new List<Guid>();
-                    // try ElementID first
-                    v.Components.ForEach(c => {                        
-                        try
-                        {                        
-                            long elementId = long.Parse(c.AuthoringToolId);
-                            Element ele = MSApp.ActiveModelReference.GetElementByID((long)elementId);
-                            MSApp.ActiveModelReference.SelectElement(ele);
-                        }
-                        catch (Exception ex)
-                        {
-                            // add GUIDs if element not found
-                            Guid guid = IfcGuid.FromIfcGUID(c.IfcGuid);
-                            if(guid != Guid.Empty)
-                            {
-                                guidsOfMissingElementIDs.Add(guid);
-                            }                                                                                                           
-                        }
-                    });
-
-                    // try GUID if any ElementID not found
-                    int foundElementCounter = 0;
-                    if (guidsOfMissingElementIDs.Count > 0)
-                    {
-                        // iterate the entire model
-                        ElementEnumerator ee = MSApp.ActiveModelReference.Scan();
-                        while(ee.MoveNext())
-                        {
-                            Element ele = ee.Current;
-                            PropertyHandler handler = MSApp.CreatePropertyHandler(ele);
-                            if (handler.SelectByAccessString("GUID"))
-                            {
-                                // select element if GUID is found
-                                Guid benleyGuid = parseGuid(handler.GetDisplayString());
-                                if (benleyGuid != Guid.Empty && guidsOfMissingElementIDs.Exists(bcfGuid => bcfGuid == benleyGuid))
-                                {
-                                    MSApp.ActiveModelReference.SelectElement(ele);
-                                    foundElementCounter++;
-                                }
-                            }
-                            // break the loop if all missing elements are found
-                            if (guidsOfMissingElementIDs.Count == foundElementCounter)
-                            {
-                                break;
-                            }
-                        }
-                    }
-                }                
+                selectElements(v.Components);                
 
                 // redraw current view                
                 currentView.Redraw();
@@ -634,6 +591,69 @@ namespace ARUP.IssueTracker.Bentley
             catch (System.Exception ex1)
             {
                 MessageBox.Show("exception: " + ex1, "Error!");
+            }
+        }
+
+        private void selectElements(List<Component> components, bool redrawView = false)
+        {
+            if (components != null)
+            {
+                List<Guid> guidsOfMissingElementIDs = new List<Guid>();
+                // try ElementID first
+                components.ForEach(c =>
+                {
+                    try
+                    {
+                        long elementId = long.Parse(c.AuthoringToolId);
+                        Element ele = MSApp.ActiveModelReference.GetElementByID((long)elementId);
+                        MSApp.ActiveModelReference.SelectElement(ele);
+                    }
+                    catch (Exception ex)
+                    {
+                        // add GUIDs if element not found
+                        Guid guid = IfcGuid.FromIfcGUID(c.IfcGuid);
+                        if (guid != Guid.Empty)
+                        {
+                            guidsOfMissingElementIDs.Add(guid);
+                        }
+                    }
+                });
+
+                // try GUID if any ElementID not found
+                // HTC: disable finding element by GUID for now since it's very slow
+                /*int foundElementCounter = 0;
+                if (guidsOfMissingElementIDs.Count > 0)
+                {
+                    // iterate the entire model
+                    ElementEnumerator ee = MSApp.ActiveModelReference.Scan();
+                    while (ee.MoveNext())
+                    {
+                        Element ele = ee.Current;
+                        PropertyHandler handler = MSApp.CreatePropertyHandler(ele);
+                        if (handler.SelectByAccessString("GUID"))
+                        {
+                            // select element if GUID is found
+                            Guid bentleyGuid = parseGuid(handler.GetDisplayString());
+                            if (bentleyGuid != Guid.Empty && guidsOfMissingElementIDs.Exists(bcfGuid => bcfGuid == bentleyGuid))
+                            {
+                                MSApp.ActiveModelReference.SelectElement(ele);
+                                foundElementCounter++;
+                            }
+                        }
+                        // break the loop if all missing elements are found
+                        if (guidsOfMissingElementIDs.Count == foundElementCounter)
+                        {
+                            break;
+                        }
+                    }
+                }*/
+            }
+            
+            if(redrawView)
+            {
+                int activeViewNum = getActiveViewNumber();
+                View currentView = MSApp.ActiveDesignFile.Views[activeViewNum];
+                currentView.Redraw();
             }
         }
 

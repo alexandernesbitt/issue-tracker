@@ -51,6 +51,9 @@ namespace ARUP.IssueTracker.Win
 
         mainPan.bcfPan.open3dViewEvent += new RoutedEventHandler(Open3dViewBCF);
         mainPan.jiraPan.open3dViewEvent += new RoutedEventHandler(Open3dViewJira);
+
+        // for selecting attached elements
+        mainPan.selectElements = this.SelectElements;
     }
 
     /// <summary>
@@ -395,6 +398,11 @@ namespace ARUP.IssueTracker.Win
     private void doOpen3DView(VisualizationInfo v)
     {
         sendIpcRequest(IpcOperationType.OpenViewpointRequest, v, null);
+    }
+
+    public void SelectElements(List<ARUP.IssueTracker.Classes.BCF2.Component> components)
+    {
+        sendIpcRequest(IpcOperationType.SelectElementsRequest, components, null);
     }
 
   }
