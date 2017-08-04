@@ -76,19 +76,19 @@ namespace ARUP.IssueTracker.Bentley
             MSApp = BMI.Utilities.ComApp;
 
             // Version check
-            string versionNumber = "V8i";
-            if (!getBentleyProductName().Contains(versionNumber))
+            /*string versionNumber = "08.11";
+            if (!MSApp.Version.Contains(versionNumber))
             {
-                MessageBox.Show(string.Format("This Add-In was built for {0} {1}, please find the Arup Issue Tracker group in Yammer for assistance...", versionNumber, getBentleyProductName()), "Incompatible Version");
+                MessageBox.Show(string.Format("This Add-In was built for {0} {1}, please find the Arup Issue Tracker group in Yammer for assistance...", getBentleyProductName(), versionNumber), "Incompatible Version");
                 return -1;
-            }
+            }*/
 
             //  Register reload and unload events, and show the form
             ReloadEvent += new ReloadEventHandler(AIT_ReloadEvent);
             UnloadedEvent += new UnloadedEventHandler(AIT_UnloadedEvent);
 
             // Run IPC app
-            RunAIT();
+            // RunAIT();
 
             return 0;
         }
