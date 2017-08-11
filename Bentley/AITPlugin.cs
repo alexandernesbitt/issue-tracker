@@ -699,7 +699,7 @@ namespace ARUP.IssueTracker.Bentley
 
         private double GetGunits()
         {
-            string units = MSApp.ActiveModelReference.get_MasterUnit().Label;
+            string units = MSApp.ActiveModelReference.get_MasterUnit().Label.ToLower();
             double factor = 1;
             switch (units)
             {
