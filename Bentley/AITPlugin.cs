@@ -30,7 +30,7 @@ namespace ARUP.IssueTracker.Bentley
         private string _path = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
         public static AITPlugin MSAddin = null;
         public static BCOM.Application MSApp = null;
-        private static string aitNamedGroupName = "AITCLIPVOLUME";
+        private static double distancePrecision = 0.001;
 
         [DllImport("stdmdlbltin.dll", CallingConvention = CallingConvention.Cdecl)]
         internal static extern IntPtr mdlView_getClipBoundaryElement
@@ -318,25 +318,28 @@ namespace ARUP.IssueTracker.Bentley
                 // enable perspective camera back and forth to get correct view attributes, see the post below
                 // https://communities.bentley.com/products/programming/microstation_programming/f/343173/t/80064
                 MSApp.CadInputQueue.SendKeyin("MDL KEYIN BENTLEY.VIEWATTRIBUTESDIALOG,VAD VIEWATTRIBUTESDIALOG SETATTRIBUTE 0 Camera True");
-                MSApp.CadInputQueue.SendKeyin("MDL KEYIN BENTLEY.VIEWATTRIBUTESDIALOG,VAD VIEWATTRIBUTESDIALOG SETATTRIBUTE 0 Camera False");
+                MSApp.CadInputQueue.SendKeyin("MDL KEYIN BENTLEY.VIEWATTRIBUTESDIALOG,VAD VIEWATTRIBUTESDIALOG SETATTRIBUTE 0 Camera False");                
 
-                // force view center to be identical as camera target
-                Point3d center = new Point3d();
-                center = currentView.get_Center();
-                Point3d extents = new Point3d();
-                extents = currentView.get_Extents();
-                Point3d translation = new Point3d();
-                translation = MSApp.Point3dSubtract(center, currentView.get_CameraTarget());
-                ViewCameraParameters vcp = new ViewCameraParametersClass();
-                vcp.set_CameraPosition(MSApp.Point3dAdd(currentView.get_CameraPosition(), translation));
-                vcp.set_CameraTarget(MSApp.Point3dAdd(currentView.get_CameraTarget(), translation));
-                currentView.SetCameraProperties(vcp);
-                currentView.set_Extents(extents);
-                currentView.set_Center(center);
-                currentView.Redraw();
-                
                 // camera direction
                 Point3d direction = MSApp.Point3dNormalize(MSApp.Point3dSubtract(currentView.get_CameraTarget(), currentView.get_CameraPosition()));
+
+                // force view center to be identical as camera target if camera direction is not along Z axis (i.e., not top view or bottom view)
+                if (direction.X > distancePrecision || direction.Y > distancePrecision) // arbitrary precision
+                {
+                    Point3d center = new Point3d();
+                    center = currentView.get_Center();
+                    Point3d extents = new Point3d();
+                    extents = currentView.get_Extents();
+                    Point3d translation = new Point3d();
+                    translation = MSApp.Point3dSubtract(center, currentView.get_CameraTarget());
+                    ViewCameraParameters vcp = new ViewCameraParametersClass();
+                    vcp.set_CameraPosition(MSApp.Point3dAdd(currentView.get_CameraPosition(), translation));
+                    vcp.set_CameraTarget(MSApp.Point3dAdd(currentView.get_CameraTarget(), translation));
+                    currentView.SetCameraProperties(vcp);
+                    currentView.set_Extents(extents);
+                    currentView.set_Center(center);
+                    currentView.Redraw();
+                }                
 
                 // camera scale
                 double h = currentView.get_Extents().Y * unitFactor;
@@ -345,6 +348,11 @@ namespace ARUP.IssueTracker.Bentley
 
                 // camera location
                 Point3d cameraLocation = MSApp.Point3dScale(currentView.get_CameraPosition(), unitFactor);
+                // grab current view center point if camera direction is along Z axis (i.e., top view or bottom view)
+                if (direction.X < distancePrecision && direction.Y < distancePrecision) // arbitrary precision
+                {
+                    cameraLocation = MSApp.Point3dScale(currentView.get_Center(), unitFactor);
+                }
 
                 // camera up vector
                 Point3d upVector = currentView.get_CameraUpVector();
@@ -543,7 +551,7 @@ namespace ARUP.IssueTracker.Bentley
                         bool uniqueProjectionPoint = true;
                         foreach (Vector2d vertex in planeVertices)
                         {
-                            if (MSApp.Point2dDistance(new Point2d() { X = vertex.X, Y = vertex.Y }, new Point2d() { X = p.X, Y = p.Y }) < 0.001) // arbitrary precision for now
+                            if (MSApp.Point2dDistance(new Point2d() { X = vertex.X, Y = vertex.Y }, new Point2d() { X = p.X, Y = p.Y }) < distancePrecision) // arbitrary precision for now
                             {
                                 uniqueProjectionPoint = false;
                                 break;
