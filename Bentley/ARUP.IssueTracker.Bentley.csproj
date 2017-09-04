@@ -140,8 +140,7 @@
     </PreBuildEvent>
   </PropertyGroup>
   <PropertyGroup>
-    <PostBuildEvent>copy /Y "$(TargetPath)" "C:\Program Files (x86)\Bentley_V8i_SS4\MicroStation\mdlapps\ARUP.IssueTracker.Bentley.dll"
-copy /Y "$(TargetPath)" "C:\Program Files (x86)\Bentley_SS6\AECOsimBuildingDesigner\AECOsimBuildingDesigner\mdlapps\ARUP.IssueTracker.Bentley.dll"</PostBuildEvent>
+    <PostBuildEvent>copy /Y "$(TargetPath)" "C:\Program Files (x86)\CASE\ARUP Issue Tracker\Bentley\ARUP.IssueTracker.Bentley.dll"</PostBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
