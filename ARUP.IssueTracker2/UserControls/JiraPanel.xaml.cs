@@ -40,12 +40,28 @@ namespace ARUP.IssueTracker.UserControls
             this.mainPanel = mainPanel;
         }
 
+        /// <summary>
+        /// Get or set the index of ProjectsCollection which is different from sorted and grouped item source of dropdown list
+        /// </summary>
         public int projIndex
         {
-            get { return projCombo.SelectedIndex; }
-            set { projCombo.SelectedIndex = value; }
-        }
-       
+            get 
+            {
+                ARUP.IssueTracker.Classes.Project selectedProject = ((ARUP.IssueTracker.Classes.Project)projCombo.SelectedItem);
+                return mainPanel.jira.ProjectsCollection.IndexOf(selectedProject); 
+            }
+            set 
+            {
+                if(value < 0)
+                {
+                    projCombo.SelectedIndex = -1;
+                }
+                else
+                {
+                    projCombo.SelectedItem = mainPanel.jira.ProjectsCollection[value];
+                }                
+            }
+        }       
 
         public int listIndex
         {

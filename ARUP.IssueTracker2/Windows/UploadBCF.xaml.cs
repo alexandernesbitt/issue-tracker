@@ -15,7 +15,6 @@ namespace ARUP.IssueTracker.Windows
     public partial class UploadBCF : Window
     {
         public int itemCount = 0;
-        public int projIndex = 0;
 
         public User selectedAssignee;
         public List<Component> selectedComponents = new List<Component>(); 

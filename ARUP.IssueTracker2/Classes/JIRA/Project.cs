@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 
 namespace ARUP.IssueTracker.Classes
 {
@@ -17,7 +18,20 @@ namespace ARUP.IssueTracker.Classes
             {
                 return "[" + key + "] " + name;
             }
-
+        }
+        public string category 
+        {
+            get 
+            {
+                return ARUP.IssueTracker.UserControls.MainPanel.recentProjectKeys.Contains(key) ? "Recent Projects" : "All Other Projects";                
+            }
+        }
+        public int recentProjectOrder 
+        {
+            get 
+            {
+                return ARUP.IssueTracker.UserControls.MainPanel.recentProjectKeys.IndexOf(key);
+            }
         }
     }
 }

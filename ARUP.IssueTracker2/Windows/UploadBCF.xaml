@@ -17,6 +17,28 @@
 
             <Label Content="Project:" VerticalAlignment="Center" Width="75"/>
             <ComboBox  x:Name="projCombo" Width="300" SelectionChanged="projCombo_SelectionChanged">
+                <ComboBox.GroupStyle>
+                    <GroupStyle>
+                        <GroupStyle.HeaderTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding Name}" Margin="10,0,0,0" Foreground="#989791" />
+                            </DataTemplate>
+                        </GroupStyle.HeaderTemplate>
+                        <GroupStyle.ContainerStyle>
+                            <Style TargetType="{x:Type GroupItem}">
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="{x:Type GroupItem}">
+                                            <Expander IsExpanded="True" x:Name="ComboExpander" Header="{TemplateBinding Content}" HeaderTemplate="{TemplateBinding ContentTemplate}">
+                                                <ItemsPresenter />
+                                            </Expander>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                        </GroupStyle.ContainerStyle>
+                    </GroupStyle>
+                </ComboBox.GroupStyle>
                 <ComboBox.ItemTemplate>
                     <DataTemplate>
                         <Grid>

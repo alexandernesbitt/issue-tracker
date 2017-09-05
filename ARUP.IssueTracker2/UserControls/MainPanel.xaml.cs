@@ -42,6 +42,8 @@ namespace ARUP.IssueTracker.UserControls
         /// </summary>
         public Window mainWindow;
 
+        public static List<string> recentProjectKeys;
+
         public MainPanel()
         {
             InitializeComponent();
@@ -169,7 +171,6 @@ namespace ARUP.IssueTracker.UserControls
         #region JIRA
         private void refresh(object sender, RoutedEventArgs e)
         {
-
             getProjects();
         }
         private void getProjects()
@@ -199,7 +200,6 @@ namespace ARUP.IssueTracker.UserControls
             try
             {
                 IRestResponse<Projects> response = e.Responses.Last() as IRestResponse<Projects>;
-                int projIndex = jiraPan.projIndex;
 
                 if (RestCallback.Check(response) && response.Data.projects != null && response.Data.projects.Any())
                 {
@@ -208,21 +208,39 @@ namespace ARUP.IssueTracker.UserControls
                     {
                         jira.ProjectsCollection.Add(project);
                     }
-                    getPriorities();
-                    if (projIndex == -1) //just opened the app
-                    {
-                        string projstring = MySettings.Get("currentproj");
-                        projIndex = (!string.IsNullOrWhiteSpace(projstring)) ? Convert.ToInt16(projstring) : 0;
+                    getPriorities();                    
 
+                    // populate recent projects
+                    string recentProjectsString = MySettings.Get("recentproj");
+                    if (!string.IsNullOrWhiteSpace(recentProjectsString) && recentProjectKeys == null)
+                    {
+                        recentProjectKeys = new List<string>(recentProjectsString.Split(','));
                     }
 
-                    jiraPan.projIndex = (jira.ProjectsCollection.Count <= projIndex) ? 0 : projIndex;
+                    // set up project groups
+                    updateProjectList();
+
+                    // get project data
+                    projCombo_SelectionChanged(null, null);
                 }
             }
             catch (System.Exception ex1)
             {
                 MessageBox.Show("exception: " + ex1, "Error!");
             }
+        }
+        private void updateProjectList() 
+        {
+            System.Windows.Data.ListCollectionView lcv = new System.Windows.Data.ListCollectionView(jira.ProjectsCollection);
+            lcv.GroupDescriptions.Add(new System.Windows.Data.PropertyGroupDescription("category"));
+            lcv.SortDescriptions.Add(new SortDescription("category", ListSortDirection.Descending));
+            lcv.SortDescriptions.Add(new SortDescription("recentProjectOrder", ListSortDirection.Descending));
+            lcv.SortDescriptions.Add(new SortDescription("key", ListSortDirection.Ascending));
+            jiraPan.projCombo.SelectionChanged -= projCombo_SelectionChanged;
+            jiraPan.projCombo.ItemsSource = lcv;
+            jiraPan.projCombo.Items.Refresh();
+            jiraPan.projCombo.SelectedIndex = 0;
+            jiraPan.projCombo.SelectionChanged += projCombo_SelectionChanged;
         }
         private void projCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
@@ -231,7 +249,22 @@ namespace ARUP.IssueTracker.UserControls
                 //clear filters!
                 jiraPan.clearFilters_Click(null, null);
 
-                if (jiraPan.projIndex == -1)
+                // update recent projects
+                ARUP.IssueTracker.Classes.Project selectedProject = ((ARUP.IssueTracker.Classes.Project)jiraPan.projCombo.SelectedItem);
+                if (selectedProject == null)
+                    return;
+                string projectKey = selectedProject.key;
+                if (recentProjectKeys.Contains(projectKey))
+                {
+                    recentProjectKeys.Remove(projectKey);
+                }
+                else if (recentProjectKeys.Count >= 5) // only keeps the latest 5 recent projects
+                {
+                    recentProjectKeys.RemoveAt(0);
+                }
+                recentProjectKeys.Add(projectKey);
+
+                if (jiraPan.projIndex < 0)
                     return;
                 getIssues(0);
                 //filters
@@ -252,7 +285,8 @@ namespace ARUP.IssueTracker.UserControls
                     getComponents();
                 }
 
-
+                // update project list dropdown
+                updateProjectList();
             }
             catch (System.Exception ex1)
             {
@@ -712,9 +746,7 @@ namespace ARUP.IssueTracker.UserControls
                 jira.IssuesCollection = new ObservableCollection<Issue>();
                 jiraPan.lastSynced.Text = "Logged out";
                 jiraPan.ConncetBtn.Content = "Connect";
-                jiraPan.projIndex = -1;
-                
-                
+                jiraPan.projIndex = -1;               
             }
             catch (System.Exception ex1)
             {
@@ -1875,9 +1907,14 @@ namespace ARUP.IssueTracker.UserControls
                 }
 
                 UploadBCF ub = new UploadBCF();
-                ub.projCombo.ItemsSource = jira.ProjectsCollection;
+                System.Windows.Data.ListCollectionView lcv = new System.Windows.Data.ListCollectionView(jira.ProjectsCollection);
+                lcv.GroupDescriptions.Add(new System.Windows.Data.PropertyGroupDescription("category"));
+                lcv.SortDescriptions.Add(new SortDescription("category", ListSortDirection.Descending));
+                lcv.SortDescriptions.Add(new SortDescription("recentProjectOrder", ListSortDirection.Descending));
+                lcv.SortDescriptions.Add(new SortDescription("key", ListSortDirection.Ascending));
+                ub.projCombo.ItemsSource = lcv;
+                ub.projCombo.SelectedIndex = 0;
                 ub.itemCount = bcfPan.issueList.SelectedItems.Count;
-                ub.projIndex = jiraPan.projIndex;
                 ub.setValues();
                 ub.WindowStartupLocation = System.Windows.WindowStartupLocation.CenterScreen;
                 ub.ShowDialog();
@@ -1968,7 +2005,8 @@ namespace ARUP.IssueTracker.UserControls
                         issuesJira.Add(issueJira);
                     }
 
-                    doUploadIssue(issues, jira.Bcf.TempPath, false, ub.projCombo.SelectedIndex, issuesJira);
+                    int selectedProjectIndex = jira.ProjectsCollection.IndexOf((ARUP.IssueTracker.Classes.Project)ub.projCombo.SelectedItem);
+                    doUploadIssue(issues, jira.Bcf.TempPath, false, selectedProjectIndex, issuesJira);
 
                 }
             }
@@ -2399,7 +2437,6 @@ namespace ARUP.IssueTracker.UserControls
                 e.Handled = true;
             }
         }
-
         #endregion
         #region public various methods
         public VisualizationInfo getVisInfo(string url)
@@ -2470,9 +2507,11 @@ namespace ARUP.IssueTracker.UserControls
                 //save current tab
                 if (index != -1)
                     MySettings.Set("currenttab", index.ToString());
-                //save current project
-                if (jiraPan.projIndex != -1)
-                    MySettings.Set("currentproj", jiraPan.projIndex.ToString());
+                //save recent projects
+                if(recentProjectKeys.Count > 0)
+                {
+                    MySettings.Set("recentproj", string.Join(",", recentProjectKeys));
+                }
 
                 if (jira.Bcf != null && Directory.Exists(jira.Bcf.TempPath))
                     DeleteDirectory(jira.Bcf.TempPath);
