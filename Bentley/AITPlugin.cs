@@ -1,7 +1,12 @@
 ﻿using Bentley.Interop.MicroStationDGN;
 using BCOM = Bentley.Interop.MicroStationDGN;
+#if select
 using BM = Bentley.MicroStation;
 using BMI = Bentley.MicroStation.InteropServices;
+#elif connect
+using BM = Bentley.MstnPlatformNET;
+using BMI = Bentley.MstnPlatformNET.InteropServices;
+#endif
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System;
@@ -277,7 +282,7 @@ namespace ARUP.IssueTracker.Bentley
             string tempSnapshotPath = Path.GetTempFileName();
             CaptureScreenModalHandler handler = new CaptureScreenModalHandler(tempSnapshotPath);
             MSApp.AddModalDialogEventsHandler(handler);
-            MSApp.CadInputQueue.SendCommand("MDL KEYIN mptools save image");
+            MSApp.CadInputQueue.SendKeyin("SAVE IMAGE ");
             MSApp.RemoveModalDialogEventsHandler(handler);
             MSApp.CommandState.StartDefaultCommand();
             return tempSnapshotPath;
