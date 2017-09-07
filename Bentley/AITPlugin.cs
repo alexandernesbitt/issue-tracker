@@ -35,7 +35,8 @@ namespace ARUP.IssueTracker.Bentley
         private string _path = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
         public static AITPlugin MSAddin = null;
         public static BCOM.Application MSApp = null;
-        private static double distancePrecision = 0.001;
+        private readonly static double distancePrecision = 0.001;        
+        private readonly static double customZoomLevel = 1.4; // arbitrary zoom level set for Bentley
 
         [DllImport("stdmdlbltin.dll", CallingConvention = CallingConvention.Cdecl)]
         internal static extern IntPtr mdlView_getClipBoundaryElement
@@ -279,8 +280,9 @@ namespace ARUP.IssueTracker.Bentley
         private string generateSnapshot() 
         {
             MSApp.CadInputQueue.SendKeyin("null");
+            MSApp.CadInputQueue.SendKeyin("MDL KEYIN BENTLEY.VIEWATTRIBUTESDIALOG,VAD VIEWATTRIBUTESDIALOG SETATTRIBUTE 0 Camera False");
             string tempSnapshotPath = Path.GetTempFileName();
-            CaptureScreenModalHandler handler = new CaptureScreenModalHandler(tempSnapshotPath);
+            CaptureScreenModalHandler handler = new CaptureScreenModalHandler(tempSnapshotPath, getActiveViewNumber());
             MSApp.AddModalDialogEventsHandler(handler);
             MSApp.CadInputQueue.SendKeyin("SAVE IMAGE ");
             MSApp.RemoveModalDialogEventsHandler(handler);
@@ -504,6 +506,7 @@ namespace ARUP.IssueTracker.Bentley
                 currentView.set_CameraTarget(scaledCameraTarget);
                 currentView.set_Center(scaledCameraTarget);
                 currentView.set_CameraUpVector(upVector);
+                MSApp.CadInputQueue.SendKeyin("MDL KEYIN BENTLEY.VIEWATTRIBUTESDIALOG,VAD VIEWATTRIBUTESDIALOG SETATTRIBUTE 0 Camera False");
                 if (v.PerspectiveCamera != null)
                 {
                     currentView.CameraAngle = zoomValue * unitFactor;
@@ -511,10 +514,10 @@ namespace ARUP.IssueTracker.Bentley
                 else if (v.OrthogonalCamera != null)
                 {
                     Point3d currentExtent = currentView.get_Extents();
-                    double zoomLevel = zoomValue * unitFactor * 1.5 / currentExtent.Y; // 1.5 is arbitrary zoom level set for Bentley
+                    double zoomLevel = zoomValue * unitFactor * customZoomLevel / currentExtent.Y;
                     currentView.Zoom(zoomLevel);
                 }
-
+                
                 // disable and clear previous clip volume
                 ulong previousClipVolumeId = 0;
                 int status = mdlView_getClipBoundaryElement(ref previousClipVolumeId, activeViewNum - 1).ToInt32();
@@ -575,6 +578,20 @@ namespace ARUP.IssueTracker.Bentley
 
                     // produce solid
                     Point3d firstVertex = planeShape.get_Vertex(1);
+#if connect
+                    MSApp.CadInputQueue.SendKeyin("CONSTRUCT SURFACE PROJECTIONSOLID ");
+                    MSApp.SetCExpressionValue("tcb->ms3DToolSettings.extrude.nonParametric", 1, "SOLIDMODELING");
+                    MSApp.SetCExpressionValue("tcb->ms3DToolSettings.extrude.solidSkewed", 0, "SOLIDMODELING");
+                    MSApp.SetCExpressionValue("tcb->ms3DToolSettings.extrude.solidIsDist", 1, "SOLIDMODELING");
+                    MSApp.SetCExpressionValue("tcb->ms3DToolSettings.extrudeSolidDistance", (MSApp.ActiveModelReference.UORsPerMasterUnit * halfOfHeight), "SOLIDMODELING");
+                    MSApp.SetCExpressionValue("tcb->ms3DToolSettings.extrude.solidBothWays", 1, "SOLIDMODELING");
+                    MSApp.SetCExpressionValue("tcb->ms3DToolSettings.extrudeSolidYScale", 1, "SOLIDMODELING");
+                    MSApp.SetCExpressionValue("tcb->ms3DToolSettings.extrudeSolidXScale", 1, "SOLIDMODELING");
+                    MSApp.SetCExpressionValue("tcb->ms3DToolSettings.extrude.solidActiveAttib", 0, "SOLIDMODELING");
+                    MSApp.SetCExpressionValue("tcb->ms3DToolSettings.extrude.solidKeepOriginal", 0, "SOLIDMODELING");                    
+                    MSApp.SetCExpressionValue("tcb->ms3DToolSettings.extrudeSolidSpinAng", 0, "SOLIDMODELING");
+                    MSApp.CadInputQueue.SendKeyin("CONSTRUCT SURFACE PROJECTIONSOLID ");
+#elif select
                     MSApp.CadInputQueue.SendCommand("CONSTRUCT SURFACE PROJECTIONSOLID");
                     MSApp.SetCExpressionValue("tcb->ms3DToolSettings.extrude.solidSkewed", 0, "3DTOOLS");
                     MSApp.SetCExpressionValue("tcb->ms3DToolSettings.extrude.solidIsDist", 1, "3DTOOLS");
@@ -586,6 +603,9 @@ namespace ARUP.IssueTracker.Bentley
                     MSApp.SetCExpressionValue("tcb->ms3DToolSettings.extrude.solidKeepOriginal", 0, "3DTOOLS");
                     MSApp.CadInputQueue.SendDataPoint(firstVertex, activeViewNum);
                     MSApp.CadInputQueue.SendDataPoint(firstVertex, activeViewNum);
+#endif
+                    MSApp.CadInputQueue.SendDataPoint(firstVertex, activeViewNum);
+                    MSApp.CadInputQueue.SendDataPoint(firstVertex, activeViewNum);
 
                     // clip volume
                     MSApp.CadInputQueue.SendCommand("VIEW CLIP SINGLE");
@@ -595,7 +615,8 @@ namespace ARUP.IssueTracker.Bentley
                 }                
 
                 // handle BCF components
-                selectElements(v.Components);                
+                MSApp.ActiveModelReference.UnselectAllElements();
+                selectElements(v.Components);             
 
                 // redraw current view                
                 currentView.Redraw();

@@ -16,11 +16,13 @@ namespace ARUP.IssueTracker.Bentley
     {
         private string tempFolder;
         private string tempFilename;
+        private int activeViewNumber;
 
-        public CaptureScreenModalHandler(string tempFilePath) 
+        public CaptureScreenModalHandler(string tempFilePath, int activeViewNumber) 
         {
             this.tempFolder = Path.GetDirectoryName(tempFilePath);
             this.tempFilename = Path.GetFileName(tempFilePath);
+            this.activeViewNumber = activeViewNumber;
         }
 
         public void OnDialogClosed(string DialogBoxName, MsdDialogBoxResult DialogResult)
@@ -32,7 +34,7 @@ namespace ARUP.IssueTracker.Bentley
         {
             if (DialogBoxName == "Save Image")
             {
-                BMI.Utilities.ComApp.SetCExpressionValue("msDialogState.modalData.saveImage.viewNum", 0, "MPTOOLS");
+                BMI.Utilities.ComApp.SetCExpressionValue("msDialogState.modalData.saveImage.viewNum", activeViewNumber-1, "MPTOOLS");
                 BMI.Utilities.ComApp.SetCExpressionValue("msDialogState.modalData.saveImage.format", 28, "MPTOOLS");
                 BMI.Utilities.ComApp.SetCExpressionValue("msDialogState.modalData.saveImage.colorMode", 1, "MPTOOLS");
                 BMI.Utilities.ComApp.SetCExpressionValue("msDialogState.modalData.saveImage.renderMode", 3, "MPTOOLS");
