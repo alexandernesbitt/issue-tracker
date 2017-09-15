@@ -63,20 +63,20 @@
     <!--AME Referebces Begin-->
     <!--AME Reference End-->
     <Reference Include="Bentley.General.1.0">
-      <HintPath>..\..\..\Program Files (x86)\Bentley_V8i_SS4\MicroStation\assemblies\ECFramework\Bentley.General.1.0.dll</HintPath>
+      <HintPath>..\Lib\Bentley\Select\Bentley.General.1.0.dll</HintPath>
     </Reference>
     <Reference Include="bentley.interop.microstationdgn">
-      <HintPath>..\..\..\Program Files (x86)\Bentley_V8i_SS4\MicroStation\assemblies\bentley.interop.microstationdgn.dll</HintPath>
+      <HintPath>..\Lib\Bentley\Select\bentley.interop.microstationdgn.dll</HintPath>
       <EmbedInteropTypes>True</EmbedInteropTypes>
     </Reference>
     <Reference Include="bentley.microstation">
-      <HintPath>..\..\..\Program Files (x86)\Bentley_V8i_SS4\MicroStation\assemblies\bentley.microstation.dll</HintPath>
+      <HintPath>..\Lib\Bentley\Select\bentley.microstation.dll</HintPath>
     </Reference>
     <Reference Include="bentley.microstation.interfaces.1.0">
-      <HintPath>..\..\..\Program Files (x86)\Bentley_V8i_SS4\MicroStation\assemblies\bentley.microstation.interfaces.1.0.dll</HintPath>
+      <HintPath>..\Lib\Bentley\Select\bentley.microstation.interfaces.1.0.dll</HintPath>
     </Reference>
     <Reference Include="Bentley.Windowing">
-      <HintPath>..\..\..\Program Files (x86)\Bentley_V8i_SS4\MicroStation\assemblies\ECFramework\Bentley.Windowing.dll</HintPath>
+      <HintPath>..\Lib\Bentley\Select\Bentley.Windowing.dll</HintPath>
     </Reference>
     <Reference Include="Newtonsoft.Json, Version=6.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -90,7 +90,8 @@
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
     <Reference Include="ustation">
-      <HintPath>..\..\..\Program Files (x86)\Bentley_V8i_SS4\MicroStation\ustation.dll</HintPath>
+      <HintPath>..\Lib\Bentley\Select\ustation.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="WindowsBase" />
     <Reference Include="PresentationCore" />

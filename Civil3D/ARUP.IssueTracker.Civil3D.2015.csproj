@@ -64,22 +64,22 @@
     <!--AME Reference End-->
     <Reference Include="accoremgd, Version=21.0.0.0, Culture=neutral, processorArchitecture=AMD64">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\Program Files\Autodesk\AutoCAD 2015\accoremgd.dll</HintPath>
+      <HintPath>..\Lib\AutoCAD\2015\accoremgd.dll</HintPath>
     </Reference>
     <Reference Include="acdbmgd, Version=21.0.0.0, Culture=neutral, processorArchitecture=AMD64">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\Program Files\Autodesk\AutoCAD 2015\acdbmgd.dll</HintPath>
+      <HintPath>..\Lib\AutoCAD\2015\acdbmgd.dll</HintPath>
     </Reference>
     <Reference Include="acmgd, Version=21.0.0.0, Culture=neutral, processorArchitecture=AMD64">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\Program Files\Autodesk\AutoCAD 2015\acmgd.dll</HintPath>
+      <HintPath>..\Lib\AutoCAD\2015\acmgd.dll</HintPath>
     </Reference>
     <Reference Include="Autodesk.AutoCAD.Interop">
-      <HintPath>..\..\..\Program Files\Autodesk\AutoCAD 2015\Autodesk.AutoCAD.Interop.dll</HintPath>
+      <HintPath>..\Lib\AutoCAD\2015\Autodesk.AutoCAD.Interop.dll</HintPath>
       <EmbedInteropTypes>True</EmbedInteropTypes>
     </Reference>
     <Reference Include="Autodesk.AutoCAD.Interop.Common">
-      <HintPath>..\..\..\Program Files\Autodesk\AutoCAD 2015\Autodesk.AutoCAD.Interop.Common.dll</HintPath>
+      <HintPath>..\Lib\AutoCAD\2015\Autodesk.AutoCAD.Interop.Common.dll</HintPath>
       <EmbedInteropTypes>True</EmbedInteropTypes>
     </Reference>
     <Reference Include="System" />

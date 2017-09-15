@@ -64,37 +64,37 @@
     <!--AME Referebces Begin-->
     <!--AME Reference End-->
     <Reference Include="Bentley.Building.Api">
-      <HintPath>..\..\..\Program Files\Bentley\AECOsim CONNECT Edition\AECOsimBuildingDesigner\Assemblies\Bentley.Building.Api.dll</HintPath>
+      <HintPath>..\Lib\Bentley\Connect\Bentley.Building.Api.dll</HintPath>
     </Reference>
     <Reference Include="Bentley.DgnDisplayNet">
-      <HintPath>..\..\..\Program Files\Bentley\AECOsim CONNECT Edition\AECOsimBuildingDesigner\Bentley.DgnDisplayNet.dll</HintPath>
+      <HintPath>..\Lib\Bentley\Connect\Bentley.DgnDisplayNet.dll</HintPath>
     </Reference>
     <Reference Include="Bentley.DgnPlatformNET">
-      <HintPath>..\..\..\Program Files\Bentley\AECOsim CONNECT Edition\AECOsimBuildingDesigner\Bentley.DgnPlatformNET.dll</HintPath>
+      <HintPath>..\Lib\Bentley\Connect\Bentley.DgnPlatformNET.dll</HintPath>
     </Reference>
     <Reference Include="Bentley.General.1.0, Version=1.0.0.0, Culture=neutral, PublicKeyToken=4bf6c96a266e58d4, processorArchitecture=x86">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\Program Files\Bentley\AECOsim CONNECT Edition\AECOsimBuildingDesigner\Assemblies\ECFramework\Bentley.General.1.0.dll</HintPath>
+      <HintPath>..\Lib\Bentley\Connect\Bentley.General.1.0.dll</HintPath>
     </Reference>
     <Reference Include="Bentley.GeometryNET">
-      <HintPath>..\..\..\Program Files\Bentley\AECOsim CONNECT Edition\AECOsimBuildingDesigner\Bentley.GeometryNET.dll</HintPath>
+      <HintPath>..\Lib\Bentley\Connect\Bentley.GeometryNET.dll</HintPath>
     </Reference>
     <Reference Include="Bentley.Interop.MicroStationDGN, Version=8.0.0.0, Culture=neutral, PublicKeyToken=4bf6c96a266e58d4, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <EmbedInteropTypes>False</EmbedInteropTypes>
-      <HintPath>..\..\..\Program Files\Bentley\AECOsim CONNECT Edition\AECOsimBuildingDesigner\Assemblies\Bentley.Interop.MicroStationDGN.dll</HintPath>
+      <HintPath>..\Lib\Bentley\Connect\Bentley.Interop.MicroStationDGN.dll</HintPath>
     </Reference>
     <Reference Include="Bentley.MicroStation, Version=1.0.0.0, Culture=neutral, PublicKeyToken=4bf6c96a266e58d4, processorArchitecture=x86">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\Program Files\Bentley\AECOsim CONNECT Edition\AECOsimBuildingDesigner\Assemblies\Bentley.MicroStation.dll</HintPath>
+      <HintPath>..\Lib\Bentley\Connect\Bentley.MicroStation.dll</HintPath>
     </Reference>
     <Reference Include="Bentley.MicroStation.Interfaces.1.0, Version=1.0.0.0, Culture=neutral, PublicKeyToken=4bf6c96a266e58d4, processorArchitecture=x86">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\Program Files\Bentley\AECOsim CONNECT Edition\AECOsimBuildingDesigner\Assemblies\Bentley.MicroStation.Interfaces.1.0.dll</HintPath>
+      <HintPath>..\Lib\Bentley\Connect\Bentley.MicroStation.Interfaces.1.0.dll</HintPath>
     </Reference>
     <Reference Include="Bentley.Windowing, Version=1.0.0.0, Culture=neutral, PublicKeyToken=4bf6c96a266e58d4, processorArchitecture=x86">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\Program Files\Bentley\AECOsim CONNECT Edition\AECOsimBuildingDesigner\Assemblies\ECFramework\Bentley.Windowing.dll</HintPath>
+      <HintPath>..\Lib\Bentley\Connect\Bentley.Windowing.dll</HintPath>
     </Reference>
     <Reference Include="Newtonsoft.Json, Version=7.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>..\packages\Newtonsoft.Json.7.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
@@ -110,7 +110,7 @@
     <Reference Include="System.Xml" />
     <Reference Include="ustation, Version=1.0.0.0, Culture=neutral, PublicKeyToken=9bfed12b64a9b7df, processorArchitecture=x86">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\Program Files\Bentley\AECOsim CONNECT Edition\AECOsimBuildingDesigner\ustation.dll</HintPath>
+      <HintPath>..\Lib\Bentley\Connect\ustation.dll</HintPath>
     </Reference>
     <Reference Include="WindowsBase" />
     <Reference Include="PresentationCore" />
