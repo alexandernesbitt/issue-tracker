@@ -3,7 +3,7 @@ The Arup Issue Tracker (AIT) is a set of tools designed to manage the electronic
 
 The tools can be used to store a list of 'Issues' in either a BCF file (BIM Collaboration Format) or using a web-based 'Issue Tracker' called Jira. This Issues can then be assignened, tracked and managed by the team in order to manage updates and tasks within the BIM model.
 
-![](https://github.com/ArupAus/issue-tracker/blob/master/Documentation/screenshot.png)
+![](https://raw.githubusercontent.com/ArupAus/issue-tracker/master/Documentation/screenshot.png)
 
 ## Integration
 * Autodesk Revit 2014-2017
